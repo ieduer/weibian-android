@@ -203,10 +203,27 @@ class ApiClient(
             .build()
         val payload = executeJson(request).payload
         // 网关历史上有过 answer 在顶层与在 data 下两种形态，两种都认。
-        return payload.optString("answer").ifBlank {
+        val answer = payload.optString("answer").ifBlank {
             payload.optJSONObject("data")?.optString("answer").orEmpty()
         }.ifBlank { throw ApiException("AI 网关没有返回内容。") }
+        return stripMarkdown(answer)
     }
+
+    /**
+     * 去掉 Markdown 记号。
+     *
+     * 提示词里已经要求不要用 Markdown，但模型仍会时不时冒出 `**要点**`、
+     * `* 含义`、`### 小标题`。App 是按纯文本渲染的，不清掉就会满屏星号。
+     * 只做记号剥离，不改动文字本身，也不试图做完整的 Markdown 解析。
+     */
+    private fun stripMarkdown(text: String): String = text
+        .replace(Regex("""\*\*(.+?)\*\*""", RegexOption.DOT_MATCHES_ALL), "$1")
+        .replace(Regex("""(?<![*\w])\*(?!\s)(.+?)(?<!\s)\*(?![*\w])""", RegexOption.DOT_MATCHES_ALL), "$1")
+        .replace(Regex("""^\s{0,3}#{1,6}\s+""", RegexOption.MULTILINE), "")
+        .replace(Regex("""^\s{0,3}[*+-]\s+""", RegexOption.MULTILINE), "· ")
+        .replace(Regex("""^\s{0,3}(\d+)[.)]\s+""", RegexOption.MULTILINE), "$1. ")
+        .replace(Regex("""`{1,3}"""), "")
+        .trim()
 
     // -----------------------------------------------------------------------
 

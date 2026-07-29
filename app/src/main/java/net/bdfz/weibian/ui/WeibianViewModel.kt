@@ -315,7 +315,7 @@ class WeibianViewModel(app: Application) : AndroidViewModel(app) {
             val reference = question.answer.ifBlank { item.referenceAnswer.ifBlank { item.modelAnswer } }
             val prompt = buildString {
                 appendLine("你是北京高考语文阅卷老师，正在批改《论语》经典阅读题。")
-                appendLine("请按以下结构给出批改，使用简体中文：")
+                appendLine("请按以下结构给出批改，使用简体中文，纯文本输出，不要使用 Markdown 记号：")
                 appendLine("1. 得分（给出 X/${question.score ?: 6} 分）")
                 appendLine("2. 踩中的得分点")
                 appendLine("3. 遗漏的知识点")
@@ -344,6 +344,7 @@ class WeibianViewModel(app: Application) : AndroidViewModel(app) {
         val chapter = bundle.chapter(chapterId) ?: return "找不到该章。"
         val prompt = buildString {
             appendLine("你是一位讲《论语》的老师，面对中学生。请用简体现代白话解答，不要用文言，分点作答，简洁准确。")
+            appendLine("直接输出纯文本，不要使用 Markdown 记号（不要 **加粗**、# 标题、* 列表符、``` 代码块）。")
             appendLine("【原文】${chapter.plainOriginal}")
             appendLine("【杨伯峻译文】${chapter.translation}")
             if (chapter.annotations.isNotEmpty()) {
