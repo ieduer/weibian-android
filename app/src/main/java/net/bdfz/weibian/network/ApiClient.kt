@@ -14,6 +14,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 class ApiException(message: String, val status: Int = 0) : IOException(message)
@@ -24,6 +25,14 @@ data class FeedbackReceipt(
     val feedbackId: String,
     val notificationSent: Boolean,
 )
+
+internal fun feedbackCategoryCode(label: String): String = when (label) {
+    "内容问题" -> "content"
+    "功能异常" -> "bug"
+    "改进建议" -> "idea"
+    "其他" -> "other"
+    else -> "other"
+}
 
 data class ContentManifest(
     val contentVersion: String,
@@ -187,17 +196,24 @@ class ApiClient(
         title: String,
         detail: String,
     ): FeedbackReceipt {
+        val clientMutationId = UUID.randomUUID().toString()
         val body = JSONObject()
             .put("siteKey", siteKey)
             .put("siteTitle", "韦编 · 论语译注")
             .put("pageTitle", "Android App · 我")
-            .put("category", category.take(40))
+            .put("category", feedbackCategoryCode(category))
             .put("severity", "normal")
             .put("title", title.take(120))
             .put("description", detail.take(2000))
+            .put("schemaVersion", 1)
+            .put("source", "weibian-android")
+            .put("clientMutationId", clientMutationId)
             .put(
                 "clientContext",
                 JSONObject()
+                    .put("schemaVersion", 1)
+                    .put("source", "weibian-android")
+                    .put("clientMutationId", clientMutationId)
                     .put("platform", "android")
                     .put("applicationId", BuildConfig.APPLICATION_ID)
                     .put("versionName", BuildConfig.VERSION_NAME)

@@ -155,7 +155,7 @@ fun ProfileScreen(
 
         // ---- 成就 ----
         item { SectionHeader("成就", "${state.achievements.count { it.unlocked }}/${state.achievements.size}") }
-        items(state.achievements, key = { it.achievement.id }) { entry ->
+        items(state.achievements, key = { ProfileListKeys.achievement(it.achievement.id) }) { entry ->
             PaperCard {
                 Row(
                     Modifier.padding(14.dp),
@@ -209,7 +209,7 @@ fun ProfileScreen(
         // ---- 收藏 ----
         if (state.favorites.isNotEmpty()) {
             item { SectionHeader("收藏", "${state.favorites.size} 章") }
-            items(state.favorites, key = { it.chapterId }) { entry ->
+            items(state.favorites, key = { ProfileListKeys.favorite(it.chapterId) }) { entry ->
                 bundle.chapter(entry.chapterId)?.let { chapter ->
                     PaperCard(modifier = Modifier.clickable { onOpenChapter(chapter.id) }) {
                         Row(
@@ -233,7 +233,7 @@ fun ProfileScreen(
         // ---- 笔记 ----
         if (state.notes.isNotEmpty()) {
             item { SectionHeader("我的笔记", "${state.notes.size} 条") }
-            items(state.notes, key = { it.chapterId }) { entry ->
+            items(state.notes, key = { ProfileListKeys.note(it.chapterId) }) { entry ->
                 bundle.chapter(entry.chapterId)?.let { chapter ->
                     PaperCard(modifier = Modifier.clickable { onOpenChapter(chapter.id) }) {
                         Column(Modifier.padding(14.dp)) {
