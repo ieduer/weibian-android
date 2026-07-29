@@ -137,3 +137,17 @@ weibian.bdfz.net 热更新  ┘             daily_stats / gaokao_attempts
 3. **真题覆盖**：北京卷设《论语》大题的年份只有 6 年（其余年份考《红楼梦》），已全部收录，不是遗漏。
 4. **验收范围**：功能验证在 **Android 15 模拟器（arm64）** 完成，标注为 emulator-only；
    真机与平板尚未验收，见 [VERIFICATION_STANDARD.md](docs/VERIFICATION_STANDARD.md)。
+
+---
+
+## 界面
+
+| 今日 | 章句 | 点注释 |
+|---|---|---|
+| ![](docs/screenshots/01-今日.png) | ![](docs/screenshots/02-章句.png) | ![](docs/screenshots/03-点注释.png) |
+
+| 挑战反馈 | 学程图 | 高考真题 | 深色模式 |
+|---|---|---|---|
+| ![](docs/screenshots/04-挑战反馈.png) | ![](docs/screenshots/05-学程图.png) | ![](docs/screenshots/06-高考真题.png) | ![](docs/screenshots/07-深色模式.png) |
+
+> 截图取自 Android 15 模拟器（arm64），标注为 emulator-only。
