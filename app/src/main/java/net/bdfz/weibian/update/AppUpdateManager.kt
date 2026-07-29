@@ -3,10 +3,16 @@ package net.bdfz.weibian.update
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import net.bdfz.weibian.BuildConfig
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import java.text.ParsePosition
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 
 /**
@@ -65,60 +71,24 @@ class AppUpdateManager(
                 if (!response.isSuccessful) {
                     return@use UpdateState.Unavailable("更新检查暂不可用（HTTP ${response.code}）")
                 }
-                val body = response.body ?: return@use UpdateState.Unavailable("更新检查暂不可用")
+                val body = response.body
                 // 清单体积设上限：一个更新清单不该有几兆。
                 val raw = body.source().let { source ->
                     source.request(MAX_MANIFEST_BYTES + 1)
+                    if (source.buffer.size > MAX_MANIFEST_BYTES) {
+                        return@use UpdateState.Unavailable("更新清单异常")
+                    }
                     source.buffer.snapshot().utf8()
                 }
-                if (raw.length > MAX_MANIFEST_BYTES) {
-                    return@use UpdateState.Unavailable("更新清单异常")
-                }
                 prefs.edit().putLong(KEY_LAST_CHECK, now).apply()
-                parse(JSONObject(raw))
+                parseUpdateManifest(
+                    json = JSONObject(raw),
+                    currentAppId = BuildConfig.APPLICATION_ID,
+                    currentVersionCode = BuildConfig.VERSION_CODE,
+                    deviceSdk = Build.VERSION.SDK_INT,
+                )
             }
         }.getOrElse { UpdateState.Unavailable("更新检查暂不可用，请稍后再试") }
-    }
-
-    private fun parse(json: JSONObject): UpdateState {
-        // 契约校验：任何一项不合规都当作没有更新，绝不据此引导安装。
-        if (json.optString("schema") != SCHEMA) {
-            return UpdateState.Unavailable("更新清单格式不符")
-        }
-        val appId = json.optString("appId")
-        if (appId != BuildConfig.APPLICATION_ID && appId != BASE_APPLICATION_ID) {
-            return UpdateState.Unavailable("更新清单与当前应用不匹配")
-        }
-        val versionCode = json.optInt("versionCode", -1)
-        if (versionCode <= 0) return UpdateState.Unavailable("更新清单版本号无效")
-        if (versionCode <= BuildConfig.VERSION_CODE) return UpdateState.UpToDate
-
-        val apkUrl = json.optString("apkUrl")
-        if (!apkUrl.startsWith(ALLOWED_APK_PREFIX)) {
-            return UpdateState.Unavailable("更新地址不在允许范围内")
-        }
-        val sha256 = json.optString("sha256")
-        if (!SHA256_RE.matches(sha256)) return UpdateState.Unavailable("更新校验值无效")
-        val size = json.optLong("size", 0L)
-        if (size <= 0L) return UpdateState.Unavailable("更新包大小无效")
-
-        val notes = json.optJSONArray("releaseNotes")?.let { array ->
-            ArrayList<String>(array.length()).also { out ->
-                for (i in 0 until array.length()) out.add(array.optString(i).take(200))
-            }
-        }.orEmpty()
-
-        return UpdateState.Available(
-            UpdateInfo(
-                version = json.optString("version"),
-                versionCode = versionCode,
-                apkUrl = apkUrl,
-                sha256 = sha256.lowercase(),
-                size = size,
-                releaseNotes = notes,
-                mandatory = json.optBoolean("mandatory", false),
-            ),
-        )
     }
 
     /** 交给系统浏览器/下载器，由用户在 Android 自己的安装界面确认。 */
@@ -129,12 +99,99 @@ class AppUpdateManager(
     }
 
     private companion object {
-        const val SCHEMA = "bdfz-android-update-v1"
-        const val BASE_APPLICATION_ID = "net.bdfz.weibian"
-        const val ALLOWED_APK_PREFIX = "https://img.bdfz.net/apps/weibian-android/"
         const val KEY_LAST_CHECK = "last_check_at"
         const val CHECK_INTERVAL_MS = 6L * 60 * 60 * 1000  // 舰队默认 6 小时
         const val MAX_MANIFEST_BYTES = 16L * 1024
-        val SHA256_RE = Regex("^[0-9a-fA-F]{64}$")
     }
 }
+
+internal fun parseUpdateManifest(
+    json: JSONObject,
+    currentAppId: String,
+    currentVersionCode: Int,
+    deviceSdk: Int,
+): UpdateState {
+    if (json.optString("schema") != UPDATE_SCHEMA) {
+        return UpdateState.Unavailable("更新清单格式不符")
+    }
+    if (json.optString("appId") != currentAppId) {
+        return UpdateState.Unavailable("更新清单与当前应用不匹配")
+    }
+    val version = json.optString("version")
+    if (!SEMVER_RE.matches(version)) return UpdateState.Unavailable("更新版本格式无效")
+    val versionCode = json.optInt("versionCode", -1)
+    if (versionCode <= 0) return UpdateState.Unavailable("更新清单版本号无效")
+    val minAndroidApi = json.optInt("minAndroidApi", -1)
+    if (minAndroidApi !in 21..100 || minAndroidApi > deviceSdk) {
+        return UpdateState.Unavailable("此更新不支持当前 Android 版本")
+    }
+
+    val sha256 = json.optString("sha256").lowercase()
+    if (!SHA256_RE.matches(sha256)) return UpdateState.Unavailable("更新校验值无效")
+    val apkUrl = json.optString("apkUrl")
+    val parsedUrl = apkUrl.toHttpUrlOrNull()
+    val expectedPath =
+        "${ALLOWED_APK_PATH}v$version/${sha256.take(8)}/weibian-$version.apk"
+    if (
+        parsedUrl == null ||
+        !parsedUrl.isHttps ||
+        parsedUrl.host != "img.bdfz.net" ||
+        parsedUrl.encodedPath != expectedPath ||
+        parsedUrl.query != null ||
+        parsedUrl.fragment != null
+    ) {
+        return UpdateState.Unavailable("更新地址不在允许范围内")
+    }
+    val size = json.optLong("size", 0L)
+    if (size !in 1..MAX_APK_BYTES) return UpdateState.Unavailable("更新包大小无效")
+    if (!validPublishedAt(json.optString("publishedAt"))) {
+        return UpdateState.Unavailable("更新时间无效")
+    }
+
+    val array = json.optJSONArray("releaseNotes")
+        ?: return UpdateState.Unavailable("更新说明缺失")
+    if (array.length() !in 1..MAX_RELEASE_NOTES) {
+        return UpdateState.Unavailable("更新说明格式无效")
+    }
+    val notes = ArrayList<String>(array.length())
+    for (index in 0 until array.length()) {
+        val note = array.optString(index).trim()
+        if (note.isBlank() || note.length > MAX_RELEASE_NOTE_LENGTH) {
+            return UpdateState.Unavailable("更新说明格式无效")
+        }
+        notes += note
+    }
+
+    if (versionCode <= currentVersionCode) return UpdateState.UpToDate
+    return UpdateState.Available(
+        UpdateInfo(
+            version = version,
+            versionCode = versionCode,
+            apkUrl = apkUrl,
+            sha256 = sha256,
+            size = size,
+            releaseNotes = notes,
+            mandatory = json.optBoolean("mandatory", false),
+        ),
+    )
+}
+
+private fun validPublishedAt(value: String): Boolean {
+    if (!value.endsWith("Z")) return false
+    return listOf("yyyy-MM-dd'T'HH:mm:ss'Z'", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").any { pattern ->
+        val parser = SimpleDateFormat(pattern, Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+            isLenient = false
+        }
+        val position = ParsePosition(0)
+        parser.parse(value, position) != null && position.index == value.length
+    }
+}
+
+private const val UPDATE_SCHEMA = "bdfz-android-update-v1"
+private const val ALLOWED_APK_PATH = "/apps/weibian-android/releases/"
+private const val MAX_APK_BYTES = 512L * 1024 * 1024
+private const val MAX_RELEASE_NOTES = 10
+private const val MAX_RELEASE_NOTE_LENGTH = 200
+private val SEMVER_RE = Regex("^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$")
+private val SHA256_RE = Regex("^[0-9a-f]{64}$")

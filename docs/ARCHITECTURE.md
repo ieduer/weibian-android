@@ -34,7 +34,7 @@ domain/        纯 Kotlin，无 Android 依赖，可直接单测
  └─ Achievements  成就判定
 
 data/          Room 实体 / DAO / LearningRepository（唯一写入口）
-content/       ContentBundle（内存索引）+ ContentStore（取哪一份内容）
+content/       ContentBundle（内存索引）+ ContentStore（三槽发布）+ ContentDelta
 network/       ApiClient（用户中心 / 内容接口 / AI 网关）
 security/      SecureSessionStore（AES-GCM + AndroidKeyStore）
 sync/          ProgressSyncWorker（WorkManager 周期同步）
@@ -56,10 +56,10 @@ CF/gaokao/data/all.json     (key=lunyu)       ──┤        │
 CF/gks/data/papers/*chinese*.json             ──┘        ↓
                                               content/dist/{content,manifest}.json
                                                          │
-                            ┌────────────────────────────┴───────────┐
-                            ↓                                        ↓
-                  app/src/main/assets/                   worker/public/（内容接口）
-                  （随 APK 附带，保证离线可用）              （热更新，不必发新 APK）
+             ┌──────────────────────────┼──────────────────────────┐
+             ↓                          ↓                          ↓
+ app/src/main/assets/        R2 immutable bundles       worker/public/ manifest
+ （随 APK 附带）              （按 version/hash 保留）       （审核后的稳定指针）
 ```
 
 管线在构建期做了三件不显然的事：
@@ -81,7 +81,8 @@ CF/gks/data/papers/*chinese*.json             ──┘        ↓
 **3. 真题回挂章句。** 高考材料与原文的关系有三种形态：整章引用（阳货 17.8 六言六蔽）、
 只截取长章一段（2015 侍坐篇只引篇末对话）、转录有讹字（2019 材料作「贫与残」）。
 单向包含判定只能处理第一种，因此改用**最长公共子串**：重合覆盖该章一半以上，
-或连续重合 ≥25 字，即判命中。七组真题全部正确回挂到章句。
+或连续重合 ≥25 字，即判命中。六组含原文材料的真题全部回挂；2018 微写作
+只有命题要求、没有引文，明确保留为空映射，不能伪造章句关系。
 
 ---
 
@@ -147,9 +148,11 @@ AI 失败一律降级为提示文案，作答早已在本地留痕，不会白�
 |---|---|---|
 | 触发 | 启动时静默检查 / 手动"更新内容" | 冷启动、回前台、手动"立即检查"（6 小时限流） |
 | 来源 | `weibian.bdfz.net/api/content/manifest` | `img.bdfz.net/apps/weibian-android/latest.json` |
-| 校验 | sha256 + 可解析性，落盘后再复校一次 | schema／包名／versionCode 单调递增／URL 前缀／sha256／size |
-| 失败 | 回落内置包，App 照常可用 | 非阻断，只在"关于"里提示暂不可用 |
-| 安装 | 原子替换文件 | **交给 Android 系统安装器**，绝不静默安装 |
+| 校验 | 精确 schema/host/path + base/target/patch sha256 + size + 可解析性 | schema／精确包名／versionCode 单调递增／不可变 URL／sha256／size |
+| 失败 | 差量失败回落完整 bundle；下载失败保留 active/previous；App 仍可用 | 非阻断，只在"关于"里提示暂不可用 |
+| 安装 | staged → active 原子发布，保留 previous | **交给 Android 系统安装器**，绝不静默安装 |
 
-内容包以 Worker 静态资源随部署发布，因此内容版本 = 部署版本，
-出问题可以 `wrangler rollback` 整体回退。
+Worker manifest 与发布代码随部署回滚；实际内容 bundle/delta 保存在 R2
+内容寻址对象中，`content-releases.js` 只映射已审核版本，因此旧版本 URL 在
+新部署后仍可回读。manifest 只列比完整 bundle 小的
+`weibian-content-delta-v1` 补丁；没有适用补丁时直接取完整 bundle。

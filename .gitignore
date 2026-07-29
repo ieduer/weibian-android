@@ -18,8 +18,7 @@ worker/public/manifest.json
 worker/node_modules/
 .wrangler/
 
-# 语料不入库：杨伯峻《论语译注》译注部分有著作权（中华书局），
-# 公开仓库不得再分发。构建前先跑 content/build_content.py 生成，
-# 见 docs/DEVELOPMENT.md。
+# 生成语料不入 Git。已授权分发只走签名 APK 与 content/public-content-lock.json
+# 锁定的不可变内容服务；clean clone 运行 scripts/bootstrap_public_content.mjs。
 app/src/main/assets/content.json
 app/src/main/assets/content-manifest.json

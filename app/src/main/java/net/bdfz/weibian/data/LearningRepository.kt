@@ -4,18 +4,23 @@ import android.content.Context
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import net.bdfz.weibian.BuildConfig
 import net.bdfz.weibian.content.ContentBundle
+import net.bdfz.weibian.content.ContentStore
 import net.bdfz.weibian.domain.AchievementSnapshot
 import net.bdfz.weibian.domain.Achievements
 import net.bdfz.weibian.domain.ChapterMastery
 import net.bdfz.weibian.domain.LearningTask
 import net.bdfz.weibian.domain.Merit
-import org.json.JSONObject
+import net.bdfz.weibian.sync.ProgressClientInfo
+import net.bdfz.weibian.sync.ProgressSyncWorker
+import net.bdfz.weibian.sync.buildProgressPayload
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import java.util.UUID
 
 /**
  * 学习记录仓库 —— 所有「学了什么」的写入口。
@@ -27,7 +32,9 @@ class LearningRepository(
     context: Context,
     private val db: LearningDatabase = LearningDatabase.get(context),
 ) {
-    private val prefs = context.applicationContext
+    private val appContext = context.applicationContext
+    private val contentStore = ContentStore(appContext)
+    private val prefs = appContext
         .getSharedPreferences("weibian_progress", Context.MODE_PRIVATE)
 
     val progressFlow: Flow<List<ChapterProgressEntity>> = db.chapterProgress().observeAll()
@@ -316,23 +323,18 @@ class LearningRepository(
     private suspend fun enqueue(chapterId: Int) {
         val entity = db.chapterProgress().find(chapterId) ?: return
         val mastery = entity.toMastery()
-        val payload = JSONObject()
-            .put("itemKey", "chapter-$chapterId")
-            .put("state", if (mastery.mastered) "completed" else "in_progress")
-            .put("progressPercent", mastery.score)
-            .put("score", mastery.score)
-            .put(
-                "meta",
-                JSONObject()
-                    .put("progressPercent", mastery.score)
-                    .put("read", entity.read)
-                    .put("annotationRevealed", entity.annotationRevealed)
-                    .put("attempts", entity.attempts)
-                    .put("correct", entity.correct)
-                    .put("reviews", entity.reviews)
-                    .put("clientUpdatedAt", isoNow()),
-            )
-            .toString()
+        val payload = buildProgressPayload(
+            entity = entity,
+            mastery = mastery,
+            clientMutationId = "weibian-${UUID.randomUUID()}",
+            clientUpdatedAt = isoNow(),
+            client = ProgressClientInfo(
+                applicationId = BuildConfig.APPLICATION_ID,
+                versionName = BuildConfig.VERSION_NAME,
+                versionCode = BuildConfig.VERSION_CODE,
+                contentVersion = contentStore.activeVersion(),
+            ),
+        )
         db.syncQueue().enqueue(
             SyncQueueEntity(
                 itemKey = "chapter-$chapterId",
@@ -340,6 +342,7 @@ class LearningRepository(
                 createdAt = System.currentTimeMillis(),
             ),
         )
+        ProgressSyncWorker.scheduleNow(appContext)
     }
 
     suspend fun pendingSync(limit: Int = 100): List<SyncQueueEntity> = db.syncQueue().peek(limit)

@@ -1,72 +1,534 @@
-# 运维手册
+# 韦编 · 论语译注 Android 运维手册
 
-## 日常
+Status: `published-limited`
+Public release: v1.0.0 / versionCode 1
+Release candidate: v1.1.0 / versionCode 2
+Last production-candidate verification: 2026-07-29 07:17 PDT
+Source: `/Users/ylsuen/CF/lunyu-yizhu-android`
 
-| 周期 | 事项 |
+这是本项目开发、发布、值守、故障处理和交接的项目级事实入口。
+“已公开发布”不等于 production-supported；本项目仍有实体平板、真实反馈、
+User Center 登记和门户健康门未闭环。
+
+## 0. 必读顺序与状态用词
+
+每次工作依序阅读：
+
+1. `/Users/ylsuen/CF/AGENTS.md`
+2. `runbooks/bdfz_project_matrix_and_interdependencies.md`
+3. `runbooks/bdfz_android_app_fleet_operations.md`
+4. `runbooks/bdfz_native_app_development_standard.md`
+5. `runbooks/bdfz_android_app_update_standard.md`
+6. `runbooks/bdfz_backend_operations.md`
+7. `runbooks/bdfz_unified_user_system.md`
+8. 本仓库 `AGENTS.md`
+9. `README.md`
+10. `docs/ARCHITECTURE.md`
+11. 本手册
+12. `docs/DEPLOYMENT.md`
+13. `docs/VERIFICATION_STANDARD.md`
+14. `docs/SECURITY_REVIEW.md`
+
+允许的当前表述：
+
+- “v1.0.0 已公开发布”
+- “v1.1.0 是尚未移动公开更新指针的候选版”
+- “Worker 排行榜、内容不可变路由和差量契约已上线”
+- “实体 OnePlus 手机覆盖升级、真实登录、进度与排行榜金丝雀已通过”
+- “当前 lifecycle 为 `published-limited`”
+
+禁止的当前表述：
+
+- “production-ready”
+- “production-supported”
+- “全部验收完成”
+- “五面登记全部 production live”
+- “实体手机和平板都已验证”
+- “差异内容版本已完成线上导入与回滚”
+
+## 1. App identity record
+
+| 字段 | 当前值 |
 |---|---|
-| 每次发布 | 跑完[核查标准](VERIFICATION_STANDARD.md)八点 |
-| 内容有更正 | 改上游语料 → `build_content.py` → 同步 assets 与 worker/public → 部署 Worker（无需发 APK） |
-| 每季 | 复核签名密钥可用性与备份；核对 `latest.json` 与 R2 对象一致 |
-| 上游语料变动 | 跑 `--check`；断言不过说明上游结构变了，先查清再动 |
+| 产品名 | 韦编 · 论语译注 |
+| fleetId / appKey | `weibian-android` |
+| source path | `/Users/ylsuen/CF/lunyu-yizhu-android` |
+| GitHub | `https://github.com/ieduer/weibian-android`（public） |
+| default branch | `main` |
+| v1.0.0 source/tag | `6512b57f0148e51b98452d166ce75c139ff68855` / `v1.0.0` |
+| siteKey | `weibian` |
+| base / Play package | `net.bdfz.weibian` |
+| Direct package | `net.bdfz.weibian.direct` |
+| Direct update | enabled |
+| Play update | disabled；商店流程未验收 |
+| public host | `weibian.bdfz.net` |
+| Worker | `weibian-content` |
+| APK R2 prefix | `blog-images` / `apps/weibian-android/` |
+| content R2 prefix | `blog-images` / `apps/weibian-content/` |
+| update manifest | `https://img.bdfz.net/apps/weibian-android/latest.json` |
+| immutable APK | `https://img.bdfz.net/apps/weibian-android/releases/v1.0.0/21fddd9a/weibian-1.0.0.apk` |
+| APK SHA-256 | `21fddd9a82a6f486f5aa2e817716615fcd58b1d0d4f71ddff511eaaf8a1111ce` |
+| APK size | 2,737,821 bytes |
+| signer certificate SHA-256 | `a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282` |
+| v1.1.0 candidate APK SHA-256 | `80e52ae02cd7469e4ca3d4294b44dc12ec8fa2eac4174b1fc85b34c30a40cf7c` |
+| v1.1.0 candidate APK size | 2,738,037 bytes |
+| local data class | Room schema 1；学习记录不可再生 |
+| central data class | `student_owned`；User Center progress/feedback |
+| content schema | `lunyu-content-v1`, schemaVersion 1 |
+| content version | `fc68413c7b70da0e` |
+| lifecycle | `published-limited` |
 
----
+这些键不得与 `lunyu`、`lunyu-battle`、`lunyu-battle-android`、
+`recite-android` 或其他 App 混用。
 
-## 故障排查
+### 当前发布证据
+
+- Worker current version:
+  `64f3c319-e3b8-429e-a49c-1e333fd2e15d`
+- Previous Worker version:
+  `437c965f-d420-43f0-8f08-c73a4b15a73b`
+- GitHub Release:
+  `https://github.com/ieduer/weibian-android/releases/tag/v1.0.0`
+- Pulse:
+  `weibian.bdfz.net`, source `worker_analytics`, status `tracked`
+
+版本 ID 是回滚锚，不代表内容、客户端和数据门全部通过。操作前重新读取
+Wrangler/GitHub/R2；不得把本节旧值直接当作当前事实。
+
+## 2. 产品和仓库边界
+
+本项目独占：
+
+- Android client、Room schema、App UI、构建、签名、release metadata；
+- `weibian-content` Worker；
+- `weibian.bdfz.net`；
+- R2 `apps/weibian-android/` 与 `apps/weibian-content/`；
+- GitHub `ieduer/weibian-android`。
+
+本项目只读依赖：
+
+| 路径/产品 | 用途 | 本项目能否写 |
+|---|---|---|
+| `CF/lunyu/data/dialogues.json` | 512 章正文、译文、注释来源 | 否 |
+| `CF/lunyu-battle/src/data/` | 215 题、概念、人物 | 否 |
+| `CF/gaokao/data/all.json` | 既有高考索引 | 否 |
+| `CF/gks/data/papers/` | 真题材料 | 否 |
+| `my.bdfz.net` | 身份、进度、反馈 | 只调用版本化 API |
+| `apis.bdfz.net` | AI 讲解/批改 | 只调用共享契约 |
+| `pulse.bdfz.net` | 运行监控和 aggregate | 只读验证；不从 APK 直写 |
+
+禁止在本项目任务中顺手改上述语料或共享 hub。上游确需修复时另开 task，
+明确 source owner、同源 Web/App disposition、fan-out、备份和回滚。
+
+## 3. 架构和数据所有权
+
+### 3.1 内容
+
+- APK 内置 `assets/content.json`，保证离线首次使用。
+- Worker manifest 提供 version/hash/size/counts/deltas；内容寻址 bundle/delta
+  存在 R2，由 `content-releases.js` 白名单映射，旧版本跨 Worker 部署可回读。
+- 内容与用户学习记录分离；内容包可再生，学习记录不可再生。
+- 客户端以 `active/staged/previous` 三槽和原子重命名发布下载内容；启动只读取
+  完整的 active，失败时保留 previous。
+- `weibian-content-delta-v1` 支持同一内容 schema 内的前缀/后缀差量；
+  base/hash/size 任一不符即安全回落完整 bundle。当前线上内容与 v1.0.0
+  内容 hash 相同，因此 manifest 的 `deltas` 为空；真实差异版本导入/回滚仍是
+  下一次内容变更的发布门。
+
+### 3.2 学习记录
+
+Room `weibian-learning.db` 保存：
+
+- chapter progress；
+- task attempts；
+- daily stats；
+- gaokao attempts；
+- sync queue。
+
+禁止 `fallbackToDestructiveMigration`。任何 schema 变更必须：
+
+1. 导出新 schema；
+2. 写显式 Migration；
+3. 用真实上一版数据库跑升级；
+4. 验证 force-stop/重启；
+5. 验证登录、outbox 和内容版本；
+6. 记录不可逆点与恢复路径。
+
+### 3.3 身份与同步
+
+当前客户端直接向 User Center `/api/login` 提交 username/password，一次登录
+后只保存 Android Keystore 加密的 session Cookie。密码不落盘。
+
+这条路径已由 `docs/IDENTITY_ADR.md` 明确接受为 v1.1 direct channel 的有限
+一方适配器，并通过单次真实账号读写金丝雀。User Center 提供独立 App
+handoff 后必须迁移；不得复用 Companion client 或退回 WebView 主界面。
+
+进度读取使用 `GET /api/progress?site=weibian`，写入请求体使用
+`siteKey=weibian`。两者字段不同是当前共享契约；写成 `site` 会 400。
+
+outbox payload 携带 `schemaVersion`、稳定的 `clientMutationId`、platform、
+App version、content version 和 source marker；同一队列项重试保持同一
+mutation id。服务端仍以 `siteKey + itemKey` 的幂等 PUT 为权威写入契约。
+
+### 3.4 段位与排行榜
+
+“修为/段位/每日任务”保留本机即时体验；线上每日榜和总榜由
+`weibian-content` 通过 User Center service binding 读取已写入进度后计算，
+客户端不能提交总分。D1 只保存 HMAC 假名快照，不保存账号、姓名或 Cookie；
+服务端 secret 缺失时 fail closed。榜单是学习激励，不是正式成绩。
+
+### 3.5 内容权利
+
+public Git 已通过 `.gitignore` 排除生成的译注语料，GitHub source tree 不含
+`content.json`。但公开 APK 和无鉴权 Worker bundle 实际会分发译文/注释。
+
+owner 已于 2026-07-29 明确确认本项目取得公开发布授权，项目级收据和来源、
+分发面、撤回流程记录在 `docs/CONTENT_RIGHTS_RECEIPT.md`。新内容、来源或
+授权范围变化仍须重新复核，不能把本次确认泛化到其他项目。
+
+## 4. 配置与 secret 名称
+
+### App build
+
+release 必须只使用：
+
+- `WEIBIAN_ANDROID_KEYSTORE_PATH`
+- `WEIBIAN_ANDROID_KEYSTORE_PASSWORD`
+- `WEIBIAN_ANDROID_KEY_ALIAS`
+- `WEIBIAN_ANDROID_KEY_PASSWORD`
+
+四项缺失时 release 只可生成未签名候选，不能进入发布；不得 fallback 到
+其他 App 的通用签名变量。正式发布同时必须核对既有 signer certificate。
+
+### Cloudflare
+
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+- Worker secret `RANKING_PEPPER`
+
+排行榜 D1 为 `weibian-rankings`，Worker 通过 `USER_CENTER` service binding
+读取进度。不得在 APK、Worker source、报告、命令行参数或 Git 中记录 secret
+值；排行榜 secret 缺失必须拒绝认证同步。
+
+## 5. Dependency map
+
+| 依赖边 | Contract probe | 变更影响 | Owner / rollback |
+|---|---|---|---|
+| App → User Center | `/api/version`、真实 session/progress/feedback canary | 登录、同步、反馈、80+ 站枢纽 | User Center owner；App 任务默认只读 |
+| App → APIS | `Origin=https://weibian.bdfz.net`, `X-Project-Name=weibian` | AI 讲解/批改、~28 调用方 | APIS incident runbook；App 降级为离线 |
+| App → content Worker | health/manifest/bundle hash | 内容热更新 | `weibian-content` version rollback |
+| App → R2 | manifest/APK bytes/hash/size/signer | 安装和自更新 | immutable object + pointer；坏已装版发更高 code |
+| Worker → R2 | `content-releases.js` exact key + public/Worker byte parity | 历史内容可回读 | immutable object 不删除；Worker mapping rollback |
+| Worker → Assets | 当前 manifest/旧客户端兼容 bundle | 稳定指针与 v1.0 兼容 | Worker previous version |
+| Pulse → Worker analytics | meta/range/live | 运行可见性 | Pulse owner；App 不直写 |
+| build → source corpora | `build_content.py --check` | 内容、stable ID、alias | 上游 owner；另开 task |
+| GitHub → R2 release | asset bytes/hash 相同 | 第二分发面 | Git tag/Release + immutable R2 |
+
+本 App 是叶子，不得修改共享 hub contract。若必须改 User Center/APIS，
+按矩阵手册现扫 fan-out，并把受支持 App 全部纳入回归。
+
+## 6. 日常值守
+
+### 每周
+
+```bash
+curl -sS https://weibian.bdfz.net/api/health | jq
+curl -sS https://weibian.bdfz.net/api/content/manifest \
+  | jq '{schema,schemaVersion,contentVersion,sha256,size,counts}'
+curl -sS https://img.bdfz.net/apps/weibian-android/latest.json \
+  | jq '{schema,appId,version,versionCode,apkUrl,sha256,size,publishedAt}'
+curl -sS https://pulse.bdfz.net/api/meta \
+  | jq '.. | objects | select((.host? // "") == "weibian.bdfz.net")'
+curl -sS 'https://pulse.bdfz.net/api/range?range=24h' \
+  | jq '.. | objects | select((.host? // "") == "weibian.bdfz.net")'
+```
+
+同时核对：
+
+- GitHub Release 和 R2 APK digest；
+- Worker errors/requests；
+- User Center aggregate（只保留 aggregate）；
+- feedback delivery；
+- 版本 adoption/crash/ANR（若有受审核 aggregate）；
+- `allinone.bdfz.net` 和 `portal.bdfz.net` 入口。
+
+### 每月
+
+- JDK/SDK/AGP/Kotlin/AndroidX 与 dependency/security；
+- Room schema 和上一版数据库升级恢复；
+- 权限、隐私说明和内容权利；
+- signer backup 和公开 certificate continuity；
+- R2/GitHub/manifest byte parity；
+- User Center registry、nav、portal、frozen Companion disposition、Pulse。
+
+### 每季
+
+- 实体手机覆盖升级演练；
+- 实体平板 adaptive/accessibility；
+- Worker rollback sandbox/受控演练；
+- 内容 staged/previous restore；
+- lifecycle 是否仍为 `published-limited`。
+
+## 7. 开发和构建
+
+### 环境
+
+- JDK 21: `/opt/homebrew/opt/openjdk@21`
+- Android SDK: `/opt/homebrew/share/android-commandlinetools`
+- Python: `/Users/ylsuen/.venv/bin/python`
+
+### 无 mutation 的内容校验
+
+```bash
+cd /Users/ylsuen/CF/lunyu-yizhu-android
+/Users/ylsuen/.venv/bin/python content/build_content.py --check
+```
+
+### 代码验证
+
+```bash
+cd /Users/ylsuen/CF/lunyu-yizhu-android
+JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./gradlew \
+  :app:testDirectDebugUnitTest \
+  :app:lintDirectDebug \
+  :app:assembleDirectDebug
+```
+
+Release build 只能在 identity release card 完整、项目专用 signing 输入就绪、
+prior signer/version 已核对后执行。
+
+### 内容生成
+
+生成会写文件，必须先取得上游和生成物 ownership：
+
+```bash
+cd /Users/ylsuen/CF/lunyu-yizhu-android
+/Users/ylsuen/.venv/bin/python content/build_content.py
+cp content/dist/content.json app/src/main/assets/content.json
+cp content/dist/manifest.json app/src/main/assets/content-manifest.json
+cp content/dist/content.json worker/public/content.json
+cp content/dist/manifest.json worker/public/manifest.json
+```
+
+生成物含授权语料但仍不入 Git。上传新的不可变 R2 bundle，逐字节读回后，
+更新 `content/public-content-lock.json` 和 `worker/src/content-releases.js`；
+clean clone 用 `node scripts/bootstrap_public_content.mjs` 恢复精确内容。
+
+## 8. 发布
+
+### 8.1 发布前 release card
+
+必须记录：
+
+- clean commit/tag；
+- base/direct/play package；
+- versionName/versionCode 与 prior accepted code；
+- signer certificate current/prior；
+- APK/AAB hash/size；
+- Room schema/migration；
+- content version/schema/digest/rights；
+- Worker current/previous version；
+- User Center/Pulse/feedback/phone/tablet/upgrade evidence；
+- R2 immutable URL；
+- rollback 和未过门。
+
+### 8.2 Worker/内容
+
+先上传不可变 R2 bundle/delta 并逐字节读回，再追加 release mapping、更新
+manifest、dry-run、记录 current version，最后部署 Worker 指针：
+
+```bash
+cd /Users/ylsuen/CF/lunyu-yizhu-android/worker
+npx wrangler deploy --dry-run
+```
+
+正式 deploy 只在 task 明确授权、内容 rights/hash、cache contract、App
+差异版本导入和回滚均通过后执行。不得覆盖 R2 内容寻址对象，也不得把
+`/api/content/bundle` 兼容 URL 标成 immutable。
+
+### 8.3 APK
+
+顺序固定：
+
+1. signed content-addressed APK；
+2. immutable release metadata；
+3. 可选便利别名；
+4. 公开 bytes/hash/size/signer readback；
+5. `latest.json` 最后；
+6. GitHub Release 与公开入口；
+7. 安装后重验。
+
+v1.0.0 是第一个已接受 release，没有更低 production APK 可作为已安装客户端
+回滚。坏版已安装后只能用同 signer、更高 versionCode 修复。
+
+Landing page 必须链接到当前 accepted release 的内容寻址 APK，不能链接
+`latest.apk` 便利别名。v1.1.0 pointer 未移动前仍指向 immutable v1.0.0。
+
+## 9. 监控和验收
+
+### Backend
+
+通过条件：
+
+- health `ok=true`；
+- manifest schema/version/counts 正确；
+- bundle bytes/hash/size 与 manifest 一致；
+- Pulse meta/range/live 收录 Worker，无异常错误；
+- User Center 和 APIS 安全 probe 正常。
+
+### App
+
+不能仅用 emulator。production-supported 至少需要：
+
+- 指定实体手机 serial；
+- 指定实体平板 serial；
+- clean install；
+- v1.0.0 → 更高 code 覆盖升级；
+- cold/force-stop/foreground/back/rotation/multi-window/offline/recovery；
+- canonical 真实账号登录、同步、登出/撤销、重启读回；
+- feedback canary → API → aggregate D1 → Telegram receipt；
+- AI 讲解和高考批改；
+- 差异内容版本下载、hash、导入、重启、rollback；
+- scoped logcat 无 fatal/ANR；
+- direct/Play 渠道行为分离。
+
+## 10. 故障排查
 
 ### 登录
 
 | 现象 | 原因与处理 |
 |---|---|
-| "登录成功，但服务器没有返回会话" | 用户中心未下发 `bdfz_uc_session`。查 `curl -s https://my.bdfz.net/api/version`；若枢纽异常见 `runbooks/user_center_incident.md` |
-| 提示"注册入口已关闭" | **预期行为**。服务端已全局关闭注册（`registration-disabled`），请用希悦账号登录 |
-| 反复登录失败 | **不要重试**。用户中心对多次失败会临时锁定账号，等锁定窗口过去或让用户确认密码 |
-| 重装后需重新登录 | **预期**。会话密钥在 AndroidKeyStore，不随备份还原；学习记录本身会还原 |
-| 登录后进度没过来 | 手动"立即同步"；确认 `/api/progress?site=weibian` 有数据；注意 `itemKey` 形如 `chapter-<id>` |
+| “登录成功，但服务器没有返回会话” | User Center 未下发 `bdfz_uc_session`；查 `/api/version` 和 incident runbook |
+| “注册入口已关闭” | 当前预期：服务端 `registration-disabled`；不要在 App 新建用户表 |
+| 反复登录失败 | 停止重试，避免锁定；核对账号规范化和 User Center 状态 |
+| 重装后需重登 | 预期：Keystore session 不跨设备恢复 |
+| 登录后进度未回 | 手动同步；核对 GET `?site=weibian` 与 PUT `body.siteKey=weibian` |
+| 换账号看到前一账号状态 | P0；停止同步并检查本机账号隔离，不得清库掩盖 |
 
 ### 同步
 
 | 现象 | 处理 |
 |---|---|
-| "待同步 N 条"不下降 | 说明 push 一直失败。查网络与会话是否过期（过期需重登）。队列不会丢，联网后自动冲刷 |
-| 两台设备进度不一致 | 合并策略是取双方较优者，不会互相冲掉；先在两边各点一次"立即同步" |
-| 未登录学了很久，登录后会覆盖吗 | 不会。本地记录保留，登录后与远端合并 |
+| “待同步 N 条”不下降 | 保留队列；查网络/session/API，不手工删队 |
+| 两设备不一致 | 双方各手动同步；核对 monotonic merge，不接受回退 |
+| 游客登录后担心覆盖 | 当前策略合并较优记录；需继续验证账号归属隔离 |
+| 重复写入 | 检查 itemKey PUT；补齐 `clientMutationId` 前不得宣称完整事件幂等 |
 
-### 更新
-
-| 现象 | 处理 |
-|---|---|
-| "更新检查暂不可用" | 非阻断。查 `curl -I https://img.bdfz.net/apps/weibian-android/latest.json` |
-| 检查不到新版 | 自动检查 6 小时限流；点"立即检查"强制。或 `versionCode` 未递增 |
-| "更新地址不在允许范围内" | `apkUrl` 必须以 `https://img.bdfz.net/apps/weibian-android/` 开头，客户端硬校验 |
-| "更新清单与当前应用不匹配" | `appId` 与包名不符。注意 `direct` 渠道包名带 `.direct` 后缀，清单写基础包名即可 |
-| 商店版看不到更新入口 | **预期**：`play` 渠道 `SELF_UPDATE_ENABLED=false`，由商店负责 |
-| 内容更新后没生效 | 校验失败会静默回落内置包。查 Worker 的 manifest 与 bundle sha256 是否一致 |
-
-### 数据迁移
-
-| 场景 | 处理 |
-|---|---|
-| 用户在 `kz`/`ly` 站已有进度 | 内容包保留了 29 条重复章的**别名映射**，旧章 id 可解析回现行章（`ContentBundle.canonicalId`） |
-| Room schema 变更 | **必须写 Migration**。禁用 destructive fallback —— 学习记录不可再生 |
-| 内容包结构变更 | 升 `schemaVersion`；旧客户端会因解析失败回落内置包，不会崩 |
-| 用户换机 | 已登录：`/api/progress` 拉回。未登录：仅靠系统备份，恢复不了就是丢了 —— 这也是引导登录的理由 |
-
-### 内容问题
+### APK 更新
 
 | 现象 | 处理 |
 |---|---|
-| 某章点注释没反应 | 查该章 `unresolvedMarkers`。雍也 6.7、6.26 是**上游确实缺注释**的已知缺口 |
-| 注释对错了字 | 改上游 `dialogues.json` → 重跑管线 → 部署 Worker。注意序号讹误由管线自动修复，不要手改序号 |
-| 某题答案存疑 | 题在 `CF/lunyu-battle/src/data/bank/*.ts`，改完重跑管线；`ContentBundleTest` 会校验答案在选项内且错项有诊断 |
-| 真题没挂到章句 | 匹配阈值在 `build_content.py#map_passages`（≥12 字且覆盖半章，或连续 ≥25 字）。微写作类无材料，本就不挂 |
+| “更新检查暂不可用” | 非阻断；查 manifest HTTP/schema/size |
+| 检查不到新版 | 手动强制；核对 versionCode 严格增加 |
+| “更新地址不在允许范围内” | URL 必须在 `apps/weibian-android/` |
+| “清单与当前应用不匹配” | Direct 必须精确为 `net.bdfz.weibian.direct`；先查实际 APK package 和 manifest |
+| Play 看不到 direct 入口 | 预期；Play 不得 sideload |
+| hash/size 不符 | P1；停止 pointer/入口，保全 artifact，不覆盖 immutable object |
+| signer 不符 | P0；停止发布，不引导卸载接受陌生 signer |
 
----
+### 内容更新
 
-## 边界（别做的事）
+| 现象 | 处理 |
+|---|---|
+| manifest 变了但内容不生效 | 检查 stable bundle 的 immutable CDN 缓存和 hash mismatch |
+| 下载后回落内置包 | 核对 bundle hash、schema、解析错误和 active meta |
+| 某章注释不可点 | 查 `unresolvedMarkers`；雍也 6.7、6.26 是已知上游缺口 |
+| 注释序号错 | 改上游另开 task，重跑管线；不要手改生成物 |
+| 真题未回挂 | 检查 LCS 阈值和 source；无材料微写作可不挂 |
+| 需要回滚 | 启动会清除不完整 staged；可回退 previous；不得删除学习记录 |
 
-- 不在本项目新建用户表、密码、注册或找回流程 —— 身份只属于 `my.bdfz.net`。
-- 不在 App 内内置模型密钥 —— AI 只走 `apis.bdfz.net`。
-- 不写上游语料仓库 —— 它们是其他项目的事实来源。
-- 不覆盖已公开读过的内容寻址 APK 对象。
-- 不用更低 versionCode 做回滚。
-- 日志、报告、提交里不出现口令、Cookie、会话 id、学生内容。
+### Portal/登记
+
+| 现象 | 处理 |
+|---|---|
+| allinone/portal 522 | 既存共享故障；Pages preview 不是生产健康 |
+| User Center 看不到 Weibian | registry 只在脏 source，尚未部署；不要从该工作树越权 deploy |
+| Companion 出现 Weibian WebView entry | 与 frozen legacy 规则冲突；由 Companion owner 单独评审 |
+| Pulse 没数据 | 先看 meta 是否登记，再看 range source/coverage；request 不等于用户 |
+
+## 11. 回滚
+
+### Worker/内容
+
+当前 previous version:
+
+```text
+437c965f-d420-43f0-8f08-c73a4b15a73b
+```
+
+操作前重新读取 `wrangler versions list/deployments list`，确认它仍是目标
+previous version。不要凭文档直接回滚。
+
+```bash
+wrangler rollback <REVIEWED_PREVIOUS_VERSION_ID> \
+  --name weibian-content \
+  --yes
+```
+
+回滚后复验 health、manifest、bundle hash、App import 和 Pulse。
+
+### APK
+
+- `latest.json` 指错：先保存当前 pointer bytes/hash，再回指已验证 artifact。
+- 当前没有 code 0/更早 production release；v1.0.0 已安装坏版只能发同 signer、
+  更高 code 修复。
+- immutable APK 不覆盖、不删除。
+- GitHub Release 是审计面，不以删除 Release 代替客户端修复。
+
+### Room/User Center
+
+- migration 只向前；
+- 不清 Room/D1/User Center 作为回滚；
+- backend 新字段优先 dormant；
+- 先证明修复版可读现有 schema，再发更高 code。
+
+## 12. 已知故障模式与经验
+
+1. User Center progress 读用 `site` query，写用 `siteKey` body；两边不能凭名称
+   猜成相同。
+2. 朱砂色接近 error，不能表示“答对”；正确状态用青瓷。
+3. `fillMaxSize().widthIn()` 不能实现大屏限宽；要由父容器约束。
+4. AI 网关可能返回 Markdown；纯文本 UI 需要稳定 prompt/renderer contract。
+5. 内容包通过 R8 不能只看 APK 大小；必须读取包内 asset 并比 bytes/hash。
+6. mutable bundle URL 配 `immutable` 会造成 manifest 新、bundle 旧。
+7. public Git 不含语料不等于 APK/Worker 没有再分发内容；权利审查要看全部分发面。
+8. GitHub Release、R2、Worker、Pulse 各自成功仍不等于实体设备验收。
+
+## 13. 技术债和阻塞项
+
+| 优先级 | 项目 | 关闭证据 |
+|---|---|---|
+| P1 | 无实体平板正式验收 | 指定实体平板 serial 的 adaptive/accessibility 完整核查记录 |
+| P1 | feedback 未做真实回执 | physical App → API → aggregate D1 → Telegram |
+| P1 | 差量契约尚无真实差异版本导入/回滚 | 下一次内容变更的 patch/full fallback、重启与 previous rollback |
+| P1 | User Center registry 本地未部署 | 干净可审 source、hub deploy、fan-out smoke |
+| P1 | AI 高考批改未在 App 实测 | 非敏感题目端到端记录 |
+| P1 | allinone/portal 生产 522 | 生产域 200/正确入口与回滚 |
+| P2 | Companion 新 WebView entry 与 frozen policy 冲突 | Companion owner 记录 `not-applicable` 或用户重新授权 |
+| P2 | 注册 UI 预留但服务关闭 | User Center 正式开放或明确永久不支持 |
+
+## 14. 后续变更
+
+任何新功能、共享 hub 改动、新 release、内容分发扩展或 production 状态提升
+都必须另开 task。优先顺序：
+
+1. 实体平板与 physical feedback 回执；
+2. User Center registry 和 portal 健康；
+3. 高考批改与真实差异内容导入/回滚；
+4. 发布 v1.1.0 后的更新指针、GitHub/R2 字节一致性与入口 immutable URL；
+5. Play store。
+
+## 15. Closeout
+
+任务结束必须记录：
+
+- changed files/production resources；
+- tests、设备 serial、live endpoints；
+- commit/tag、Worker version、APK/hash/signer；
+- rollback；
+- dirty tree；
+- unresolved。
+
+更新 `reports/agent_action_log.jsonl` 的 `change`、`verify`、`closeout`。
+canonical report 被另一个 active owner 持有时不得抢写；在 handoff 明确指出
+待其收口后补 association index。

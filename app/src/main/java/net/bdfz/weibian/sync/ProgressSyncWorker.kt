@@ -4,8 +4,11 @@ import android.content.Context
 import android.util.Log
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
+import androidx.work.BackoffPolicy
+import androidx.work.ExistingWorkPolicy
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -36,27 +39,39 @@ class ProgressSyncWorker(
 
             val pending = repository.pendingSync()
             val done = mutableListOf<Long>()
+            var failed = false
             for (item in pending) {
-                runCatching { api.pushProgress(session, item.payload) }
-                    .onSuccess { done += item.id }
-                    .onFailure { return@runCatching done }
+                try {
+                    api.pushProgress(session, item.payload)
+                    done += item.id
+                } catch (error: Exception) {
+                    Log.w(TAG, "单条进度同步失败，保留队列等待重试", error)
+                    failed = true
+                    break
+                }
             }
-            done
+            done to failed
         }.fold(
-            onSuccess = { done ->
+            onSuccess = { (done, failed) ->
                 repository.dropSynced(done)
-                Result.success()
+                when {
+                    !failed -> Result.success()
+                    runAttemptCount < MAX_ATTEMPTS -> Result.retry()
+                    else -> Result.failure()
+                }
             },
             onFailure = { error ->
                 Log.w(TAG, "进度同步失败，稍后重试", error)
-                Result.retry()
+                if (runAttemptCount < MAX_ATTEMPTS) Result.retry() else Result.failure()
             },
         )
     }
 
     companion object {
         private const val TAG = "ProgressSync"
-        private const val UNIQUE_NAME = "weibian-progress-sync"
+        private const val PERIODIC_NAME = "weibian-progress-sync-periodic"
+        private const val IMMEDIATE_NAME = "weibian-progress-sync-immediate"
+        private const val MAX_ATTEMPTS = 5
 
         fun schedule(context: Context) {
             val request = PeriodicWorkRequestBuilder<ProgressSyncWorker>(6, TimeUnit.HOURS)
@@ -65,10 +80,27 @@ class ProgressSyncWorker(
                         .setRequiredNetworkType(NetworkType.CONNECTED)
                         .build(),
                 )
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
                 .build()
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                UNIQUE_NAME,
+                PERIODIC_NAME,
                 ExistingPeriodicWorkPolicy.KEEP,
+                request,
+            )
+        }
+
+        fun scheduleNow(context: Context) {
+            val request = OneTimeWorkRequestBuilder<ProgressSyncWorker>()
+                .setConstraints(
+                    Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .build(),
+                )
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
+                .build()
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                IMMEDIATE_NAME,
+                ExistingWorkPolicy.APPEND_OR_REPLACE,
                 request,
             )
         }

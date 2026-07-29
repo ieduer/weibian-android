@@ -28,6 +28,7 @@ import net.bdfz.weibian.domain.LearningTask
 import net.bdfz.weibian.domain.Merit
 import net.bdfz.weibian.domain.OverallProgress
 import net.bdfz.weibian.network.ApiClient
+import net.bdfz.weibian.network.RankingSnapshot
 import net.bdfz.weibian.security.AppSession
 import net.bdfz.weibian.security.SecureSessionStore
 import net.bdfz.weibian.sync.ProgressSyncWorker
@@ -83,6 +84,13 @@ data class UiState(
     val updateState: UpdateState = UpdateState.Idle,
     val pendingSync: Int = 0,
     val studySeconds: Long = 0,
+    val rankings: RankingSnapshot? = null,
+    val rankingsBusy: Boolean = false,
+    val rankingsError: String? = null,
+    val feedbackBusy: Boolean = false,
+    val feedbackError: String? = null,
+    val feedbackReceiptId: String? = null,
+    val feedbackNotificationSent: Boolean? = null,
     val message: String? = null,
     val newAchievements: List<String> = emptyList(),
 )
@@ -117,6 +125,7 @@ class WeibianViewModel(app: Application) : AndroidViewModel(app) {
             ProgressSyncWorker.schedule(getApplication())
             checkUpdate(force = false)
             refreshContent()
+            refreshRankings(syncCurrentUser = false)
         }
     }
 
@@ -399,30 +408,108 @@ class WeibianViewModel(app: Application) : AndroidViewModel(app) {
 
     fun syncNow() = viewModelScope.launch {
         val session = _state.value.session ?: return@launch
-        withContext(Dispatchers.IO) {
+        val result = withContext(Dispatchers.IO) {
             runCatching {
                 repository.mergeRemote(api.pullProgress(session))
                 val pending = repository.pendingSync()
                 val done = mutableListOf<Long>()
+                var pushFailure: Exception? = null
                 for (item in pending) {
-                    runCatching { api.pushProgress(session, item.payload) }
-                        .onSuccess { done += item.id }
-                        .onFailure { return@runCatching done }
+                    try {
+                        api.pushProgress(session, item.payload)
+                        done += item.id
+                    } catch (error: Exception) {
+                        pushFailure = error
+                        break
+                    }
                 }
                 repository.dropSynced(done)
+                pushFailure?.let { throw it }
+                api.loadRankings(session, syncCurrentUser = true)
             }
         }
-        _state.value = _state.value.copy(message = "同步完成")
+        result.fold(
+            onSuccess = { rankings ->
+                _state.value = _state.value.copy(
+                    rankings = rankings,
+                    rankingsError = null,
+                    message = "同步完成",
+                )
+            },
+            onFailure = { error ->
+                _state.value = _state.value.copy(
+                    message = "同步暂未完成：${error.message ?: "网络异常"}",
+                )
+            },
+        )
+    }
+
+    fun refreshRankings(syncCurrentUser: Boolean = false) = viewModelScope.launch {
+        if (_state.value.rankingsBusy) return@launch
+        _state.value = _state.value.copy(rankingsBusy = true, rankingsError = null)
+        val session = _state.value.session
+        val result = withContext(Dispatchers.IO) {
+            runCatching {
+                api.loadRankings(session, syncCurrentUser && session != null)
+            }
+        }
+        result.fold(
+            onSuccess = { rankings ->
+                _state.value = _state.value.copy(
+                    rankings = rankings,
+                    rankingsBusy = false,
+                    rankingsError = null,
+                )
+            },
+            onFailure = { error ->
+                _state.value = _state.value.copy(
+                    rankingsBusy = false,
+                    rankingsError = error.message ?: "网络异常",
+                )
+            },
+        )
     }
 
     fun submitFeedback(category: String, title: String, detail: String) = viewModelScope.launch {
+        if (_state.value.feedbackBusy) return@launch
         val session = _state.value.session
+        _state.value = _state.value.copy(
+            feedbackBusy = true,
+            feedbackError = null,
+            feedbackReceiptId = null,
+            feedbackNotificationSent = null,
+        )
         val result = withContext(Dispatchers.IO) {
             runCatching { api.submitFeedback(session, category, title, detail) }
         }
+        result.fold(
+            onSuccess = { receipt ->
+                _state.value = _state.value.copy(
+                    feedbackBusy = false,
+                    feedbackReceiptId = receipt.feedbackId,
+                    feedbackNotificationSent = receipt.notificationSent,
+                    message = if (receipt.notificationSent) {
+                        "反馈已保存并通知运营人员。"
+                    } else {
+                        "反馈已保存；通知状态待运营端复核。"
+                    },
+                )
+            },
+            onFailure = { error ->
+                _state.value = _state.value.copy(
+                    feedbackBusy = false,
+                    feedbackError = error.message ?: "网络异常",
+                )
+            },
+        )
+    }
+
+    fun beginFeedback() {
         _state.value = _state.value.copy(
-            message = if (result.isSuccess) "反馈已提交，谢谢。"
-            else "提交失败：${result.exceptionOrNull()?.message ?: "网络异常"}",
+            feedbackBusy = false,
+            feedbackError = null,
+            feedbackReceiptId = null,
+            feedbackNotificationSent = null,
         )
     }
 
@@ -446,12 +533,11 @@ class WeibianViewModel(app: Application) : AndroidViewModel(app) {
         val result = withContext(Dispatchers.IO) {
             runCatching {
                 val manifest = api.contentManifest()
-                val remoteVersion = manifest.optString("contentVersion")
-                val sha = manifest.optString("sha256")
-                if (remoteVersion.isBlank() || sha.isBlank()) return@runCatching false
-                if (remoteVersion == contentStore.activeVersion()) return@runCatching false
-                val body = api.downloadContent()
-                contentStore.install(body, sha, remoteVersion)
+                if (manifest.contentVersion == contentStore.activeVersion()) {
+                    return@runCatching false
+                }
+                val body = api.downloadContent(manifest, contentStore.activeSnapshot())
+                contentStore.install(body, manifest.sha256, manifest.contentVersion)
             }
         }
         if (result.getOrDefault(false)) {

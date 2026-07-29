@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.bdfz.weibian.BuildConfig
+import net.bdfz.weibian.network.RankingEntry
 import net.bdfz.weibian.ui.UiState
 import net.bdfz.weibian.ui.WeibianViewModel
 import net.bdfz.weibian.ui.components.PaperCard
@@ -251,6 +252,64 @@ fun ProfileScreen(
             }
         }
 
+        // ---- 服务端匿名学习榜 ----
+        item {
+            SectionHeader(
+                "学习榜",
+                state.rankings?.dayKey?.let { "北京时间 $it" }.orEmpty(),
+            )
+        }
+        item {
+            PaperCard {
+                Column(Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "只按 User Center 已同步进度计算，不接受客户端自报总分。",
+                            modifier = Modifier.weight(1f),
+                            fontSize = 11.sp,
+                            lineHeight = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        TextButton(
+                            onClick = { viewModel.refreshRankings(syncCurrentUser = true) },
+                            enabled = !state.rankingsBusy,
+                        ) {
+                            Text(if (state.rankingsBusy) "刷新中…" else "刷新")
+                        }
+                    }
+                    state.rankingsError?.let { error ->
+                        Text(
+                            "学习榜暂不可用：$error",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                    state.rankings?.let { board ->
+                        Spacer(Modifier.height(10.dp))
+                        Text("今日榜", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        board.daily.take(5).forEach { RankingLine(it, daily = true) }
+                        if (board.daily.isEmpty()) {
+                            Text(
+                                "今天还没有上榜记录。",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        Text("总榜", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        board.total.take(5).forEach { RankingLine(it, daily = false) }
+                        if (board.total.isEmpty()) {
+                            Text(
+                                "登录并同步后生成首条匿名榜单记录。",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // ---- 关于 / 更新 / 反馈 ----
         item { SectionHeader("关于") }
         item {
@@ -309,7 +368,10 @@ fun ProfileScreen(
                     }
                     Spacer(Modifier.height(10.dp))
                     OutlinedButton(
-                        onClick = { showFeedback = true },
+                        onClick = {
+                            viewModel.beginFeedback()
+                            showFeedback = true
+                        },
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text("意见反馈") }
                 }
@@ -331,11 +393,40 @@ fun ProfileScreen(
 
     if (showFeedback) {
         FeedbackDialog(
+            state = state,
             onDismiss = { showFeedback = false },
             onSubmit = { category, title, detail ->
                 viewModel.submitFeedback(category, title, detail)
-                showFeedback = false
             },
+        )
+    }
+}
+
+@Composable
+private fun RankingLine(entry: RankingEntry, daily: Boolean) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            "${entry.position}.",
+            modifier = Modifier.width(28.dp),
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            buildString {
+                append(entry.displayName)
+                if (entry.isMe) append("（我）")
+            },
+            modifier = Modifier.weight(1f),
+            fontSize = 12.sp,
+            fontWeight = if (entry.isMe) FontWeight.SemiBold else FontWeight.Normal,
+        )
+        Text(
+            if (daily) "+${entry.todayPoints}" else "${entry.totalPoints}",
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.primary,
         )
     }
 }
@@ -400,6 +491,7 @@ private fun LoginDialog(
 
 @Composable
 private fun FeedbackDialog(
+    state: UiState,
     onDismiss: () -> Unit,
     onSubmit: (String, String, String) -> Unit,
 ) {
@@ -409,7 +501,7 @@ private fun FeedbackDialog(
     val categories = listOf("内容问题", "功能异常", "改进建议", "其他")
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!state.feedbackBusy) onDismiss() },
         title = { Text("意见反馈") },
         text = {
             Column {
@@ -445,14 +537,40 @@ private fun FeedbackDialog(
                     minLines = 4,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                state.feedbackError?.let { error ->
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        "提交失败：$error",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+                state.feedbackReceiptId?.let { receiptId ->
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        if (state.feedbackNotificationSent == true) {
+                            "已保存并通知运营人员。回执 ${receiptId.take(8)}"
+                        } else {
+                            "已保存，通知状态待复核。回执 ${receiptId.take(8)}"
+                        },
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
         },
         confirmButton = {
-            Button(
-                onClick = { onSubmit(category, title, detail) },
-                enabled = title.isNotBlank() && detail.isNotBlank(),
-            ) { Text("提交") }
+            if (state.feedbackReceiptId != null) {
+                Button(onClick = onDismiss) { Text("完成") }
+            } else {
+                Button(
+                    onClick = { onSubmit(category, title, detail) },
+                    enabled = !state.feedbackBusy && title.isNotBlank() && detail.isNotBlank(),
+                ) { Text(if (state.feedbackBusy) "提交中…" else "提交") }
+            }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !state.feedbackBusy) { Text("取消") }
+        },
     )
 }

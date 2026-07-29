@@ -63,16 +63,18 @@
 
 ```bash
 git clone <repo> && cd lunyu-yizhu-android
+node scripts/bootstrap_public_content.mjs
 echo "sdk.dir=$ANDROID_HOME" > local.properties
 JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./gradlew :app:assembleDirectDebug
 ```
 
 APK 在 `app/build/outputs/apk/direct/debug/`。需要 **JDK 21**、Android SDK 37。
 
-重建内容包（改了语料才需要）：
+clean clone 先按 checked-in lock 从已授权的不可变内容对象恢复 exact bytes。
+只有受控上游语料变更时才重建内容包：
 
 ```bash
-python3 content/build_content.py
+/Users/ylsuen/.venv/bin/python content/build_content.py
 ```
 
 详见 [开发指南](docs/DEVELOPMENT.md)。
@@ -111,6 +113,8 @@ weibian.bdfz.net 热更新  ┘             daily_stats / gaokao_attempts
 | [DEPLOYMENT.md](docs/DEPLOYMENT.md) | APK 签名发布、内容 Worker 部署、GitHub Release |
 | [MAINTENANCE_MANUAL.md](docs/MAINTENANCE_MANUAL.md) | 运维手册与故障排查（登录／同步／更新／迁移） |
 | [VERIFICATION_STANDARD.md](docs/VERIFICATION_STANDARD.md) | 八点核查标准（本机强制） |
+| [SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) | v1.1.0 App／Worker 安全审查与剩余风险 |
+| [IDENTITY_ADR.md](docs/IDENTITY_ADR.md) | Direct 渠道身份流程决策 |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献流程与代码约定 |
 | [art/README.md](art/README.md) | 美术资产体系与授权 |
 
@@ -119,7 +123,8 @@ weibian.bdfz.net 热更新  ┘             daily_stats / gaokao_attempts
 ## 内容来源与授权
 
 - **正文与译注**：杨伯峻《论语译注》（中华书局）。《论语》原文属公有领域；
-  译文与注释的著作权归原出版方，本项目**仅作校内教学使用**，不另行分发语料。
+  译文与注释的著作权归原出版方；本项目已取得公开发布授权，授权依据见
+  [`docs/CONTENT_RIGHTS_RECEIPT.md`](docs/CONTENT_RIGHTS_RECEIPT.md)。
 - **高考真题**：北京卷历年语文真题，取自本机既有真题库。
 - **代码**：MIT（见 [LICENSE](LICENSE)）。**授权仅涵盖代码，不涵盖上述语料**。
 - **美术资产**：全部原创矢量绘制，无第三方素材，见 [art/README.md](art/README.md)。
@@ -135,8 +140,9 @@ weibian.bdfz.net 热更新  ┘             daily_stats / gaokao_attempts
 2. **上游语料缺注**：雍也 6.7、6.26 两章正文有注释标记但上游 `dialogues.json` 缺对应注释条目。
    这两处标记按纯文本渲染，不给点了没反应的目标。
 3. **真题覆盖**：北京卷设《论语》大题的年份只有 6 年（其余年份考《红楼梦》），已全部收录，不是遗漏。
-4. **验收范围**：功能验证在 **Android 15 模拟器（arm64）** 完成，标注为 emulator-only；
-   真机与平板尚未验收，见 [VERIFICATION_STANDARD.md](docs/VERIFICATION_STANDARD.md)。
+4. **验收范围**：实体 OnePlus 手机已完成 v1.0.0 → v1.1.0 候选版覆盖升级、
+   真实登录、进度与排行榜金丝雀；实体平板和真实反馈通知仍未验收。模拟器证据
+   不替代这两个门，见 [VERIFICATION_STANDARD.md](docs/VERIFICATION_STANDARD.md)。
 
 ---
 

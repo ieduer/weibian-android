@@ -2,13 +2,31 @@
 
 ## 一、内容接口 Worker
 
+发布顺序：
+
+1. 生成并验证 `content.json` / manifest；
+2. 以 `<contentVersion>/<sha256>.json` 上传既有 R2 bucket
+   `blog-images/apps/weibian-content/releases/`，先确认目标 404，禁止覆盖；
+3. 公开读回 bytes/size/sha256；
+4. 在 `worker/src/content-releases.js` 追加 exact version → R2 key；
+5. 若有更小的 delta，上传 `apps/weibian-content/deltas/<from8>-<to8>.json`；
+6. 更新 `content/public-content-lock.json`、`worker/public/manifest.json` 与
+   App manifest；此时再运行 bootstrap，确认 clean clone 能重现同一 bytes；
+7. Worker dry-run、deploy，最后移动内容 manifest 指针。
+
 ```bash
+cd /Users/ylsuen/CF/lunyu-yizhu-android
+/Users/ylsuen/.venv/bin/python content/build_content.py
+# 先上传不可变对象并更新 lock / content-releases.js，再验证锁定对象：
+node scripts/bootstrap_public_content.mjs
 cd worker
-cp ../content/dist/{content,manifest}.json public/
-source ~/.secrets.env
-export CLOUDFLARE_ACCOUNT_ID=da810f08b63347a01d3db7fd42619972
+npx wrangler deploy --dry-run
 npx wrangler deploy
 ```
+
+`bootstrap_public_content.mjs` 的 source 是已上传并经公开 readback 的 lock，
+不是刚生成的 `content/dist/`。不要在更新 lock 之前运行它，否则会把工作树恢复
+到上一个公开版本。
 
 部署后自检：
 
@@ -16,12 +34,13 @@ npx wrangler deploy
 curl -s https://weibian.bdfz.net/api/health | jq
 curl -s https://weibian.bdfz.net/api/content/manifest | jq '{contentVersion,sha256,size,counts}'
 # 校验下发内容与清单 sha256 一致
-test "$(curl -s https://weibian.bdfz.net/api/content/bundle | shasum -a 256 | cut -d' ' -f1)" \
+test "$(curl -s https://weibian.bdfz.net/api/content/bundles/<CONTENT_VERSION>.json | shasum -a 256 | cut -d' ' -f1)" \
    = "$(curl -s https://weibian.bdfz.net/api/content/manifest | jq -r .sha256)" && echo SHA-OK
 ```
 
-内容包作为 Worker 静态资源随部署发布，所以**内容版本 = 部署版本**，
-回退用 `npx wrangler rollback`，不需要单独的内容回滚机制。
+Worker Assets 只保存当前 manifest/兼容 bundle；内容寻址 bundle 由 R2
+永久保留，Worker 白名单映射旧版本。回退 Worker 会恢复旧 manifest，不能删除
+或覆盖 R2 对象。
 
 首次部署还需在 Cloudflare 为 `weibian.bdfz.net` 配置路由/自定义域。
 
@@ -90,7 +109,7 @@ apps/weibian-android/latest.json       （最后才写）
 ```json
 {
   "schema": "bdfz-android-update-v1",
-  "appId": "net.bdfz.weibian",
+  "appId": "net.bdfz.weibian.direct",
   "version": "1.0.0",
   "versionCode": 1,
   "minAndroidApi": 23,
@@ -104,7 +123,7 @@ apps/weibian-android/latest.json       （最后才写）
 ```
 
 客户端会拒绝：schema 或包名不符、versionCode 非递增、
-`apkUrl` 不以 `https://img.bdfz.net/apps/weibian-android/` 开头、
+`apkUrl` 不在 `https://img.bdfz.net/apps/weibian-android/releases/` 下、
 sha256 格式非法、size ≤ 0、清单体积超限。这些校验都在
 `update/AppUpdateManager.kt` 里，改契约要两边一起改。
 
@@ -123,7 +142,7 @@ sha256 格式非法、size ≤ 0、清单体积超限。这些校验都在
 
 | 故障 | 处理 |
 |---|---|
-| 内容包有错 | `cd worker && npx wrangler rollback` |
+| 内容包有错 | 回滚 Worker manifest；客户端可恢复 previous；保留 R2 对象作证据 |
 | `latest.json` 指错 | 把指针改回上一个已知良好版本 |
 | 门户页面坏了 | 恢复上一个 Pages/Worker 部署 |
 | 坏 APK 已被安装 | 发**更高 versionCode** 的修复版；不要引导用户卸载重装 |

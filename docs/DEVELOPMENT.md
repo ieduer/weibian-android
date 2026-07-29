@@ -8,13 +8,19 @@
 | Android SDK | compileSdk/targetSdk **37**，minSdk 23 | `/opt/homebrew/share/android-commandlinetools` |
 | Gradle | 9.6.1（wrapper 自带） | — |
 | Kotlin / AGP | 2.3.10 / 9.2.1 | — |
-| Python | 3.x ＋ `zhconv`（内容管线繁转简） | — |
+| Python | canonical venv ＋ `zhconv==1.4.3`（内容管线繁转简） | `/Users/ylsuen/.venv` |
 
 ```bash
 echo "sdk.dir=/opt/homebrew/share/android-commandlinetools" > local.properties
 export JAVA_HOME=/opt/homebrew/opt/openjdk@21
 export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
+/Users/ylsuen/.venv/bin/pip install -r content/requirements.txt
+node scripts/bootstrap_public_content.mjs
 ```
+
+公开 Git 不提交生成语料；`public-content-lock.json` 只记录已授权发布对象的
+URL、hash、size 与 counts。bootstrap 会限制下载大小并验证这些字段后，原子
+恢复 App/Worker 的 exact bytes。CI 使用同一流程。
 
 ## 构建
 
@@ -33,7 +39,7 @@ export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
 ./gradlew :app:testDirectDebugUnitTest
 ```
 
-26 项单元测试，分两类：
+52 项单元测试，分九组：
 
 - `ProgressionTest` —— 段位阶梯、掌握度评分、连续天数加成。
   含几条刻意写死的边界：**只读不练拿不到掌握**、**一题答对不足以判定掌握**、
@@ -41,14 +47,22 @@ export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
 - `ContentBundleTest` —— **直接解析 `app/src/main/assets/content.json`**，
   校验的是真正会装进 APK 的那份内容：512 章、二十篇章数、每章原文译文非空、
   别名可解析、215 题答案与诊断齐备、真题回挂章句、出题稳定性、界面用字为简体。
+- `MarkdownStripTest` —— 锁定 AI 纯文本渲染的 Markdown 清理边界。
+- `AppUpdateManifestTest` —— 锁定 Direct 精确包名、不可变 APK URL、hash、
+  size 与发布时间契约。
+- `ContentManifestTest` / `ContentDeltaTest` —— 锁定内容寻址路由和差量重建。
+- `ContentReleaseFilesTest` —— 锁定 staged/active/previous 原子发布与恢复。
+- `ProgressPayloadTest` —— 锁定 outbox schema、mutation id 与客户端来源字段。
+- `FeedbackReceiptTest` —— 只有明确 stored、合法 UUID 与 Telegram 状态的响应
+  才能显示为反馈回执。
 
 内容出问题，`ContentBundleTest` 就该红。这是内容管线的回归网。
 
 ## 内容管线
 
 ```bash
-python3 content/build_content.py --check   # 只校验不写文件
-python3 content/build_content.py           # 写 content/dist/
+/Users/ylsuen/.venv/bin/python content/build_content.py --check   # 只校验不写文件
+/Users/ylsuen/.venv/bin/python content/build_content.py           # 写 content/dist/
 ```
 
 改完内容后要把产物同步到两处：
@@ -58,6 +72,10 @@ cp content/dist/content.json  app/src/main/assets/content.json
 cp content/dist/manifest.json app/src/main/assets/content-manifest.json
 cp content/dist/{content,manifest}.json worker/public/
 ```
+
+上面只用于尚未公开的候选内容。发布时必须先按 `docs/DEPLOYMENT.md` 上传新的
+不可变 R2 对象、公开回读，并更新 lock 与 `content-releases.js`；不要用旧
+lock 的 bootstrap 覆盖候选产物。
 
 管线自带断言：章数必须 512、每篇章数必须与杨伯峻本吻合、题目答案必须在选项内、
 每个错项必须有 why 诊断、概念人物引用必须能解析。任一不过直接非零退出。

@@ -8,11 +8,25 @@ routes = [
   { pattern = "weibian.bdfz.net", custom_domain = true },
 ]
 
-# 内容包作为静态资源随部署发布：内容版本 = 部署版本，
-# 出问题可以 `wrangler rollback` 整体回退到上一份内容。
+# 当前 manifest 与旧客户端兼容 bundle 随部署发布；已审核的不可变完整包
+# 存在 R2，并由代码 exact allowlist 映射。回滚 Worker 不删除 R2 对象。
 [assets]
 directory = "./public"
 binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "weibian-rankings"
+database_id = "cfaf4257-b93a-4a24-b186-b221e1895331"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "CONTENT_R2"
+bucket_name = "blog-images"
+
+[[services]]
+binding = "USER_CENTER"
+service = "bdfz-user-center"
 
 [observability]
 enabled = true

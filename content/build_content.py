@@ -732,6 +732,7 @@ def main() -> int:
         "contentVersion": content_hash[:16],
         "sha256": content_hash,
         "size": len(content_bytes),
+        "deltas": [],
         "builtAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "counts": {
             "chapters": len(chapters),

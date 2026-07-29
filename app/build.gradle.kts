@@ -7,13 +7,9 @@ plugins {
 // 签名材料只从环境变量读取，绝不入库。两者都缺时仍可产出未签名包，
 // 便于 CI 与贡献者在没有密钥的情况下构建。
 val releaseKeystorePath = providers.environmentVariable("WEIBIAN_ANDROID_KEYSTORE_PATH")
-    .orElse(providers.environmentVariable("BDFZ_ANDROID_KEYSTORE_PATH"))
 val releaseStorePassword = providers.environmentVariable("WEIBIAN_ANDROID_KEYSTORE_PASSWORD")
-    .orElse(providers.environmentVariable("BDFZ_ANDROID_KEYSTORE_PASSWORD"))
 val releaseKeyAlias = providers.environmentVariable("WEIBIAN_ANDROID_KEY_ALIAS")
-    .orElse(providers.environmentVariable("BDFZ_ANDROID_KEY_ALIAS"))
 val releaseKeyPassword = providers.environmentVariable("WEIBIAN_ANDROID_KEY_PASSWORD")
-    .orElse(providers.environmentVariable("BDFZ_ANDROID_KEY_PASSWORD"))
 val releaseSigningReady = listOf(
     releaseKeystorePath,
     releaseStorePassword,
@@ -29,8 +25,8 @@ android {
         applicationId = "net.bdfz.weibian"
         minSdk = 23
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true

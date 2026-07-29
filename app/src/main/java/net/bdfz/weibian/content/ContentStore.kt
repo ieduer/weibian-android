@@ -6,9 +6,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
 import java.io.File
 import java.security.MessageDigest
+import org.json.JSONObject
 
 /**
  * 内容仓库 —— 决定「用哪一份内容」，并把它解析成内存索引。
@@ -22,12 +22,17 @@ import java.security.MessageDigest
  */
 class ContentStore(private val context: Context) {
 
+    data class ActiveSnapshot(
+        val body: String,
+        val contentVersion: String,
+        val sha256: String,
+    )
+
     private val mutex = Mutex()
     @Volatile private var cached: ContentBundle? = null
 
     private val contentDir: File get() = File(context.filesDir, "content").apply { mkdirs() }
-    private val activeFile: File get() = File(contentDir, "content.json")
-    private val activeMeta: File get() = File(contentDir, "content.meta.json")
+    private val releases: ContentReleaseFiles by lazy { ContentReleaseFiles(contentDir) }
 
     /** 当前生效的内容包；首次调用时解析，之后复用。 */
     suspend fun bundle(): ContentBundle = cached ?: mutex.withLock {
@@ -39,19 +44,17 @@ class ContentStore(private val context: Context) {
     }
 
     private fun readDownloaded(): ContentBundle? {
-        if (!activeFile.exists() || !activeMeta.exists()) return null
+        val release = releases.readActiveOrPrevious() ?: return null
         return runCatching {
-            val meta = JSONObject(activeMeta.readText())
-            val expected = meta.getString("sha256")
-            val body = activeFile.readText()
-            // 落盘后仍然复校一次：文件可能被外部损坏或写入中断。
-            val actual = sha256(body.toByteArray())
-            require(actual == expected) { "内容包校验不符 expected=$expected actual=$actual" }
-            ContentBundle.parse(body, meta.optString("contentVersion", expected.take(16)))
+            ContentBundle.parse(release.body, release.contentVersion)
         }.onFailure {
-            Log.w(TAG, "已下发内容包不可用，回落到内置包", it)
-            runCatching { activeFile.delete(); activeMeta.delete() }
-        }.getOrNull()
+            Log.w(TAG, "已下发内容包不可用，尝试上一已知良好版本", it)
+        }.getOrElse {
+            if (!releases.restorePrevious()) return null
+            val previous = releases.readActiveOrPrevious() ?: return null
+            runCatching { ContentBundle.parse(previous.body, previous.contentVersion) }
+                .getOrNull()
+        }
     }
 
     private fun readBundled(): ContentBundle {
@@ -71,9 +74,22 @@ class ContentStore(private val context: Context) {
         ).getString("contentVersion")
     }.getOrElse { "bundled" }
 
-    fun activeVersion(): String = cached?.version
-        ?: runCatching { JSONObject(activeMeta.readText()).getString("contentVersion") }
-            .getOrElse { bundledVersion() }
+    suspend fun activeVersion(): String = cached?.version ?: withContext(Dispatchers.IO) {
+        releases.readActiveOrPrevious()?.contentVersion ?: bundledVersion()
+    }
+
+    /** 当前原始内容及其校验值，供差量更新选择基础版本。 */
+    fun activeSnapshot(): ActiveSnapshot {
+        releases.readActiveOrPrevious()?.let {
+            return ActiveSnapshot(it.body, it.contentVersion, it.sha256)
+        }
+        val body = context.assets.open(ASSET_CONTENT).bufferedReader().use { it.readText() }
+        return ActiveSnapshot(
+            body = body,
+            contentVersion = bundledVersion(),
+            sha256 = sha256(body.toByteArray()),
+        )
+    }
 
     /**
      * 安装一份新内容包：先校验 sha256，再原子替换，最后让内存缓存失效。
@@ -81,28 +97,13 @@ class ContentStore(private val context: Context) {
      */
     suspend fun install(body: String, expectedSha256: String, version: String): Boolean =
         withContext(Dispatchers.IO) {
-            val actual = sha256(body.toByteArray())
-            if (!actual.equals(expectedSha256, ignoreCase = true)) {
-                Log.w(TAG, "内容包校验失败，已丢弃 expected=$expectedSha256 actual=$actual")
+            val installed = releases.install(body, expectedSha256, version) { candidate, candidateVersion ->
+                ContentBundle.parse(candidate, candidateVersion)
+            }
+            if (!installed) {
+                Log.w(TAG, "内容包未通过 staged 校验或原子切换，现有内容保持不变")
                 return@withContext false
             }
-            if (runCatching { ContentBundle.parse(body, version) }.isFailure) {
-                Log.w(TAG, "内容包解析失败，已丢弃")
-                return@withContext false
-            }
-            val tmp = File(contentDir, "content.json.tmp")
-            tmp.writeText(body)
-            if (!tmp.renameTo(activeFile)) {
-                tmp.delete()
-                return@withContext false
-            }
-            activeMeta.writeText(
-                JSONObject()
-                    .put("contentVersion", version)
-                    .put("sha256", actual)
-                    .put("installedAt", System.currentTimeMillis())
-                    .toString(),
-            )
             mutex.withLock { cached = null }
             true
         }

@@ -1,0 +1,47 @@
+{
+  "sourceUrl": "https://img.bdfz.net/apps/weibian-content/releases/fc68413c7b70da0e/fc68413c7b70da0e1f14e36bb2229c4d9ae64fb8f26d75251f87d7457f8ffa75.json",
+  "manifest": {
+    "schema": "lunyu-content-v1",
+    "schemaVersion": 1,
+    "contentId": "lunyu-yizhu",
+    "contentVersion": "fc68413c7b70da0e",
+    "sha256": "fc68413c7b70da0e1f14e36bb2229c4d9ae64fb8f26d75251f87d7457f8ffa75",
+    "size": 871333,
+    "deltas": [],
+    "builtAt": "2026-07-29T05:43:31Z",
+    "counts": {
+      "chapters": 512,
+      "books": 20,
+      "concepts": 17,
+      "figures": 15,
+      "bank": 215,
+      "gaokao": 7,
+      "gaokaoQuestions": 23,
+      "annotations": 1045,
+      "aliases": 29
+    },
+    "sources": [
+      {
+        "name": "杨伯峻《论语译注》全文",
+        "path": "lunyu/data/dialogues.json",
+        "items": 541,
+        "deduped": 512
+      },
+      {
+        "name": "核心概念 / 人物",
+        "path": "lunyu-battle/src/data",
+        "items": 32
+      },
+      {
+        "name": "人工精编题库",
+        "path": "lunyu-battle/src/data/bank",
+        "items": 215
+      },
+      {
+        "name": "北京高考《论语》经典阅读真题",
+        "path": "gaokao/data/all.json + gks/data/papers",
+        "items": 7
+      }
+    ]
+  }
+}

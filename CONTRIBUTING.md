@@ -10,7 +10,7 @@
 ## 提交前
 
 ```bash
-python3 content/build_content.py --check
+/Users/ylsuen/.venv/bin/python content/build_content.py --check
 JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./gradlew :app:assembleDirectDebug :app:testDirectDebugUnitTest
 ```
 
