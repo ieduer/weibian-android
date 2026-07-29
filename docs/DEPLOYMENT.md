@@ -49,11 +49,16 @@ Worker Assets 只保存当前 manifest/兼容 bundle；内容寻址 bundle 由 R
 按 `runbooks/bdfz_project_matrix_and_interdependencies.md`，任何新公开站点必须
 在同一次事务里登记到四个产品面 ＋ Pulse 监控面：
 
-- [ ] 用户中心 `SITE_REGISTRY` 加 `weibian` 条目
-- [ ] `bdfz-nav/sites.json`
-- [ ] 门户 `suen/allinone/index.html#portalGroups`
-- [ ] Companion `constants/sites.ts#SERVICES`（或显式标注 App-not-applicable）
-- [ ] `pulse/src/sites.js`，并在 `/api/meta`、`/api/range` 实测到该 host
+- [ ] 用户中心 `SITE_REGISTRY` 加 `weibian` 条目，并完成 live registry
+  canary 与 hub fan-out smoke
+- [x] `bdfz-nav/sites.json`
+- [x] canonical portal `https://i.rdfzer.com`（source:
+  `suen/allinone/index.html#portalGroups`）返回 200 且含正确入口
+- [x] Companion 明确记录 `not-applicable`；**不得**新增 Weibian WebView service
+- [x] `pulse/src/sites.js`，并在 `/api/meta`、`/api/range` 实测到该 host
+
+`allinone.bdfz.net` 与 `portal.bdfz.net` 当前返回 522，但它们不是 canonical
+portal，也不替代 `i.rdfzer.com` 的发布验收。
 
 **学生数据分级**：`student_owned`（写入学习进度）。因此上线前必须有一次
 真实登录 + 进度写入 + 回读验证，仅加载脚本不算集成。
@@ -64,25 +69,54 @@ Worker Assets 只保存当前 manifest/兼容 bundle；内容寻址 bundle 由 R
 
 ### 签名
 
-密钥与口令只从环境变量读，**绝不入库**：
+唯一 signing authority 是：
 
-```bash
-export WEIBIAN_ANDROID_KEYSTORE_PATH=~/.android/weibian-release.keystore
-export WEIBIAN_ANDROID_KEYSTORE_PASSWORD=...
-export WEIBIAN_ANDROID_KEY_ALIAS=weibian
-export WEIBIAN_ANDROID_KEY_PASSWORD=...
-./gradlew :app:assembleDirectRelease
+```text
+/Users/ylsuen/.android/weibian-release.env
 ```
 
-四个变量缺任意一个仍能出**未签名包**，方便 CI 与外部贡献者构建。
+密钥与口令只从这个 600 权限的本机文件载入，**绝不入库、绝不打印**。正式
+release 必须 fail closed：
+
+```zsh
+set -euo pipefail
+cd /Users/ylsuen/CF/lunyu-yizhu-android
+set -a
+source /Users/ylsuen/.android/weibian-release.env
+set +a
+
+test -n "${WEIBIAN_ANDROID_KEYSTORE_PATH:-}"
+test -n "${WEIBIAN_ANDROID_KEYSTORE_PASSWORD:-}"
+test -n "${WEIBIAN_ANDROID_KEY_ALIAS:-}"
+test -n "${WEIBIAN_ANDROID_KEY_PASSWORD:-}"
+
+JAVA_HOME=/opt/homebrew/opt/openjdk@21 \
+  ./gradlew --no-daemon :app:clean :app:assembleDirectRelease
+
+WEIBIAN_APK_PATH=app/build/outputs/apk/direct/release/app-direct-release.apk
+test -f "$WEIBIAN_APK_PATH"
+test ! -e app/build/outputs/apk/direct/release/app-direct-release-unsigned.apk
+apksigner verify --verbose --print-certs "$WEIBIAN_APK_PATH"
+```
+
+Gradle 仍可为 CI／外部贡献者生成未签名候选，但任何 `*-unsigned.apk`、缺少
+v1/v2 签名验证、signer continuity 不符或不是上述 authority 生成的输出都必须
+拒收，不能进入 R2、GitHub Release、门户或实体安装验收。
+
+截至 2026-07-29，v1.1.1 / versionCode 3 尚未发布或接受。已有 clean-signer
+构建只能算 interim artifact；本轮文档提交会改变 release bytes，必须在最终
+clean commit 上重新构建并重新计算 hash/size，文档不得把 interim digest
+写成 final。
 
 发布前必须核对（`runbooks/bdfz_android_app_update_standard.md` §5）：
 
-```bash
+```zsh
+set -e
+WEIBIAN_APK_PATH=app/build/outputs/apk/direct/release/app-direct-release.apk
 # 签名指纹须与上一个已接受版本一致
-apksigner verify --print-certs app-direct-release.apk | grep SHA-256
+apksigner verify --print-certs "$WEIBIAN_APK_PATH" | grep SHA-256
 # versionCode 必须严格递增
-aapt2 dump badging app-direct-release.apk | head -1
+aapt2 dump badging "$WEIBIAN_APK_PATH" | head -1
 ```
 
 **坏版本的修法是发一个更高 versionCode 的修复版**，不要靠"回退到更低版本号"。
@@ -104,20 +138,21 @@ apps/weibian-android/latest.json       （最后才写）
 4. **最后**才更新 `latest.json` 指针
 5. 门户下载链接等公开读**逐字节回读通过**之后再放出
 
-`latest.json` 必须符合 `bdfz-android-update-v1`：
+`latest.json` 必须符合 `bdfz-android-update-v1`。下列是占位模板；生成正式
+JSON 时，`versionCode` 与 `size` 必须写成正整数，不能带引号：
 
-```json
+```text
 {
   "schema": "bdfz-android-update-v1",
   "appId": "net.bdfz.weibian.direct",
-  "version": "1.0.0",
-  "versionCode": 1,
+  "version": "<SEMVER>",
+  "versionCode": <STRICTLY_INCREASING_VERSION_CODE>,
   "minAndroidApi": 23,
-  "apkUrl": "https://img.bdfz.net/apps/weibian-android/releases/v1.0.0/<HASH8>/weibian-1.0.0.apk",
+  "apkUrl": "https://img.bdfz.net/apps/weibian-android/releases/v<SEMVER>/<HASH8>/weibian-<SEMVER>.apk",
   "sha256": "<64 位小写十六进制>",
-  "size": 20971520,
-  "publishedAt": "2026-07-28T00:00:00Z",
-  "releaseNotes": ["首个版本：512 章全本、215 道精编题、北京卷《论语》真题"],
+  "size": <EXACT_APK_BYTES>,
+  "publishedAt": "<UTC_ISO8601>",
+  "releaseNotes": ["<RELEASE_NOTE>"],
   "mandatory": false
 }
 ```
@@ -127,6 +162,31 @@ apps/weibian-android/latest.json       （最后才写）
 sha256 格式非法、size ≤ 0、清单体积超限。这些校验都在
 `update/AppUpdateManager.kt` 里，改契约要两边一起改。
 
+当前公开 `latest.json` 仍是 v1.0.0 / versionCode 1，且 `appId` 为错误的
+`net.bdfz.weibian`，不是 Direct package `net.bdfz.weibian.direct`。HTTP 200
+不代表更新契约通过；在 fail-closed 顺序发布正确的新指针并由实体 Direct App
+读回之前，不得写“自检更新端到端已验证”。
+
+正式上传前，必须让仓库内 release guard 同时核对 APK、metadata、签名和
+内容寻址 URL；不能靠人工目测 JSON：
+
+```zsh
+set -e
+WEIBIAN_APK_PATH=app/build/outputs/apk/direct/release/app-direct-release.apk
+WEIBIAN_RELEASE_JSON="<RELEASE_JSON_PATH>"
+WEIBIAN_BUILD_TOOLS=/opt/homebrew/share/android-commandlinetools/build-tools/37.0.0
+
+node scripts/verify_android_release.mjs \
+  --apk "$WEIBIAN_APK_PATH" \
+  --metadata "$WEIBIAN_RELEASE_JSON" \
+  --aapt2 "$WEIBIAN_BUILD_TOOLS/aapt2" \
+  --apksigner "$WEIBIAN_BUILD_TOOLS/apksigner" \
+  --expected-signer a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282
+```
+
+guard 任一项非零退出即停止；不得上传 APK、`release.json` 或移动 pointer。
+CI 以 `node --test scripts/test/*.test.mjs` 锁定这条防线。
+
 ### GitHub Release
 
 第二分发面，必须与 R2 **同一份字节**：
@@ -134,7 +194,10 @@ sha256 格式非法、size ≤ 0、清单体积超限。这些校验都在
 - 同样的 APK、同样的 sha256、同样的签名指纹
 - 附 R2 不可变 URL
 - 写明构建与安装方法
-- 写明已知验证缺口（例如"真机未验收"）
+- 写明仍未通过的 physical feedback、offline/content/tablet 和 registry 门
+
+canonical portal 下载入口只更新 `https://i.rdfzer.com`。非 canonical 的
+`allinone.bdfz.net`／`portal.bdfz.net` 522 不得被写成成功发布面。
 
 ---
 

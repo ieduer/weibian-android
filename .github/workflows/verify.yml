@@ -29,5 +29,7 @@ jobs:
         run: node scripts/bootstrap_public_content.mjs
       - name: Verify Worker logic
         run: node --test worker/test/*.test.mjs
+      - name: Verify Android release guard
+        run: node --test scripts/test/*.test.mjs
       - name: Test, lint and build Android
         run: ./gradlew :app:testDirectDebugUnitTest :app:lintDirectDebug :app:assembleDirectDebug

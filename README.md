@@ -5,6 +5,15 @@
 
 一个**原生 Android 应用**（Kotlin + Jetpack Compose），不是 WebView 套壳。
 
+当前 lifecycle 为 `published-limited`：公开版仍是 v1.0.0 / versionCode 1；
+v1.1.1 / versionCode 3 只是尚未发布、尚未接受的候选版。候选源码检查点
+`0f2dae26ee84b676a401cad70fa088a8fd8eaac6` 的 GitHub Actions
+[run 30464811968（attempt 2）](https://github.com/ieduer/weibian-android/actions/runs/30464811968)
+已通过，但最终发布包必须在本轮文档提交之后重新签名构建和计算 digest。
+当前公开 `latest.json` 仍指向 v1.0.0，且 `appId` 错写为 base package
+`net.bdfz.weibian`；它不满足 Direct package `net.bdfz.weibian.direct` 的契约，
+因此**不得声称应用内自更新已验证**。
+
 ---
 
 ## 这是什么
@@ -113,7 +122,7 @@ weibian.bdfz.net 热更新  ┘             daily_stats / gaokao_attempts
 | [DEPLOYMENT.md](docs/DEPLOYMENT.md) | APK 签名发布、内容 Worker 部署、GitHub Release |
 | [MAINTENANCE_MANUAL.md](docs/MAINTENANCE_MANUAL.md) | 运维手册与故障排查（登录／同步／更新／迁移） |
 | [VERIFICATION_STANDARD.md](docs/VERIFICATION_STANDARD.md) | 八点核查标准（本机强制） |
-| [SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) | v1.1.0 App／Worker 安全审查与剩余风险 |
+| [SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) | v1.1.1 App／Worker 安全审查与剩余风险 |
 | [IDENTITY_ADR.md](docs/IDENTITY_ADR.md) | Direct 渠道身份流程决策 |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献流程与代码约定 |
 | [art/README.md](art/README.md) | 美术资产体系与授权 |
@@ -140,9 +149,15 @@ weibian.bdfz.net 热更新  ┘             daily_stats / gaokao_attempts
 2. **上游语料缺注**：雍也 6.7、6.26 两章正文有注释标记但上游 `dialogues.json` 缺对应注释条目。
    这两处标记按纯文本渲染，不给点了没反应的目标。
 3. **真题覆盖**：北京卷设《论语》大题的年份只有 6 年（其余年份考《红楼梦》），已全部收录，不是遗漏。
-4. **验收范围**：实体 OnePlus 手机已完成 v1.0.0 → v1.1.0 候选版覆盖升级、
-   真实登录、进度与排行榜金丝雀；实体平板和真实反馈通知仍未验收。模拟器证据
-   不替代这两个门，见 [VERIFICATION_STANDARD.md](docs/VERIFICATION_STANDARD.md)。
+4. **验收范围**：实体 OnePlus 手机已覆盖安装 code 3，确认本机资料保留；
+   “我”页重复 key 闪退已修复并完成整页滚动回归，实体 App 的 AI 讲解／批改
+   路径也已通过。User Center registry 上线金丝雀、physical feedback
+   API → aggregate D1 → Telegram 回执、实体离线／恢复矩阵、真实差异内容更新、
+   实体平板以及最终 v1.1.1 发布／自更新仍未验收。
+5. **公开入口**：canonical portal 是 `https://i.rdfzer.com`，当前返回 200；
+   `allinone.bdfz.net` 与 `portal.bdfz.net` 是非 canonical 别名，当前 522 不作为
+   本 App 的发布入口。Companion disposition 为 `not-applicable`，不得新增
+   Weibian WebView service。
 
 ---
 
