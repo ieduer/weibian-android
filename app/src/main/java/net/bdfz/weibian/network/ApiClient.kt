@@ -115,9 +115,15 @@ class ApiClient(
         return out
     }
 
-    /** 单条上行。调用方按队列逐条冲刷，失败的留在队列里下次重试。 */
+    /**
+     * 单条上行。调用方按队列逐条冲刷，失败的留在队列里下次重试。
+     *
+     * 注意读写两侧的字段名不一致，这是用户中心既有契约，不是笔误：
+     * 读用查询参数 `?site=`，写用请求体里的 `siteKey`。
+     * 写成 `site` 会被判成缺参数直接 400。
+     */
     fun pushProgress(session: AppSession, payload: String) {
-        val body = JSONObject(payload).put("site", siteKey)
+        val body = JSONObject(payload).put("siteKey", siteKey)
         executeJson(
             Request.Builder()
                 .url("${userCenterUrl.trimEnd('/')}/api/progress")

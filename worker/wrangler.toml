@@ -2,6 +2,12 @@ name = "weibian-content"
 main = "src/index.js"
 compatibility_date = "2026-07-01"
 
+# App 里写死的内容接口地址是 weibian.bdfz.net，
+# 自定义域必须随部署一起声明，否则只有 workers.dev 可用。
+routes = [
+  { pattern = "weibian.bdfz.net", custom_domain = true },
+]
+
 # 内容包作为静态资源随部署发布：内容版本 = 部署版本，
 # 出问题可以 `wrangler rollback` 整体回退到上一份内容。
 [assets]
