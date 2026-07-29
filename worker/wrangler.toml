@@ -1,0 +1,12 @@
+name = "weibian-content"
+main = "src/index.js"
+compatibility_date = "2026-07-01"
+
+# 内容包作为静态资源随部署发布：内容版本 = 部署版本，
+# 出问题可以 `wrangler rollback` 整体回退到上一份内容。
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[observability]
+enabled = true

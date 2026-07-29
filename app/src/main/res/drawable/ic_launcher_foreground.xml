@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  韦编 —— 以皮绳编连的竹简。
+  取「韦编三绝」之意：孔子读《易》，编简的皮绳断了三次。
+  五根竹简竖列，两道横绳横贯，是这部 App 的标记。
+  纯矢量绘制，无外部素材，授权见 art/README.md。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 竹简五根（安全区 72x72，居中于 108x108 画布） -->
+    <path android:fillColor="#E8D9B8" android:pathData="M31,28 h8 a2,2 0 0 1 2,2 v48 a2,2 0 0 1 -2,2 h-8 a2,2 0 0 1 -2,-2 v-48 a2,2 0 0 1 2,-2 z" />
+    <path android:fillColor="#F0E3C6" android:pathData="M43,26 h8 a2,2 0 0 1 2,2 v52 a2,2 0 0 1 -2,2 h-8 a2,2 0 0 1 -2,-2 v-52 a2,2 0 0 1 2,-2 z" />
+    <path android:fillColor="#E8D9B8" android:pathData="M55,25 h8 a2,2 0 0 1 2,2 v54 a2,2 0 0 1 -2,2 h-8 a2,2 0 0 1 -2,-2 v-54 a2,2 0 0 1 2,-2 z" />
+    <path android:fillColor="#F0E3C6" android:pathData="M67,26 h8 a2,2 0 0 1 2,2 v52 a2,2 0 0 1 -2,2 h-8 a2,2 0 0 1 -2,-2 v-52 a2,2 0 0 1 2,-2 z" />
+
+    <!-- 简上墨痕，示意文字 -->
+    <path android:fillColor="#6B5B44" android:pathData="M33,36 h4 v2 h-4z M33,43 h4 v2 h-4z M33,50 h4 v2 h-4z" />
+    <path android:fillColor="#6B5B44" android:pathData="M45,34 h4 v2 h-4z M45,41 h4 v2 h-4z M45,48 h4 v2 h-4z M45,55 h4 v2 h-4z" />
+    <path android:fillColor="#6B5B44" android:pathData="M57,33 h4 v2 h-4z M57,40 h4 v2 h-4z M57,47 h4 v2 h-4z M57,54 h4 v2 h-4z" />
+    <path android:fillColor="#6B5B44" android:pathData="M69,34 h4 v2 h-4z M69,41 h4 v2 h-4z M69,48 h4 v2 h-4z" />
+
+    <!-- 两道皮绳 -->
+    <path android:fillColor="#A8322A" android:pathData="M27,38 h54 v3.6 h-54z" />
+    <path android:fillColor="#A8322A" android:pathData="M27,66 h54 v3.6 h-54z" />
+</vector>

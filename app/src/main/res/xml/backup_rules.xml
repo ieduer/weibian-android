@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 学习记录随系统备份；会话密钥受 Keystore 保护、不可跨设备还原，故排除。 -->
+<full-backup-content>
+    <include domain="database" path="weibian-learning.db" />
+    <include domain="sharedpref" path="weibian_progress.xml" />
+    <exclude domain="sharedpref" path="weibian_secure_session.xml" />
+</full-backup-content>
