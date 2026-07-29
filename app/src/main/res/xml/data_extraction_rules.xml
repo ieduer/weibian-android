@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 12+ 的云备份与换机迁移规则。同样是白名单语义：
+  只列学习记录；加密会话因未被 include 而自然排除，不另写 exclude。
+-->
 <data-extraction-rules>
     <cloud-backup>
         <include domain="database" path="weibian-learning.db" />
         <include domain="sharedpref" path="weibian_progress.xml" />
-        <exclude domain="sharedpref" path="weibian_secure_session.xml" />
     </cloud-backup>
     <device-transfer>
         <include domain="database" path="weibian-learning.db" />
         <include domain="sharedpref" path="weibian_progress.xml" />
-        <exclude domain="sharedpref" path="weibian_secure_session.xml" />
     </device-transfer>
 </data-extraction-rules>

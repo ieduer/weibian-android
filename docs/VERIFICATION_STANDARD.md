@@ -113,17 +113,35 @@ Worker `wrangler rollback`；`latest.json` 指针；更高 versionCode 的修复
 | 深色模式 | 靛底暖字，对比正常 |
 | 离线 | 未登录、无网络时全书可读可练（同步 Worker 直接成功返回） |
 
+**2026-07-29 追加验证（全部通过）：**
+
+| 项 | 证据 |
+|---|---|
+| 内容接口上线 | `weibian.bdfz.net/api/health` 返回 512/1045/215/23；落地页可读 |
+| 内容包完整性（线上） | manifest.sha256 == bundle 实测 sha256（`fc68413c…fa75`） |
+| **真实账号端到端** | 单次登录成功（slug=suen，未重试）；以 App 完全相同的载荷 PUT 一条 `chapter-1` 金丝雀 → `/api/progress?site=weibian` 回读到 `state=in_progress, progressPercent=35, read=true` → 删除回零；会话 cookie 已从磁盘清除 |
+| 进度契约修正 | 发现读写字段名不一致（读 `?site=`、写 `body.siteKey`），客户端原先写 `site` 会 400，已修并实测通过 |
+| **平板／大屏** | 2560×1600 @320dpi：原为拉满全宽，已改 `BoxWithConstraints` 定宽 760dp 居中；手机 1080×2400 布局无回归 |
+| **AI 讲解（App 内）** | 章句页「问先生」实测返回简体白话分点讲解；发现网关回 Markdown 而 App 纯文本渲染，已加提示词约束＋客户端剥离（8 项测试锁定） |
+| **签名 release 包** | `assembleDirectRelease` 出包 2.6 MB；证书 SHA-256 `a40f3956…1282`；R8 压缩后 `assets/content.json` 871,333 字节完整在包内 |
+| **发布链路** | 按 fail-closed 顺序传 R2：内容寻址 APK → release.json → 别名 → **公开读逐字节回验一致后**才写 `latest.json` |
+| **自检更新端到端** | 安装 release 包后「我 → 关于」实测拉取 `img.bdfz.net/apps/weibian-android/latest.json`，通过 schema／包名／versionCode 校验，正确显示「已是最新版本」 |
+| 五面登记 | 用户中心 SITE_REGISTRY／nav sites.json／门户 portalGroups／Companion SERVICES／pulse sites.js 均已加 `weibian`；nav 与 pulse `/api/meta` 线上核验命中 |
+
 **尚未验证（明确缺口，不假装已做）：**
 
-- [ ] **真机**安装与升级覆盖安装
-- [ ] **平板／大屏**布局（代码已用 `material3-window-size-class` 但未实测）
-- [ ] **真实账号登录 + 进度端到端回读**（需 `~/.secrets.env` 的 `SEIUE_USERNAME`/`SEIUE_PASSWORD`；
-      运维标准要求真实账号验收，且**不得**对失败密码重试 —— 用户中心会临时锁定）
-- [ ] **AI 批改**在 App 内的端到端实测（网关本身已单独探通）
-- [ ] **应用内反馈**投递与 Telegram 通知回执
-- [ ] **内容热更新**端到端（需 Worker 先上线）
-- [ ] **自检更新**端到端（需 `latest.json` 先发布）
-- [ ] 旋转、系统返回、force-stop 后持久化的系统性走查
+- [ ] **真机**安装与升级覆盖安装（全部证据均为 **emulator-only**）
+- [ ] **升级覆盖**：versionCode 2 覆盖 1 后本地记录完好（当前只有 v1，无从验证）
+- [ ] **应用内反馈**投递与 Telegram 通知回执（表单已实现，未发过真实工单）
+- [ ] **AI 高考批改**在 App 内实测（讲解已通，批改走同一网关同一代码路径，但未单独点过）
+- [ ] **内容热更新**端到端（线上内容版本与随包版本相同，未构造差异版本触发替换）
+- [ ] 旋转、force-stop 后持久化的系统性走查（已知冷启动与切页签持久化正常）
+- [ ] **`bdfz-user-center` 的 `weibian` 登记条目尚未部署** —— 该仓库有 32 个文件、
+      13,686 行的他人在途改动，部署会一并发布，属越权。源码已改好，待其在途工作收口后随下次发布带上。
+      不影响功能：`/api/progress` 不校验 siteKey 是否登记，进度读写已实测通过。
+- [ ] **门户生产域 `allinone.bdfz.net` 返回 522**（`portal.bdfz.net` 同样 522，
+      且该域也取不到既有的 `kz.bdfz.net` 条目），系**既存故障**、与本次改动无关；
+      Pages 部署本身成功，预览地址可见新条目。
 
 > 模拟器证据一律标注为 **emulator-only**。
 > 认证与同步必须用真实账号端到端回读后才能声称可用；界面上有登录框不算同步证据。

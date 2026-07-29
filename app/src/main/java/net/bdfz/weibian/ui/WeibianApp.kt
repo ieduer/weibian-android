@@ -6,6 +6,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -34,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import net.bdfz.weibian.ui.screens.ChallengeScreen
@@ -59,6 +63,9 @@ sealed interface Route {
     data class GaokaoDetail(val gaokaoId: String) : Route
     data object Challenge : Route
 }
+
+/** 正文最大宽度：再宽中文行长就超出舒适阅读区间了。 */
+private val READING_MAX_WIDTH = 760.dp
 
 private data class TabSpec(val route: Route, val label: String, val icon: ImageVector)
 
@@ -130,14 +137,24 @@ fun WeibianApp(viewModel: WeibianViewModel = viewModel()) {
             }
         },
     ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding)) {
+        // 大屏上不把内容拉满：一行 1280dp 宽的古文没法读。
+        // 用 BoxWithConstraints 显式算出正文宽度再定宽——
+        // 直接写 fillMaxSize().widthIn(max=…) 是没用的，fillMaxSize
+        // 会把宽度的最小约束也顶到父容器宽度，widthIn 的上限根本不起作用。
+        BoxWithConstraints(
+            Modifier.fillMaxSize().padding(padding),
+            contentAlignment = Alignment.TopCenter,
+        ) {
             if (state.loading) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-                return@Box
+                return@BoxWithConstraints
             }
 
+            // 手机上 maxWidth 远小于 760dp，取 min 后布局与原来完全一致。
+            val contentWidth = minOf(maxWidth, READING_MAX_WIDTH)
+            Box(Modifier.width(contentWidth).fillMaxHeight()) {
             AnimatedContent(
                 targetState = current,
                 transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(120)) },
@@ -211,6 +228,7 @@ fun WeibianApp(viewModel: WeibianViewModel = viewModel()) {
                         onOpenChapter = { push(Route.Chapter(it)) },
                     )
                 }
+            }
             }
         }
     }

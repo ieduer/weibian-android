@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 学习记录随系统备份；会话密钥受 Keystore 保护、不可跨设备还原，故排除。 -->
+<!--
+  只备份学习记录。
+
+  这里是白名单语义：凡未 include 的一律不备份，所以加密会话
+  （weibian_secure_session.xml）不必也不能再写一条 exclude ——
+  它不在任何 include 路径下，lint 会直接判为错误。
+
+  会话本来也不该跨设备还原：密钥由 AndroidKeyStore 持有且不可导出，
+  还原过去也解不开，不如让用户重新登录。
+-->
 <full-backup-content>
     <include domain="database" path="weibian-learning.db" />
     <include domain="sharedpref" path="weibian_progress.xml" />
-    <exclude domain="sharedpref" path="weibian_secure_session.xml" />
 </full-backup-content>

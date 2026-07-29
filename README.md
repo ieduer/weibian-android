@@ -151,3 +151,7 @@ weibian.bdfz.net 热更新  ┘             daily_stats / gaokao_attempts
 | ![](docs/screenshots/04-挑战反馈.png) | ![](docs/screenshots/05-学程图.png) | ![](docs/screenshots/06-高考真题.png) | ![](docs/screenshots/07-深色模式.png) |
 
 > 截图取自 Android 15 模拟器（arm64），标注为 emulator-only。
+
+平板（2560×1600）正文限宽居中：
+
+![](docs/screenshots/08-平板布局.png)
