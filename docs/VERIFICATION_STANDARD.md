@@ -88,8 +88,8 @@ JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./gradlew \
 - 在 release 身份未核对时使用其他 App 的 package、R2 prefix、签名变量或 signer；
 - 从 `/Users/ylsuen/.android/weibian-release.env` 以外的 signing authority
   生成正式包，或接受任何 unsigned release 输出；
-- release build 不使用 `set -e`／`--no-daemon`，或把文档变更前的 interim
-  digest 当作 final；
+- release build 不使用 `set -e`／`--no-daemon`，或把任何非 release
+  checkpoint 的 interim digest 当作 final；
 - 把可变 `/api/content/bundle` 作为一年 immutable 对象发布新内容；
 - 把签名口令、Cookie、会话 id 写进日志、报告或提交。
 
@@ -152,14 +152,14 @@ release，没有可供已安装客户端降级的更早 production APK。
 |---|---|
 | 内容接口上线 | `weibian.bdfz.net/api/health` 返回 512/1045/215/23；落地页可读 |
 | 内容包完整性（线上） | manifest.sha256 == bundle 实测 sha256（`fc68413c…fa75`） |
-| **真实账号端到端** | canonical 授权账号单次登录成功（未重试）；以 App 同形载荷 PUT 一条非计分 `chapter-1` 金丝雀 → `/api/progress?site=weibian` 回读 → 清理；不保留账号、Cookie 或原始学生内容 |
+| **历史真实账号契约验证（非 final exact 实机门）** | canonical 授权账号单次登录成功（未重试）；以 App 同形载荷 PUT 一条非计分 `chapter-1` 金丝雀 → `/api/progress?site=weibian` 回读 → 清理；不保留账号、Cookie 或原始学生内容。此记录只证明身份／进度契约，不替代 final exact APK 的实体登录与持久化验收 |
 | 进度契约修正 | 发现读写字段名不一致（读 `?site=`、写 `body.siteKey`），客户端原先写 `site` 会 400，已修并实测通过 |
-| **平板／大屏** | 2560×1600 @320dpi：原为拉满全宽，已改 `BoxWithConstraints` 定宽 760dp 居中；手机 1080×2400 布局无回归 |
+| **平板／大屏（emulator-only）** | 2560×1600 @320dpi 模拟器：原为拉满全宽，已改 `BoxWithConstraints` 定宽 760dp 居中；手机模拟器 1080×2400 布局无回归。不能替代实体平板 adaptive/accessibility 验收 |
 | **AI 讲解（App 内）** | 章句页「问先生」实测返回简体白话分点讲解；发现网关回 Markdown 而 App 纯文本渲染，已加提示词约束＋客户端剥离（8 项测试锁定） |
-| **签名构建能力** | 专用 signer certificate continuity 与包内 `assets/content.json` 已验证；最终 v1.1.1 artifact 仍须在本轮文档提交后的 clean commit 上重建，interim digest 不作 final |
-| **发布顺序设计** | fail-closed 顺序已写入标准；v1.1.1 尚未依此发布或接受 |
+| **签名构建能力** | final v1.1.1 APK 已从 `e623e370…59e20471` 用专用 authority 构建；2,738,032 bytes，SHA-256 `de47da19…8da67`，signer continuity 与包内 `assets/content.json` 已验证 |
+| **发布顺序执行** | immutable APK 与 `release.json` 已先上传并公开逐字节读回；`latest.json`、GitHub Release 与 landing 尚未切换，故 v1.1.1 尚未成为 current／accepted release |
 | **自检更新旧结论撤回** | 当前公开 v1.0.0 `latest.json.appId=net.bdfz.weibian`，与 Direct package `.direct` 不符；HTTP 200／旧截图不能算 self-update acceptance |
-| 登记 live 分层 | nav、Pulse、canonical portal `i.rdfzer.com` 已 live；Companion 为 `not-applicable` 且无 WebView；User Center registry canary／fan-out 仍开放 |
+| 登记 live 分层 | nav、Pulse、canonical portal `i.rdfzer.com` 已 live；Companion 为 `not-applicable` 且无 WebView；User Center v240 registry 已 100% live 并完成 representative fan-out smoke，clean source reconciliation 仍开放 |
 
 **2026-07-29 正式接管只读复核：**
 
@@ -172,8 +172,10 @@ release，没有可供已安装客户端降级的更早 production APK。
 | 实际安装身份 | Direct package `net.bdfz.weibian.direct`、versionCode 1、min/target 23/37；v1/v2 签名通过 |
 | signer | certificate SHA-256 `a40f3956…41282` |
 | GitHub | public Release v1.0.0 asset digest 与 R2 一致；public source 不含生成语料 |
-| code checkpoint | `0f2dae26ee84b676a401cad70fa088a8fd8eaac6`；55/55 Android unit tests、Worker 7/7 tests、lint/build 通过 |
-| CI | GitHub Actions run `30464811968`, attempt 2, success；这是 code checkpoint，不是最终 release commit |
+| release checkpoint | `e623e370a60bff33609e8bf5ad2748f559e20471`；release guard tests、Android unit/lint/build 与 Worker tests 通过 |
+| CI | GitHub Actions run `30466463323`, success |
+| v1.1.1 immutable staging | APK `…/v1.1.1/de47da19/weibian-1.1.1.apk` 与同目录 `release.json` 已公开精确读回；APK 2,738,032 bytes，SHA-256 `de47da19…8da67`，signer `a40f3956…41282` |
+| User Center registry | v240 `96b9db71…ffd2f` 100% live，deployment `df473f1b…889f`；13 probes、代表性依赖与 10m zero-error evidence 通过；rollback v239 `c3b71149…a56a` |
 | 落地页 | desktop 与 390×844 响应式布局通过；390 CSS viewport 无水平溢出 |
 | Pulse | meta/range 收录 `weibian.bdfz.net`，source `worker_analytics`，read-only 观察为 0 errors |
 | portal | canonical `i.rdfzer.com` 返回 200 且有正确入口；`allinone.bdfz.net`、`portal.bdfz.net` 是非 canonical 522 别名 |
@@ -182,33 +184,35 @@ release，没有可供已安装客户端降级的更早 production APK。
 
 | 项 | 证据 |
 |---|---|
-| 实体手机覆盖升级 | 指定 OnePlus IN2020 实机（task-scoped ADB serial 不进入公开仓库）：由公开 code 1 经候选 code 2 覆盖至 v1.1.1 code 3；`firstInstallTime` 不变，本地收藏、笔记和学习记录保留 |
-| 实体手机真实身份 | canonical 账号经 App 登录一次，重启 session 保留；User Center aggregate 从 0 变 1，`site_key=weibian` 读回 1 row/1 user |
-| 排行榜 | App 同步后 `weibian-rankings` D1 写入 1 条 HMAC 假名快照；公开榜不暴露账号或姓名 |
-| Profile 闪退修复 | 同章同时出现在收藏和笔记时，旧版以重复 `chapterId` 作为同一 `LazyColumn` key 而 crash；现已改为 section-namespaced key，并在实体 OnePlus code 3 完成“我”页整页反复滚动，scoped crash buffer 无本 App fatal |
-| AI（实体 App） | OnePlus code 3 的 AI 讲解和非敏感高考批改路径均返回可用结果；不把网络成功泛化为其余实体门已通过 |
+| 实体手机候选覆盖 | 指定 OnePlus IN2020 实机（task-scoped ADB serial 不进入公开仓库）：此前由公开 code 1 经候选 code 2 覆盖至 pre-final code 3；`firstInstallTime` 不变，本地收藏、笔记与 session 重启后保留 |
+| Profile 闪退修复 | 同章同时出现在收藏和笔记时，旧版以重复 `chapterId` 作为同一 `LazyColumn` key 而 crash；现已改为 section-namespaced key，并在实体 OnePlus 的 pre-final code 3 候选完成“我”页整页反复滚动，scoped crash buffer 无本 App fatal |
+| AI（实体 App） | OnePlus pre-final code 3 候选的 AI 讲解和非敏感高考批改路径均返回可用结果；不代表 final exact APK 或其余实体门已通过 |
 | 原子内容发布 | `ContentReleaseFilesTest` 覆盖 staged → active、previous 保留和中断恢复 |
-| 差量契约 | `weibian-content-delta-v1` 重建和 hash/size/base 拒绝由测试锁定；线上 manifest 暂为 `deltas: []`，因 v1.0.0 与候选包内容 hash 相同 |
+| 差量契约 | B bundle `4a97b261…e3703`（871,334 bytes）与 A→B delta `83d407be…8b1f`（259 bytes）已 immutable 上传并公开精确读回；canary Worker `8207191d…d27e` 为 0% 流量，ordinary manifest 仍是 stable A／`deltas: []`，未做实体导入 |
 | Worker | current `64f3c319-e3b8-429e-a49c-1e333fd2e15d`；health、manifest、ranking、landing rights、R2 immutable content/v1.0.0 download 与非法 delta 拒绝均 live readback 通过 |
 | 安全基线 | 明确禁止 cleartext；JSON 2 MiB 上限；同步重试有界；排行榜 secret 缺失 fail closed；gitleaks 无命中 |
 | 内容权利 | owner 明确授权；`CONTENT_RIGHTS_RECEIPT.md` 入档 |
 | 身份/签名契约 | `IDENTITY_ADR.md` 接受有限 native adapter；release 仅接受 `WEIBIAN_ANDROID_*`；Direct manifest 精确匹配 `.direct` |
-| signing authority | 唯一 authority 为 `/Users/ylsuen/.android/weibian-release.env`；已有 clean-signer build 仅为 interim，最终文档提交后必须以 `set -e`、`--no-daemon` 重建并拒收 unsigned 输出 |
+| signing authority | 唯一 authority 为 `/Users/ylsuen/.android/weibian-release.env`；final `de47da19…8da67` 以 `set -e`、`--no-daemon` 构建，unsigned 输出被拒收 |
 | portal / Companion | canonical portal `i.rdfzer.com` 200；两个 bdfz alias 522 为非 canonical；Companion disposition `not-applicable`、无 Weibian WebView |
 
 **尚未验证（明确缺口，不假装已做）：**
 
 - [ ] **实体平板** adaptive/accessibility 验收；现有 2560×1600 证据为 emulator-only。
 - [ ] **应用内反馈** physical App → API → aggregate D1 → Telegram 通知回执。
-- [ ] **差异内容版本**下载、差量/整包回落、重启和 previous rollback；当前仅有确定性测试。
+- [ ] **差异内容版本**下载、差量/整包回落、重启和 previous rollback；
+      immutable B/delta 与 0% Worker canary 已就绪，但尚无实体导入证据。
 - [ ] **实体 offline/recovery 矩阵**：断网启动、读练、恢复联网、
       force-stop/rotation/multi-window 与 scoped logcat 尚未闭环。
-- [ ] **User Center registry canary**：须完成 clean hub deploy、live registry
-      readback、真实最小金丝雀与 representative fan-out smoke。
-- [ ] **v1.1.1 最终 release/self-update**：当前没有 final APK/hash/size；
-      公开 `latest.json` 仍是 v1.0.0 且 `appId` 错写为 base package。须在最终
-      clean commit 重建同 signer APK，按 immutable-first/pointer-last 发布，
-      核对 R2/GitHub/`i.rdfzer.com` bytes，并在实体 Direct App 完成升级。
+- [ ] **final exact APK 实体安装**：OnePlus 尚未覆盖安装
+      `de47da19…8da67`；无线 ADB 失联后不能把 pre-final code 3 证据转移给它。
+- [ ] **共享枢纽技术债（非本 App lifecycle 硬门）**：User Center v240
+      registry 已 live 且可回滚，但 dirty/stale source 必须在未来任何普通
+      User Center deploy 前归并到经审 clean Git source。
+- [ ] **v1.1.1 最终 release/self-update**：immutable APK 与 `release.json`
+      已完成；公开 `latest.json` 仍是 v1.0.0 且 `appId` 错写为 base package，
+      GitHub Release 与 landing 尚未切换。须按 pointer-last 完成三面 byte
+      parity，并在实体 Direct App 读回正确清单。
 
 以下不是 open gate：
 
@@ -219,6 +223,8 @@ release，没有可供已安装客户端降级的更早 production APK。
 > 认证与同步必须用真实账号端到端回读后才能声称可用；界面上有登录框不算同步证据。
 
 **最后验证人／日期**：Codex production-candidate 验证，2026-07-29。
-实体手机证据只覆盖上表列出的 OnePlus code 3 profile／AI 路径；physical
-feedback、offline/content/tablet/release 仍未闭环。浏览器、R2、GitHub、
+实体手机证据只覆盖上表列出的 OnePlus pre-final code 3
+profile／AI／session persistence；final exact install、physical
+feedback、offline/content/rotation/multi-window/tablet/release 仍未闭环。
+浏览器、R2、GitHub、
 Wrangler、Pulse 和 CI 证据不替代剩余实体 Android 验收。

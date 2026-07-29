@@ -49,11 +49,14 @@ Worker Assets 只保存当前 manifest/兼容 bundle；内容寻址 bundle 由 R
 按 `runbooks/bdfz_project_matrix_and_interdependencies.md`，任何新公开站点必须
 在同一次事务里登记到四个产品面 ＋ Pulse 监控面：
 
-- [ ] 用户中心 `SITE_REGISTRY` 加 `weibian` 条目，并完成 live registry
-  canary 与 hub fan-out smoke
+- [x] 用户中心 `SITE_REGISTRY` 已在 v240
+  `96b9db71-a595-4ae3-a557-288b49bffd2f` 以 100% 流量上线，并完成 live
+  registry readback 与 representative hub fan-out smoke；rollback 为
+  v239 `c3b71149-0c8a-460b-8613-ff789502a56a`
 - [x] `bdfz-nav/sites.json`
 - [x] canonical portal `https://i.rdfzer.com`（source:
-  `suen/allinone/index.html#portalGroups`）返回 200 且含正确入口
+  `/Users/ylsuen/CF/allinone-pages/public/index.html#portalGroups`）返回 200
+  且含正确入口
 - [x] Companion 明确记录 `not-applicable`；**不得**新增 Weibian WebView service
 - [x] `pulse/src/sites.js`，并在 `/api/meta`、`/api/range` 实测到该 host
 
@@ -62,6 +65,10 @@ portal，也不替代 `i.rdfzer.com` 的发布验收。
 
 **学生数据分级**：`student_owned`（写入学习进度）。因此上线前必须有一次
 真实登录 + 进度写入 + 回读验证，仅加载脚本不算集成。
+
+User Center 本次是从现行生产 bundle 做的一项外科式登记发布；当前生产 bundle
+可精确回读与回滚，本地共享枢纽仓库也含该对象，但其 dirty/stale source 尚未
+完成 clean Git source reconciliation。后续不得从未审工作树做普通 deploy。
 
 ---
 
@@ -103,10 +110,29 @@ Gradle 仍可为 CI／外部贡献者生成未签名候选，但任何 `*-unsign
 v1/v2 签名验证、signer continuity 不符或不是上述 authority 生成的输出都必须
 拒收，不能进入 R2、GitHub Release、门户或实体安装验收。
 
-截至 2026-07-29，v1.1.1 / versionCode 3 尚未发布或接受。已有 clean-signer
-构建只能算 interim artifact；本轮文档提交会改变 release bytes，必须在最终
-clean commit 上重新构建并重新计算 hash/size，文档不得把 interim digest
-写成 final。
+截至 2026-07-29，v1.1.1 / versionCode 3 的 final candidate 已从 clean
+checkpoint `e623e370a60bff33609e8bf5ad2748f559e20471` 构建：
+
+- package：`net.bdfz.weibian.direct`
+- size：2,738,032 bytes
+- SHA-256：`de47da19562515049769c872f738975d8000091f9295f40e691d2928fe18da67`
+- signer certificate SHA-256：
+  `a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282`
+- `release.json`：625 bytes，SHA-256
+  `9cfdb82006787800cc1612d8232257191815b7c3d06b33537695ccd946df4275`
+- CI：[run 30466463323](https://github.com/ieduer/weibian-android/actions/runs/30466463323)
+
+同一份 APK 与不可变 `release.json` 已公开并逐字节读回：
+
+```text
+https://img.bdfz.net/apps/weibian-android/releases/v1.1.1/de47da19/weibian-1.1.1.apk
+https://img.bdfz.net/apps/weibian-android/releases/v1.1.1/de47da19/release.json
+```
+
+这只是 pointer-last 发布中的 immutable staging：`latest.json`、GitHub
+Release 与落地页尚未切换，final exact APK 也尚未在实体手机安装验收，故
+v1.1.1 仍未成为 current／accepted release。后续状态文档提交不改变已经锁定
+的 release checkpoint，也不得重签或覆盖上述不可变对象。
 
 发布前必须核对（`runbooks/bdfz_android_app_update_standard.md` §5）：
 
@@ -194,7 +220,11 @@ CI 以 `node --test scripts/test/*.test.mjs` 锁定这条防线。
 - 同样的 APK、同样的 sha256、同样的签名指纹
 - 附 R2 不可变 URL
 - 写明构建与安装方法
-- 写明仍未通过的 physical feedback、offline/content/tablet 和 registry 门
+- 写明仍未通过的 final exact install、physical feedback、
+  offline/content/rotation/multi-window/tablet 和 self-update 门
+
+当前尚未建立 v1.1.1 GitHub Release；不得把已公开的 immutable R2 staging
+误写成 GitHub/current release。
 
 canonical portal 下载入口只更新 `https://i.rdfzer.com`。非 canonical 的
 `allinone.bdfz.net`／`portal.bdfz.net` 522 不得被写成成功发布面。

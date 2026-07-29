@@ -6,10 +6,15 @@
 一个**原生 Android 应用**（Kotlin + Jetpack Compose），不是 WebView 套壳。
 
 当前 lifecycle 为 `published-limited`：公开版仍是 v1.0.0 / versionCode 1；
-v1.1.1 / versionCode 3 只是尚未发布、尚未接受的候选版。候选源码检查点
-`0f2dae26ee84b676a401cad70fa088a8fd8eaac6` 的 GitHub Actions
-[run 30464811968（attempt 2）](https://github.com/ieduer/weibian-android/actions/runs/30464811968)
-已通过，但最终发布包必须在本轮文档提交之后重新签名构建和计算 digest。
+v1.1.1 / versionCode 3 的最终候选 APK 与 `release.json` 已按内容寻址公开，
+但 `latest.json`、GitHub Release 与落地页尚未切换，因此尚未成为当前发布版，
+也尚未接受。最终发布检查点
+`e623e370a60bff33609e8bf5ad2748f559e20471` 的 GitHub Actions
+[run 30466463323](https://github.com/ieduer/weibian-android/actions/runs/30466463323)
+已通过；APK 为 2,738,032 bytes，SHA-256
+`de47da19562515049769c872f738975d8000091f9295f40e691d2928fe18da67`，
+signer certificate SHA-256 为
+`a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282`。
 当前公开 `latest.json` 仍指向 v1.0.0，且 `appId` 错写为 base package
 `net.bdfz.weibian`；它不满足 Direct package `net.bdfz.weibian.direct` 的契约，
 因此**不得声称应用内自更新已验证**。
@@ -37,8 +42,10 @@ v1.1.1 / versionCode 3 只是尚未发布、尚未接受的候选版。候选源
 | `CF/lunyu-battle-android` | 上者的 **Capacitor WebView 套壳** | **无关**；本项目是纯原生重做 |
 | `CF/recite-android` | 琅琅背诵 App | 参考其用户系统与更新架构 |
 
-本项目独占：目录 `lunyu-yizhu-android/`、包名 `net.bdfz.weibian`、siteKey `weibian`、
-域名 `weibian.bdfz.net`、更新通道 `img.bdfz.net/apps/weibian-android/`。
+本项目独占：目录 `lunyu-yizhu-android/`、base package
+`net.bdfz.weibian`、Direct package `net.bdfz.weibian.direct`、siteKey
+`weibian`、域名 `weibian.bdfz.net`、更新通道
+`img.bdfz.net/apps/weibian-android/`。
 
 ---
 
@@ -149,12 +156,19 @@ weibian.bdfz.net 热更新  ┘             daily_stats / gaokao_attempts
 2. **上游语料缺注**：雍也 6.7、6.26 两章正文有注释标记但上游 `dialogues.json` 缺对应注释条目。
    这两处标记按纯文本渲染，不给点了没反应的目标。
 3. **真题覆盖**：北京卷设《论语》大题的年份只有 6 年（其余年份考《红楼梦》），已全部收录，不是遗漏。
-4. **验收范围**：实体 OnePlus 手机已覆盖安装 code 3，确认本机资料保留；
+4. **验收范围**：实体 OnePlus 手机已覆盖安装此前的 code 3 候选包，确认本机资料保留；
    “我”页重复 key 闪退已修复并完成整页滚动回归，实体 App 的 AI 讲解／批改
-   路径也已通过。User Center registry 上线金丝雀、physical feedback
-   API → aggregate D1 → Telegram 回执、实体离线／恢复矩阵、真实差异内容更新、
-   实体平板以及最终 v1.1.1 发布／自更新仍未验收。
-5. **公开入口**：canonical portal 是 `https://i.rdfzer.com`，当前返回 200；
+   路径与登录 session 重启保留也已通过。该实机证据不是最终
+   `de47da19…8da67` APK 的安装验收；无线 ADB 失联后，final exact install、
+   physical feedback API → aggregate D1 → Telegram 回执、实体离线／恢复、
+   rotation/multi-window、真实差异内容导入／回滚与实体平板仍未验收。
+   User Center v240 registry 已 100% live 并完成代表性 fan-out smoke，但其
+   clean Git source reconciliation 仍是共享枢纽技术债。
+5. **发布边界**：v1.1.1 的 immutable APK 与 `release.json` 已公开并逐字节
+   验证；公开 `latest.json`、GitHub Release、落地页和实体 self-update 尚未
+   切换／验收。差异内容 B bundle 与 delta 也只处于 immutable staging，
+   canary Worker 为 0% 流量，未在实体 App 导入。
+6. **公开入口**：canonical portal 是 `https://i.rdfzer.com`，当前返回 200；
    `allinone.bdfz.net` 与 `portal.bdfz.net` 是非 canonical 别名，当前 522 不作为
    本 App 的发布入口。Companion disposition 为 `not-applicable`，不得新增
    Weibian WebView service。
