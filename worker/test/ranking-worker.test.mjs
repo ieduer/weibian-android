@@ -499,3 +499,72 @@ test('real SQLite aggregation serves truthful legacy and v2 response shapes', as
   assert.equal(legacyPayload.total[0].activeChapters, 1);
   assert.equal(legacyPayload.total[0].verifiedCorrectAnswers, undefined);
 });
+
+test('ranking reads distinguish anonymous access from an invalid supplied session', async () => {
+  const { env } = await fixture();
+  const anonymous = await worker.fetch(
+    new Request('https://weibian.bdfz.net/api/rankings/v2'),
+    env,
+  );
+  assert.equal(anonymous.status, 200);
+
+  const invalid = await worker.fetch(
+    new Request('https://weibian.bdfz.net/api/rankings/v2', {
+      headers: { Cookie: 'bdfz_uc_session=expired-session' },
+    }),
+    env,
+  );
+  assert.equal(invalid.status, 401);
+  assert.equal((await invalid.json()).error, 'login-required');
+
+  const malformed = await worker.fetch(
+    new Request('https://weibian.bdfz.net/api/rankings/v2', {
+      headers: { Cookie: 'bdfz_uc_session=' },
+    }),
+    env,
+  );
+  assert.equal(malformed.status, 401);
+});
+
+test('ranking limits return the actual top rows in ascending position order', async () => {
+  const { env, database } = await fixture();
+  const insert = database.sqlite.prepare(
+    `INSERT INTO weibian_answer_events_v2 (
+       event_id, user_key, canonical_task_id, chapter_id, content_version,
+       task_semantic_digest, selected_option, correct, points,
+       received_at_ms, beijing_day, created_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+  );
+  const seed = (user, answers) => {
+    for (let index = 1; index <= answers; index += 1) {
+      insert.run(
+        `seed_${user}_${String(index).padStart(4, '0')}`,
+        user.repeat(64),
+        `seed-task-${user}-${index}`,
+        index,
+        'fc68413c7b70da0e',
+        user.repeat(64),
+        'a',
+        1,
+        1,
+        1_700_000_000_000 + index,
+        '2026-07-30',
+      );
+    }
+  };
+  seed('a', 3);
+  seed('b', 2);
+  seed('c', 1);
+
+  const response = await worker.fetch(
+    new Request('https://weibian.bdfz.net/api/rankings/v2?limit=2'),
+    env,
+  );
+
+  assert.equal(response.status, 200);
+  const payload = await response.json();
+  assert.deepEqual(
+    payload.total.map((entry) => [entry.position, entry.totalPoints]),
+    [[1, 3], [2, 2]],
+  );
+});

@@ -75,15 +75,17 @@ async function readAsset(env, path) {
 
 function sessionCookieHeader(request) {
   const raw = (request.headers.get('Cookie') || '').slice(0, 4096);
+  let sessionCookieSeen = false;
   for (const segment of raw.split(';')) {
     const cookie = segment.trim();
     if (!cookie.startsWith('bdfz_uc_session=')) continue;
+    sessionCookieSeen = true;
     const value = cookie.slice('bdfz_uc_session='.length);
     if (value && value.length <= 2048 && !/[\r\n;]/.test(value)) {
       return `bdfz_uc_session=${value}`;
     }
   }
-  return '';
+  return sessionCookieSeen ? null : '';
 }
 
 function boundedRankingLimit(url) {
@@ -138,10 +140,20 @@ async function hmacUserKey(slug, pepper) {
 
 async function authenticateRanking(request, env) {
   const cookie = sessionCookieHeader(request);
+  if (cookie === null) return { invalid: true };
   if (!cookie) return null;
   const pepper = requireRankingPepper(env.RANKING_PEPPER);
-  const slug = sessionSlug(await userCenterJson(env, '/api/session', cookie));
-  if (!slug) return null;
+  let session;
+  try {
+    session = await userCenterJson(env, '/api/session', cookie);
+  } catch (error) {
+    if (/^user-center-(?:401|403)$/.test(String(error?.message || ''))) {
+      return { invalid: true };
+    }
+    throw error;
+  }
+  const slug = sessionSlug(session);
+  if (!slug) return { invalid: true };
   return {
     cookie,
     userKey: await hmacUserKey(slug, pepper),
@@ -238,8 +250,12 @@ async function loadRankings(env, dayKey, limit, meKey = '', legacyShape = false)
      WHERE totals.total_points > 0
   `;
   const [dailyResult, totalResult] = await Promise.all([
-    env.DB.prepare(`${dailySql} LIMIT ?`).bind(dayKey, limit).all(),
-    env.DB.prepare(`${totalSql} LIMIT ?`).bind(dayKey, limit).all(),
+    env.DB.prepare(`SELECT * FROM (${dailySql}) ORDER BY position ASC LIMIT ?`)
+      .bind(dayKey, limit)
+      .all(),
+    env.DB.prepare(`SELECT * FROM (${totalSql}) ORDER BY position ASC LIMIT ?`)
+      .bind(dayKey, limit)
+      .all(),
   ]);
   const dailyRows = dailyResult.results || [];
   const totalRows = totalResult.results || [];
@@ -477,7 +493,7 @@ async function recordVerifiedAnswer(env, auth, event, nowMs, taskSemanticDigest)
 
 async function handleAnswerEvents(request, env) {
   const auth = await authenticateRanking(request, env);
-  if (!auth) {
+  if (!auth || auth.invalid) {
     return json(
       { ok: false, error: 'login-required' },
       { status: 401, headers: { 'Cache-Control': 'no-store' } },
@@ -532,6 +548,12 @@ async function handleAnswerEvents(request, env) {
 async function handleRankings(request, env, legacyShape = false) {
   const url = new URL(request.url);
   const auth = await authenticateRanking(request, env);
+  if (auth?.invalid) {
+    return json(
+      { ok: false, error: 'login-required' },
+      { status: 401, headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
   const nowMs = Date.now();
   const dayKey = beijingDayKey(new Date(nowMs));
   const board = await loadRankings(
