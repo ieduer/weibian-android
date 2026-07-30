@@ -31,5 +31,23 @@ jobs:
         run: node --test worker/test/*.test.mjs
       - name: Verify Android release guard
         run: node --test scripts/test/*.test.mjs
-      - name: Test, lint and build Android
-        run: ./gradlew :app:testDirectDebugUnitTest :app:lintDirectDebug :app:assembleDirectDebug
+      - name: Test, lint and build both distribution channels
+        run: >-
+          ./gradlew
+          :app:testDirectDebugUnitTest
+          :app:testPlayDebugUnitTest
+          :app:lintDirectDebug
+          :app:lintPlayDebug
+          :app:assembleDirectDebug
+          :app:assemblePlayDebug
+      - name: Verify one installed package identity
+        shell: bash
+        run: |
+          AAPT2="$ANDROID_HOME/build-tools/37.0.0/aapt2"
+          for APK in \
+            app/build/outputs/apk/direct/debug/app-direct-debug.apk \
+            app/build/outputs/apk/play/debug/app-play-debug.apk
+          do
+            "$AAPT2" dump badging "$APK" \
+              | grep -F "package: name='net.bdfz.weibian.direct'"
+          done

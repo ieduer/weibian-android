@@ -152,6 +152,9 @@ AI 失败一律降级为提示文案，作答早已在本地留痕，不会白�
 | 失败 | 差量失败回落完整 bundle；下载失败保留 active/previous；App 仍可用 | 非阻断，只在"关于"里提示暂不可用 |
 | 安装 | staged → active 原子发布，保留 previous | **交给 Android 系统安装器**，绝不静默安装 |
 
+Direct 与 Play 是同一安装身份 `net.bdfz.weibian.direct`，共用连续签名
+lineage；两者只分离更新传输，不能在同一设备并存成两个 App。
+
 Worker manifest 与发布代码随部署回滚；实际内容 bundle/delta 保存在 R2
 内容寻址对象中，`content-releases.js` 只映射已审核版本，因此旧版本 URL 在
 新部署后仍可回读。manifest 只列比完整 bundle 小的

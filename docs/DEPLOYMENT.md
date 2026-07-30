@@ -49,10 +49,11 @@ Worker Assets 只保存当前 manifest/兼容 bundle；内容寻址 bundle 由 R
 按 `runbooks/bdfz_project_matrix_and_interdependencies.md`，任何新公开站点必须
 在同一次事务里登记到四个产品面 ＋ Pulse 监控面：
 
-- [x] 用户中心 `SITE_REGISTRY` 已在 v240
-  `96b9db71-a595-4ae3-a557-288b49bffd2f` 以 100% 流量上线，并完成 live
-  registry readback 与 representative hub fan-out smoke；rollback 为
-  v239 `c3b71149-0c8a-460b-8613-ff789502a56a`
+- [x] 用户中心 registry 与 feedback 已在 v242
+  `ec273922-1ec4-442b-8c84-9a5e2f7fcdf5` 以 100% 流量上线，并完成 live
+  registry readback、authenticated/idempotent feedback canary 与
+  representative hub fan-out smoke；exact rollback 为 v240
+  `96b9db71-a595-4ae3-a557-288b49bffd2f`
 - [x] `bdfz-nav/sites.json`
 - [x] canonical portal `https://i.rdfzer.com`（source:
   `/Users/ylsuen/CF/allinone-pages/public/index.html#portalGroups`）返回 200
@@ -110,6 +111,9 @@ Gradle 仍可为 CI／外部贡献者生成未签名候选，但任何 `*-unsign
 v1/v2 签名验证、signer continuity 不符或不是上述 authority 生成的输出都必须
 拒收，不能进入 R2、GitHub Release、门户或实体安装验收。
 
+Direct 与 Play 都必须解析为 canonical package `net.bdfz.weibian.direct`，
+并由同一 app-signing lineage 签名；渠道只分离更新传输，不得形成两个安装项。
+
 截至 2026-07-29，v1.1.1 / versionCode 3 的 final candidate 已从 clean
 checkpoint `e623e370a60bff33609e8bf5ad2748f559e20471` 构建：
 
@@ -130,9 +134,9 @@ https://img.bdfz.net/apps/weibian-android/releases/v1.1.1/de47da19/release.json
 ```
 
 这只是 pointer-last 发布中的 immutable staging：`latest.json`、GitHub
-Release 与落地页尚未切换，final exact APK 也尚未在实体手机安装验收，故
-v1.1.1 仍未成为 current／accepted release。后续状态文档提交不改变已经锁定
-的 release checkpoint，也不得重签或覆盖上述不可变对象。
+Release 与落地页尚未切换，且当前源码已进入 v1.1.2 / code 4，因此
+v1.1.1 不得再成为 current／accepted release。不得重签或覆盖上述历史对象；
+下一候选必须重新构建并走完整验收。
 
 发布前必须核对（`runbooks/bdfz_android_app_update_standard.md` §5）：
 
@@ -188,10 +192,11 @@ JSON 时，`versionCode` 与 `size` 必须写成正整数，不能带引号：
 sha256 格式非法、size ≤ 0、清单体积超限。这些校验都在
 `update/AppUpdateManager.kt` 里，改契约要两边一起改。
 
-当前公开 `latest.json` 仍是 v1.0.0 / versionCode 1，且 `appId` 为错误的
-`net.bdfz.weibian`，不是 Direct package `net.bdfz.weibian.direct`。HTTP 200
-不代表更新契约通过；在 fail-closed 顺序发布正确的新指针并由实体 Direct App
-读回之前，不得写“自检更新端到端已验证”。
+当前公开 `latest.json` 仍是 v1.0.0 / versionCode 1；历史错误
+`appId=net.bdfz.weibian` 已于 2026-07-30 修正为 Direct package
+`net.bdfz.weibian.direct` 并完成公开逐 byte 读回。HTTP 200 仍不代表 code4
+更新契约通过；在 fail-closed 顺序发布高版本指针并由两台实体 Direct App
+完成原位覆盖之前，不得写“code4 自检更新端到端已验证”。
 
 正式上传前，必须让仓库内 release guard 同时核对 APK、metadata、签名和
 内容寻址 URL；不能靠人工目测 JSON：
@@ -207,7 +212,11 @@ node scripts/verify_android_release.mjs \
   --metadata "$WEIBIAN_RELEASE_JSON" \
   --aapt2 "$WEIBIAN_BUILD_TOOLS/aapt2" \
   --apksigner "$WEIBIAN_BUILD_TOOLS/apksigner" \
-  --expected-signer a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282
+  --expected-signer a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282 \
+  --expected-app-id net.bdfz.weibian.direct \
+  --expected-version 1.1.2 \
+  --expected-version-code 4 \
+  --previous-version-code 3
 ```
 
 guard 任一项非零退出即停止；不得上传 APK、`release.json` 或移动 pointer。
@@ -223,8 +232,8 @@ CI 以 `node --test scripts/test/*.test.mjs` 锁定这条防线。
 - 写明仍未通过的 final exact install、physical feedback、
   offline/content/rotation/multi-window/tablet 和 self-update 门
 
-当前尚未建立 v1.1.1 GitHub Release；不得把已公开的 immutable R2 staging
-误写成 GitHub/current release。
+当前尚未建立 v1.1.2 GitHub Release；不得把旧 v1.1.1 immutable R2 staging
+误写成 GitHub/current release，也不得用它替代 code 4。
 
 canonical portal 下载入口只更新 `https://i.rdfzer.com`。非 canonical 的
 `allinone.bdfz.net`／`portal.bdfz.net` 522 不得被写成成功发布面。

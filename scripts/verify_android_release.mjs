@@ -12,11 +12,16 @@ const REQUIRED_FLAGS = new Set([
   '--aapt2',
   '--apksigner',
   '--expected-signer',
+  '--expected-app-id',
+  '--expected-version',
+  '--expected-version-code',
+  '--previous-version-code',
 ]);
 const MAX_APK_BYTES = 512 * 1024 * 1024;
 const MAX_METADATA_BYTES = 16 * 1024;
 const SHA256_RE = /^[0-9a-f]{64}$/;
 const SEMVER_RE = /^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$/;
+const APPLICATION_ID_RE = /^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$/;
 const PUBLISHED_AT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 
 class VerificationError extends Error {}
@@ -31,7 +36,19 @@ function usage() {
     '  --apk <signed.apk> --metadata <release.json>',
     '  --aapt2 <aapt2> --apksigner <apksigner>',
     '  --expected-signer <64-hex-certificate-sha256>',
+    '  --expected-app-id <canonical.application.id>',
+    '  --expected-version <semver> --expected-version-code <positive-int>',
+    '  --previous-version-code <non-negative-int>',
   ].join('\n');
+}
+
+function parseIntegerFlag(value, flag, minimum) {
+  if (!/^(?:0|[1-9][0-9]*)$/.test(value)) reject(`${flag} must be an integer`);
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < minimum) {
+    reject(`${flag} is outside the accepted range`);
+  }
+  return parsed;
 }
 
 function parseArguments(argv) {
@@ -57,6 +74,27 @@ function parseArguments(argv) {
   if (!SHA256_RE.test(expectedSigner)) {
     reject('expected signer must be a 64-character SHA-256 digest');
   }
+  const expectedAppId = parsed['--expected-app-id'];
+  if (!APPLICATION_ID_RE.test(expectedAppId)) {
+    reject('expected app id is invalid');
+  }
+  const expectedVersion = parsed['--expected-version'];
+  if (!SEMVER_RE.test(expectedVersion)) {
+    reject('expected version is invalid');
+  }
+  const expectedVersionCode = parseIntegerFlag(
+    parsed['--expected-version-code'],
+    'expected versionCode',
+    1,
+  );
+  const previousVersionCode = parseIntegerFlag(
+    parsed['--previous-version-code'],
+    'previous versionCode',
+    0,
+  );
+  if (expectedVersionCode <= previousVersionCode) {
+    reject('expected versionCode must be greater than previous versionCode');
+  }
 
   return {
     apk: parsed['--apk'],
@@ -64,6 +102,10 @@ function parseArguments(argv) {
     aapt2: parsed['--aapt2'],
     apksigner: parsed['--apksigner'],
     expectedSigner,
+    expectedAppId,
+    expectedVersion,
+    expectedVersionCode,
+    previousVersionCode,
   };
 }
 
@@ -180,6 +222,21 @@ function inspectSignature(apksigner, apkPath, expectedSigner) {
   return certificates[0];
 }
 
+function verifyExpectedIdentity(identity, expected) {
+  if (identity.appId !== expected.expectedAppId) {
+    reject('APK package does not match the expected app id');
+  }
+  if (identity.versionName !== expected.expectedVersion) {
+    reject('APK version does not match the expected version');
+  }
+  if (identity.versionCode !== expected.expectedVersionCode) {
+    reject('APK versionCode does not match the expected versionCode');
+  }
+  if (identity.versionCode <= expected.previousVersionCode) {
+    reject('APK versionCode is not greater than the previous accepted code');
+  }
+}
+
 function verifyMetadata(metadata, identity, apk) {
   if (metadata.schema !== 'bdfz-android-update-v1') reject('metadata schema is invalid');
   if (metadata.appId !== identity.appId) reject('metadata package does not match the APK');
@@ -265,6 +322,7 @@ async function main() {
     loadMetadata(options.metadata),
   ]);
   const identity = inspectPackage(options.aapt2, options.apk);
+  verifyExpectedIdentity(identity, options);
   const signerSha256 = inspectSignature(
     options.apksigner,
     options.apk,
@@ -279,6 +337,7 @@ async function main() {
       appId: identity.appId,
       version: identity.versionName,
       versionCode: identity.versionCode,
+      previousVersionCode: options.previousVersionCode,
       minAndroidApi: identity.minSdk,
       sha256: apk.sha256,
       size: apk.size,

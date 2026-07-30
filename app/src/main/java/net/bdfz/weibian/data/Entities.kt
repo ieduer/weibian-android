@@ -3,6 +3,7 @@ package net.bdfz.weibian.data
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import net.bdfz.weibian.security.GUEST_OWNER_BINDING
 
 /**
  * 本地学习记录。
@@ -11,9 +12,12 @@ import androidx.room.PrimaryKey
  * 混进同一个库会让内容更新变成数据库迁移。
  */
 
-@Entity(tableName = "chapter_progress")
+@Entity(
+    tableName = "chapter_progress",
+    primaryKeys = ["ownerBinding", "chapterId"],
+)
 data class ChapterProgressEntity(
-    @PrimaryKey val chapterId: Int,
+    val chapterId: Int,
     /** 是否已通读原文 */
     val read: Boolean = false,
     /** 是否展开过译文与注释——「读完」的实质判据 */
@@ -30,12 +34,19 @@ data class ChapterProgressEntity(
     val millisSpent: Long = 0L,
     /** 打开次数，用于「重读频次」 */
     val openCount: Int = 0,
+    /** 单向账号绑定或 guest-v1；永不保存账号 slug。 */
+    val ownerBinding: String = GUEST_OWNER_BINDING,
 )
 
 /** 每一次作答都留痕：错题本、诊断、以及后续的自适应排程都依赖它。 */
 @Entity(
     tableName = "task_attempts",
-    indices = [Index("chapterId"), Index("answeredAt"), Index("correct")],
+    indices = [
+        Index(value = ["ownerBinding", "chapterId"]),
+        Index(value = ["ownerBinding", "answeredAt"]),
+        Index(value = ["ownerBinding", "correct"]),
+        Index(value = ["ownerBinding", "taskId"]),
+    ],
 )
 data class TaskAttemptEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -45,22 +56,30 @@ data class TaskAttemptEntity(
     val chosenOptionId: String,
     val correct: Boolean,
     val answeredAt: Long,
+    val ownerBinding: String = GUEST_OWNER_BINDING,
 )
 
 /** 按日聚合，供首页热力、连续天数与排行榜使用。 */
-@Entity(tableName = "daily_stats")
+@Entity(
+    tableName = "daily_stats",
+    primaryKeys = ["ownerBinding", "date"],
+)
 data class DailyStatEntity(
     /** yyyy-MM-dd（设备本地时区） */
-    @PrimaryKey val date: String,
+    val date: String,
     val chaptersRead: Int = 0,
     val tasksAnswered: Int = 0,
     val tasksCorrect: Int = 0,
     val meritEarned: Int = 0,
     val secondsStudied: Long = 0L,
+    val ownerBinding: String = GUEST_OWNER_BINDING,
 )
 
 /** 高考真题作答与批改记录。 */
-@Entity(tableName = "gaokao_attempts", indices = [Index("gaokaoId")])
+@Entity(
+    tableName = "gaokao_attempts",
+    indices = [Index(value = ["ownerBinding", "gaokaoId"])],
+)
 data class GaokaoAttemptEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val gaokaoId: String,
@@ -72,20 +91,57 @@ data class GaokaoAttemptEntity(
     /** 批改反馈全文 */
     val feedback: String = "",
     val attemptedAt: Long,
+    val ownerBinding: String = GUEST_OWNER_BINDING,
 )
 
 /** 已解锁成就。 */
-@Entity(tableName = "achievements")
+@Entity(
+    tableName = "achievements",
+    primaryKeys = ["ownerBinding", "id"],
+)
 data class AchievementEntity(
-    @PrimaryKey val id: String,
+    val id: String,
     val unlockedAt: Long,
+    val ownerBinding: String = GUEST_OWNER_BINDING,
 )
 
 /** 待上行的同步队列：离线时先入队，联网后由 WorkManager 冲刷。 */
-@Entity(tableName = "sync_queue", indices = [Index("createdAt")])
+@Entity(
+    tableName = "sync_queue",
+    indices = [Index(value = ["ownerBinding", "terminalReason", "createdAt"])],
+)
 data class SyncQueueEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val itemKey: String,
     val payload: String,
     val createdAt: Long,
+    val ownerBinding: String = GUEST_OWNER_BINDING,
+    /** Permanent client-side rejection; retained locally for support audit. */
+    val terminalReason: String? = null,
+)
+
+/**
+ * Authored-question answer awaiting server verification.
+ *
+ * This deliberately contains no client verdict, points, score, server day, or
+ * user key. The Worker is the sole scoring authority. The unique owner/task
+ * pair preserves the learner's first submitted answer while offline.
+ */
+@Entity(
+    tableName = "verified_answer_outbox",
+    indices = [
+        Index(value = ["ownerBinding", "taskId"], unique = true),
+        Index(value = ["ownerBinding", "terminalReason", "createdAt"]),
+    ],
+)
+data class VerifiedAnswerOutboxEntity(
+    val ownerBinding: String,
+    @PrimaryKey val eventId: String,
+    val contentVersion: String,
+    val taskId: String,
+    val chapterId: Int,
+    val chosenOptionId: String,
+    val createdAt: Long,
+    /** Permanent server rejection; retained locally and never transmitted. */
+    val terminalReason: String? = null,
 )

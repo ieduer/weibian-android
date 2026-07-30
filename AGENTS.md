@@ -29,8 +29,8 @@
 | source repo | `/Users/ylsuen/CF/lunyu-yizhu-android` |
 | GitHub | `ieduer/weibian-android` |
 | siteKey | `weibian` |
-| base / Play package | `net.bdfz.weibian` |
-| Direct package | `net.bdfz.weibian.direct` |
+| Kotlin namespace | `net.bdfz.weibian`（不是安装身份） |
+| Direct / Play package | `net.bdfz.weibian.direct`（同一 App、同一签名 lineage） |
 | public host / Worker | `weibian.bdfz.net` / `weibian-content` |
 | update prefix | `img.bdfz.net/apps/weibian-android/` |
 | current public release | v1.0.0 / code 1 |
@@ -51,11 +51,19 @@
 - 不覆盖 immutable APK；坏版本用同 signer、更高 `versionCode` 修复。
 - 不覆盖或删除 `apps/weibian-content/releases/` 已发布对象；
   `worker/src/content-releases.js` 只追加审核过的 exact key。
-- 当前 public v1.0.0 `latest.json.appId` 的 base package 是已知历史错误；
-  v1.1.0 起 Direct 必须精确为 `net.bdfz.weibian.direct`。
-- 实体 OnePlus 手机覆盖升级、真实登录、进度和排行榜已通过；当前仍缺实体
-  tablet、physical feedback receipt 和真实差异内容更新/回滚证据。补齐且
-  User Center registry/portal live 前不得写 production-supported。
+- public v1.0.0 `latest.json.appId` 的旧 base package 历史错误已于
+  2026-07-30 修正并逐 byte 读回；Direct 与 Play 必须继续都精确为
+  `net.bdfz.weibian.direct`，不得并存成两个 App。
+- 每个候选必须在舰队登记的 OnePlus 9 Pro `LE2120`
+  （hardware serial `c5467d2b`）与 OnePlus 8 Pro `IN2020`
+  （hardware serial `6393cccf`）两台实体手机上安装同一 byte-identical
+  签名 APK，并逐台通过 package 唯一性、覆盖升级、cold/foreground/Back、
+  真实登录、核心/榜单、离线/恢复、本机资料/Session/outbox/content version
+  持久化、反馈、自更新与 scoped fatal/ANR；任一台缺席或任一门失败都不得
+  发布。模拟器不得替代任一手机。仅本次 v1.1.2 / code 4 release，owner 已
+  明确批准在登记手机上以可逆的 forced expanded-layout 完成大屏替代验收；
+  必须恢复 size/density/rotation/proxy/font/keep-awake，且不得把这一例外
+  泛化为舰队或未来 release 可免实体平板。
 - `bdfz-user-center`、Companion、portal/nav/Pulse 或 canonical report
   被其他 active task 持有时只能只读验证。
 
@@ -70,8 +78,11 @@
 /Users/ylsuen/.venv/bin/python content/build_content.py --check
 JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./gradlew \
   :app:testDirectDebugUnitTest \
+  :app:testPlayDebugUnitTest \
   :app:lintDirectDebug \
-  :app:assembleDirectDebug
+  :app:lintPlayDebug \
+  :app:assembleDirectDebug \
+  :app:assemblePlayDebug
 ```
 
 发布必须执行 `docs/VERIFICATION_STANDARD.md` 全部八点与舰队 release card。

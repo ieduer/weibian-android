@@ -65,8 +65,11 @@ node scripts/bootstrap_public_content.mjs
 JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./gradlew \
   --no-daemon \
   :app:testDirectDebugUnitTest \
+  :app:testPlayDebugUnitTest \
   :app:lintDirectDebug \
-  :app:assembleDirectDebug
+  :app:lintPlayDebug \
+  :app:assembleDirectDebug \
+  :app:assemblePlayDebug
 ```
 
 更新清单契约 `bdfz-android-update-v1` 的客户端校验在 `update/AppUpdateManager.kt`；
@@ -158,8 +161,8 @@ release，没有可供已安装客户端降级的更早 production APK。
 | **AI 讲解（App 内）** | 章句页「问先生」实测返回简体白话分点讲解；发现网关回 Markdown 而 App 纯文本渲染，已加提示词约束＋客户端剥离（8 项测试锁定） |
 | **签名构建能力** | final v1.1.1 APK 已从 `e623e370…59e20471` 用专用 authority 构建；2,738,032 bytes，SHA-256 `de47da19…8da67`，signer continuity 与包内 `assets/content.json` 已验证 |
 | **发布顺序执行** | immutable APK 与 `release.json` 已先上传并公开逐字节读回；`latest.json`、GitHub Release 与 landing 尚未切换，故 v1.1.1 尚未成为 current／accepted release |
-| **自检更新旧结论撤回** | 当前公开 v1.0.0 `latest.json.appId=net.bdfz.weibian`，与 Direct package `.direct` 不符；HTTP 200／旧截图不能算 self-update acceptance |
-| 登记 live 分层 | nav、Pulse、canonical portal `i.rdfzer.com` 已 live；Companion 为 `not-applicable` 且无 WebView；User Center v240 registry 已 100% live 并完成 representative fan-out smoke，clean source reconciliation 仍开放 |
+| **自检更新身份修正** | 公开 v1.0.0 `latest.json.appId` 已于 2026-07-30 从错误 base 修正为 `.direct`，公开 bytes SHA-256 `d50ead93…e1db3` 且逐 byte 读回；这只修复当前清单身份，不代替 code4 两机高版本覆盖验收 |
+| 登记 live 分层 | nav、Pulse、canonical portal `i.rdfzer.com` 已 live；Companion 为 `not-applicable` 且无 WebView；User Center v242 registry/feedback 已 100% live 并完成 authenticated/idempotent canary 与 representative fan-out smoke；v240 是 exact rollback，clean source reconciliation 仍开放 |
 
 **2026-07-29 正式接管只读复核：**
 
@@ -175,7 +178,7 @@ release，没有可供已安装客户端降级的更早 production APK。
 | release checkpoint | `e623e370a60bff33609e8bf5ad2748f559e20471`；release guard tests、Android unit/lint/build 与 Worker tests 通过 |
 | CI | GitHub Actions run `30466463323`, success |
 | v1.1.1 immutable staging | APK `…/v1.1.1/de47da19/weibian-1.1.1.apk` 与同目录 `release.json` 已公开精确读回；APK 2,738,032 bytes，SHA-256 `de47da19…8da67`，signer `a40f3956…41282` |
-| User Center registry | v240 `96b9db71…ffd2f` 100% live，deployment `df473f1b…889f`；13 probes、代表性依赖与 10m zero-error evidence 通过；rollback v239 `c3b71149…a56a` |
+| User Center registry（历史快照） | 当时 v240 `96b9db71…ffd2f` 100% live，deployment `df473f1b…889f`；13 probes、代表性依赖与 10m zero-error evidence 通过。当前已由下表的 v242 supersede |
 | 落地页 | desktop 与 390×844 响应式布局通过；390 CSS viewport 无水平溢出 |
 | Pulse | meta/range 收录 `weibian.bdfz.net`，source `worker_analytics`，read-only 观察为 0 errors |
 | portal | canonical `i.rdfzer.com` 返回 200 且有正确入口；`allinone.bdfz.net`、`portal.bdfz.net` 是非 canonical 522 别名 |
@@ -184,12 +187,12 @@ release，没有可供已安装客户端降级的更早 production APK。
 
 | 项 | 证据 |
 |---|---|
-| 实体手机候选覆盖 | 指定 OnePlus IN2020 实机（task-scoped ADB serial 不进入公开仓库）：此前由公开 code 1 经候选 code 2 覆盖至 pre-final code 3；`firstInstallTime` 不变，本地收藏、笔记与 session 重启后保留 |
+| 实体手机 code 3 baseline | 登记的 LE2120 与 IN2020 均安装 byte-identical final code 3 `de47da19…8da67`；package/signer 一致，既有 first-install identity 与 App 资料保留，作为 code4 原位更新起点 |
 | Profile 闪退修复 | 同章同时出现在收藏和笔记时，旧版以重复 `chapterId` 作为同一 `LazyColumn` key 而 crash；现已改为 section-namespaced key，并在实体 OnePlus 的 pre-final code 3 候选完成“我”页整页反复滚动，scoped crash buffer 无本 App fatal |
 | AI（实体 App） | OnePlus pre-final code 3 候选的 AI 讲解和非敏感高考批改路径均返回可用结果；不代表 final exact APK 或其余实体门已通过 |
 | 原子内容发布 | `ContentReleaseFilesTest` 覆盖 staged → active、previous 保留和中断恢复 |
-| 差量契约 | B bundle `4a97b261…e3703`（871,334 bytes）与 A→B delta `83d407be…8b1f`（259 bytes）已 immutable 上传并公开精确读回；canary Worker `8207191d…d27e` 为 0% 流量，ordinary manifest 仍是 stable A／`deltas: []`，未做实体导入 |
-| Worker | current `64f3c319-e3b8-429e-a49c-1e333fd2e15d`；health、manifest、ranking、landing rights、R2 immutable content/v1.0.0 download 与非法 delta 拒绝均 live readback 通过 |
+| 差量契约 | B bundle `4a97b261…e3703`（871,334 bytes）与 A→B delta `83d407be…8b1f`（259 bytes）已 immutable 上传并公开精确读回；LE2120 与 IN2020 都通过真实 delta、故意拒绝 delta 后整包回落、重启 readback 与 stable A 恢复；canary 已撤流 |
+| Worker | current `e16da332-cbb5-46fd-82c8-ae7a6d4c69c0` 100%；immediate rollback `32f8dd97-9d50-49e1-a0cf-9f1277dd0c92`；ranking v2 health、匿名／失效会话、content/landing/R2 路径均 live readback 通过 |
 | 安全基线 | 明确禁止 cleartext；JSON 2 MiB 上限；同步重试有界；排行榜 secret 缺失 fail closed；gitleaks 无命中 |
 | 内容权利 | owner 明确授权；`CONTENT_RIGHTS_RECEIPT.md` 入档 |
 | 身份/签名契约 | `IDENTITY_ADR.md` 接受有限 native adapter；release 仅接受 `WEIBIAN_ANDROID_*`；Direct manifest 精确匹配 `.direct` |
@@ -198,21 +201,36 @@ release，没有可供已安装客户端降级的更早 production APK。
 
 **尚未验证（明确缺口，不假装已做）：**
 
-- [ ] **实体平板** adaptive/accessibility 验收；现有 2560×1600 证据为 emulator-only。
+- [ ] **本次 Weibian 大屏替代门**：owner 已明确批准仅本 release 使用登记
+      手机 reversible forced expanded-layout 完成 adaptive/accessibility；
+      通过后必须恢复 size/density/rotation/proxy/font/keep-awake。不得把这项
+      例外泛化为舰队未来 release 可免实体平板。
 - [ ] **应用内反馈** physical App → API → aggregate D1 → Telegram 通知回执。
-- [ ] **差异内容版本**下载、差量/整包回落、重启和 previous rollback；
-      immutable B/delta 与 0% Worker canary 已就绪，但尚无实体导入证据。
+- [x] **两台实体手机差异内容下载／整包回落／重启**：LE2120 与 IN2020
+      均通过真实 delta；故意错误 digest 均被拒绝并自动 full fallback；
+      active bytes/SHA 精确，force-stop/cold restart 后持久化；测试后 stable
+      内容测试后稳定 A 已恢复；当前综合 Worker
+      `e16da332-cbb5-46fd-82c8-ae7a6d4c69c0` 为 100%。
+- [ ] **内容 previous/corrupt-active rollback**：上述实机证据未故意破坏
+      active slot，仍须证明自动恢复 previous；不得把 full fallback 扩写成
+      three-slot rollback。
 - [ ] **实体 offline/recovery 矩阵**：断网启动、读练、恢复联网、
       force-stop/rotation/multi-window 与 scoped logcat 尚未闭环。
-- [ ] **final exact APK 实体安装**：OnePlus 尚未覆盖安装
-      `de47da19…8da67`；无线 ADB 失联后不能把 pre-final code 3 证据转移给它。
-- [ ] **共享枢纽技术债（非本 App lifecycle 硬门）**：User Center v240
-      registry 已 live 且可回滚，但 dirty/stale source 必须在未来任何普通
-      User Center deploy 前归并到经审 clean Git source。
-- [ ] **v1.1.1 最终 release/self-update**：immutable APK 与 `release.json`
-      已完成；公开 `latest.json` 仍是 v1.0.0 且 `appId` 错写为 base package，
-      GitHub Release 与 landing 尚未切换。须按 pointer-last 完成三面 byte
-      parity，并在实体 Direct App 读回正确清单。
+- [ ] **两台实体手机的 final exact APK**：舰队登记的 OnePlus 9 Pro
+      `LE2120`（hardware serial `c5467d2b`）与 OnePlus 8 Pro `IN2020`
+      （hardware serial `6393cccf`）都必须安装 byte-identical 最终签名
+      APK，并逐台通过 package 唯一性、覆盖升级、cold/foreground/Back、
+      核心/榜单、登录/重启、本机资料/Session/outbox/content version 持久化、
+      离线/恢复、反馈、自更新与 scoped fatal/ANR；任一台缺席或任一门失败
+      即 fail closed，模拟器不得替代。
+- [ ] **共享枢纽技术债（非本 App lifecycle 硬门）**：User Center v242
+      registry/feedback 已 live，v240 是 exact rollback；dirty/stale source
+      必须在未来任何普通 User Center deploy 前归并到经审 clean Git source。
+- [ ] **v1.1.2 / code 4 最终 release/self-update**：旧 v1.1.1 immutable
+      APK 与 `release.json` 只能保留为历史 staging，不得升格；公开
+      `latest.json` 仍是 v1.0.0，但 appId 已正确为 `.direct`。须构建
+      code 4、按 pointer-last 完成三面 byte parity，并在两台实体 Direct App
+      读回高版本清单及覆盖升级。
 
 以下不是 open gate：
 
@@ -223,8 +241,9 @@ release，没有可供已安装客户端降级的更早 production APK。
 > 认证与同步必须用真实账号端到端回读后才能声称可用；界面上有登录框不算同步证据。
 
 **最后验证人／日期**：Codex production-candidate 验证，2026-07-29。
-实体手机证据只覆盖上表列出的 OnePlus pre-final code 3
-profile／AI／session persistence；final exact install、physical
-feedback、offline/content/rotation/multi-window/tablet/release 仍未闭环。
+实体手机既有证据覆盖两台登记手机的 exact code 3 baseline 与内容恢复，不覆盖
+当前功能变更后的 final exact code 4 APK；code4 仍须两台逐台验收。canonical
+新登录/登出、physical feedback、offline/content/rotation/multi-window、
+本次 phone expanded-layout 替代与 release 仍未闭环。
 浏览器、R2、GitHub、
 Wrangler、Pulse 和 CI 证据不替代剩余实体 Android 验收。

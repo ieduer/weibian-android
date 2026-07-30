@@ -6,18 +6,20 @@
 一个**原生 Android 应用**（Kotlin + Jetpack Compose），不是 WebView 套壳。
 
 当前 lifecycle 为 `published-limited`：公开版仍是 v1.0.0 / versionCode 1；
-v1.1.1 / versionCode 3 的最终候选 APK 与 `release.json` 已按内容寻址公开，
+v1.1.1 / versionCode 3 的历史候选 APK 与 `release.json` 已按内容寻址公开，
 但 `latest.json`、GitHub Release 与落地页尚未切换，因此尚未成为当前发布版，
-也尚未接受。最终发布检查点
+也尚未接受。当前源码的下一候选身份是 v1.1.2 / versionCode 4；它必须重新
+构建、签名并完成全部实体设备门，不能把既有 code 3 staging 直接升格。历史检查点
 `e623e370a60bff33609e8bf5ad2748f559e20471` 的 GitHub Actions
 [run 30466463323](https://github.com/ieduer/weibian-android/actions/runs/30466463323)
 已通过；APK 为 2,738,032 bytes，SHA-256
 `de47da19562515049769c872f738975d8000091f9295f40e691d2928fe18da67`，
 signer certificate SHA-256 为
 `a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282`。
-当前公开 `latest.json` 仍指向 v1.0.0，且 `appId` 错写为 base package
-`net.bdfz.weibian`；它不满足 Direct package `net.bdfz.weibian.direct` 的契约，
-因此**不得声称应用内自更新已验证**。
+当前公开 `latest.json` 仍指向 v1.0.0；历史错误 `appId=net.bdfz.weibian`
+已于 2026-07-30 修正为 APK 真实身份 `net.bdfz.weibian.direct`，公开 bytes
+逐 byte 读回通过。code4 尚未发布，两台实体 Direct App 的高版本覆盖更新
+仍未完成，因此**不得把清单修正扩写成 code4 应用内自更新已验证**。
 
 ---
 
@@ -42,9 +44,10 @@ signer certificate SHA-256 为
 | `CF/lunyu-battle-android` | 上者的 **Capacitor WebView 套壳** | **无关**；本项目是纯原生重做 |
 | `CF/recite-android` | 琅琅背诵 App | 参考其用户系统与更新架构 |
 
-本项目独占：目录 `lunyu-yizhu-android/`、base package
-`net.bdfz.weibian`、Direct package `net.bdfz.weibian.direct`、siteKey
-`weibian`、域名 `weibian.bdfz.net`、更新通道
+本项目独占：目录 `lunyu-yizhu-android/`、Kotlin namespace
+`net.bdfz.weibian`、Direct/Play 共用 canonical package
+`net.bdfz.weibian.direct` 与连续签名身份、siteKey `weibian`、域名
+`weibian.bdfz.net`、更新通道
 `img.bdfz.net/apps/weibian-android/`。
 
 ---
@@ -71,7 +74,10 @@ signer certificate SHA-256 为
 
 `童蒙 → 志学 → 束脩 → 升堂 → 入室 → 博文 → 约礼 → 不惑 → 从心`
 
-每段三星，集满第三星即晋段。修为只增不减，排行榜比"今天学了多少"而非"谁把谁打下去"。
+每段三星，集满第三星即晋段。修为只增不减，是本机即时学习反馈；单列的
+“榜单”只统计服务端按当前授权内容
+核验的人工精编题首次记录作答。每日榜按服务端北京时间接收日计入，总榜按
+核验答对数累计；榜单积分／等级不与本机修为／段位混用。
 
 ---
 
@@ -129,7 +135,7 @@ weibian.bdfz.net 热更新  ┘             daily_stats / gaokao_attempts
 | [DEPLOYMENT.md](docs/DEPLOYMENT.md) | APK 签名发布、内容 Worker 部署、GitHub Release |
 | [MAINTENANCE_MANUAL.md](docs/MAINTENANCE_MANUAL.md) | 运维手册与故障排查（登录／同步／更新／迁移） |
 | [VERIFICATION_STANDARD.md](docs/VERIFICATION_STANDARD.md) | 八点核查标准（本机强制） |
-| [SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) | v1.1.1 App／Worker 安全审查与剩余风险 |
+| [SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) | v1.1.2／code 4 source freeze 安全审查与剩余 release 门 |
 | [IDENTITY_ADR.md](docs/IDENTITY_ADR.md) | Direct 渠道身份流程决策 |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献流程与代码约定 |
 | [art/README.md](art/README.md) | 美术资产体系与授权 |
@@ -156,18 +162,22 @@ weibian.bdfz.net 热更新  ┘             daily_stats / gaokao_attempts
 2. **上游语料缺注**：雍也 6.7、6.26 两章正文有注释标记但上游 `dialogues.json` 缺对应注释条目。
    这两处标记按纯文本渲染，不给点了没反应的目标。
 3. **真题覆盖**：北京卷设《论语》大题的年份只有 6 年（其余年份考《红楼梦》），已全部收录，不是遗漏。
-4. **验收范围**：实体 OnePlus 手机已覆盖安装此前的 code 3 候选包，确认本机资料保留；
-   “我”页重复 key 闪退已修复并完成整页滚动回归，实体 App 的 AI 讲解／批改
-   路径与登录 session 重启保留也已通过。该实机证据不是最终
-   `de47da19…8da67` APK 的安装验收；无线 ADB 失联后，final exact install、
-   physical feedback API → aggregate D1 → Telegram 回执、实体离线／恢复、
-   rotation/multi-window、真实差异内容导入／回滚与实体平板仍未验收。
-   User Center v240 registry 已 100% live 并完成代表性 fan-out smoke，但其
-   clean Git source reconciliation 仍是共享枢纽技术债。
+4. **验收范围**：两台登记实体手机 LE2120 与 IN2020 都已安装 byte-identical
+   v1.1.1 / code 3 final APK `de47da19…8da67`，保留 package、first-install
+   identity 与 App 资料；“我”页重复 key 闪退已完成反复整页滚动回归。两机还
+   完成真实 A→B delta、故意拒绝 delta 后整包回落、重启 readback、稳定 A
+   恢复和单一 Weibian package 核对。它们仍只是 code 4 的 prior-version
+   baseline；physical feedback、code3→code4 原位更新、code4 离线／恢复、
+   rotation／multi-window 与本次获批的手机 expanded-layout 平板替代验收仍
+   必须在 final exact code 4 上完成。User Center v242 已 100% live；v240 是
+   精确反馈 rollback。
 5. **发布边界**：v1.1.1 的 immutable APK 与 `release.json` 已公开并逐字节
-   验证；公开 `latest.json`、GitHub Release、落地页和实体 self-update 尚未
-   切换／验收。差异内容 B bundle 与 delta 也只处于 immutable staging，
-   canary Worker 为 0% 流量，未在实体 App 导入。
+   验证，但它已被当前 v1.1.2 / code 4 源码候选取代，不能再移动为 current。
+   公开 `latest.json` 仍指向 v1.0.0，但其 `appId` 已修正为 canonical
+   `net.bdfz.weibian.direct` 并由两台 code 3 App 显示“已是最新版本”。正确
+   code 4 的 immutable APK、`latest.json`、GitHub Release、落地页和实体
+   self-update 尚未发布／验收。差异内容 canary 已完成双机验收并撤流；ordinary
+   Worker 已恢复稳定 A 内容。
 6. **公开入口**：canonical portal 是 `https://i.rdfzer.com`，当前返回 200；
    `allinone.bdfz.net` 与 `portal.bdfz.net` 是非 canonical 别名，当前 522 不作为
    本 App 的发布入口。Companion disposition 为 `not-applicable`，不得新增

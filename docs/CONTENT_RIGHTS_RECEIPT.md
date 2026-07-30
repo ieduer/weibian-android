@@ -2,7 +2,7 @@
 
 Status: owner-attested
 Effective: 2026-07-29
-Applies to: `net.bdfz.weibian.direct`, `net.bdfz.weibian`,
+Applies to: canonical Android package `net.bdfz.weibian.direct`,
 `weibian.bdfz.net` and the corresponding immutable R2 release objects
 
 ## Attestation

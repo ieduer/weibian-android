@@ -3,6 +3,7 @@ package net.bdfz.weibian.ui.screens
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +23,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,7 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.bdfz.weibian.BuildConfig
-import net.bdfz.weibian.network.RankingEntry
+import net.bdfz.weibian.ui.SessionValidationState
 import net.bdfz.weibian.ui.UiState
 import net.bdfz.weibian.ui.WeibianViewModel
 import net.bdfz.weibian.ui.components.PaperCard
@@ -56,6 +60,11 @@ fun ProfileScreen(
     val overall = state.overall
     var showLogin by remember { mutableStateOf(false) }
     var showFeedback by remember { mutableStateOf(false) }
+    var showLegacyImportConfirm by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.session) {
+        if (state.session != null) showLogin = false
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
@@ -75,7 +84,18 @@ fun ProfileScreen(
                                     fontWeight = FontWeight.SemiBold,
                                 )
                                 Text(
-                                    "已连接 my.bdfz.net · 进度多端同步",
+                                    when (state.sessionValidation) {
+                                        SessionValidationState.VERIFIED ->
+                                            "已连接 my.bdfz.net · 进度多端同步"
+                                        SessionValidationState.VERIFYING ->
+                                            "正在通过 my.bdfz.net 验证账号…"
+                                        SessionValidationState.OFFLINE_UNVERIFIED ->
+                                            "离线未验证 · 多端同步已暂停"
+                                        SessionValidationState.AUTH_REQUIRED ->
+                                            "登录状态已失效 · 请重新登录"
+                                        SessionValidationState.GUEST ->
+                                            "账号状态待确认"
+                                    },
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -91,20 +111,76 @@ fun ProfileScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.weight(1f),
                                 )
-                                TextButton(onClick = { viewModel.syncNow() }) { Text("立即同步") }
+                                if (
+                                    state.sessionValidation ==
+                                    SessionValidationState.VERIFIED
+                                ) {
+                                    TextButton(onClick = { viewModel.syncNow() }) {
+                                        Text("立即同步")
+                                    }
+                                }
                             }
                         }
                     } else {
-                        Text("未登录", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            if (
+                                state.sessionValidation ==
+                                SessionValidationState.AUTH_REQUIRED
+                            ) {
+                                "登录已失效"
+                            } else {
+                                "未登录"
+                            },
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            "不登录也能完整离线学习；登录后进度可在多台设备之间同步、并可恢复。",
+                            if (
+                                state.sessionValidation ==
+                                SessionValidationState.AUTH_REQUIRED
+                            ) {
+                                "请重新登录后继续多端同步；原账号记录与访客记录都已分开保留。"
+                            } else {
+                                "不登录也能完整离线学习；访客记录与账号记录分开保存，" +
+                                    "登录不会把访客记录自动归入账号。"
+                            },
                             fontSize = 12.sp,
                             lineHeight = 19.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.height(12.dp))
                         Button(onClick = { showLogin = true }) { Text("用希悦账号登录") }
+                    }
+                    if (state.legacyImportPending) {
+                        Spacer(Modifier.height(14.dp))
+                        Text(
+                            if (state.session == null) {
+                                "检测到升级前的本机学习记录，现已独立保留。登录后可由你明确选择是否导入。"
+                            } else {
+                                "检测到升级前的本机学习记录，尚未归属任何账号。你可以选择导入当前账号。"
+                            },
+                            fontSize = 12.sp,
+                            lineHeight = 19.sp,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                        if (state.session != null) {
+                            Spacer(Modifier.height(8.dp))
+                            OutlinedButton(
+                                onClick = { showLegacyImportConfirm = true },
+                                enabled = !state.legacyImportBusy,
+                            ) {
+                                Text(if (state.legacyImportBusy) "导入中…" else "导入至当前账号")
+                            }
+                        }
+                    }
+                    state.legacyImportError?.let { error ->
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            error,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.error,
+                        )
                     }
                 }
             }
@@ -252,64 +328,6 @@ fun ProfileScreen(
             }
         }
 
-        // ---- 服务端匿名学习榜 ----
-        item {
-            SectionHeader(
-                "学习榜",
-                state.rankings?.dayKey?.let { "北京时间 $it" }.orEmpty(),
-            )
-        }
-        item {
-            PaperCard {
-                Column(Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            "只按 User Center 已同步进度计算，不接受客户端自报总分。",
-                            modifier = Modifier.weight(1f),
-                            fontSize = 11.sp,
-                            lineHeight = 18.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        TextButton(
-                            onClick = { viewModel.refreshRankings(syncCurrentUser = true) },
-                            enabled = !state.rankingsBusy,
-                        ) {
-                            Text(if (state.rankingsBusy) "刷新中…" else "刷新")
-                        }
-                    }
-                    state.rankingsError?.let { error ->
-                        Text(
-                            "学习榜暂不可用：$error",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
-                    state.rankings?.let { board ->
-                        Spacer(Modifier.height(10.dp))
-                        Text("今日榜", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                        board.daily.take(5).forEach { RankingLine(it, daily = true) }
-                        if (board.daily.isEmpty()) {
-                            Text(
-                                "今天还没有上榜记录。",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        Spacer(Modifier.height(12.dp))
-                        Text("总榜", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                        board.total.take(5).forEach { RankingLine(it, daily = false) }
-                        if (board.total.isEmpty()) {
-                            Text(
-                                "登录并同步后生成首条匿名榜单记录。",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
         // ---- 关于 / 更新 / 反馈 ----
         item { SectionHeader("关于") }
         item {
@@ -355,7 +373,10 @@ fun ProfileScreen(
                         },
                     )
                     Spacer(Modifier.height(10.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                         OutlinedButton(onClick = { viewModel.checkUpdate(force = true) }) {
                             Text("立即检查")
                         }
@@ -387,8 +408,6 @@ fun ProfileScreen(
             onDismiss = { showLogin = false },
             onLogin = { user, password -> viewModel.login(user, password) },
         )
-        // 登录成功后关闭对话框
-        if (state.session != null) showLogin = false
     }
 
     if (showFeedback) {
@@ -400,33 +419,41 @@ fun ProfileScreen(
             },
         )
     }
-}
 
-@Composable
-private fun RankingLine(entry: RankingEntry, daily: Boolean) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            "${entry.position}.",
-            modifier = Modifier.width(28.dp),
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            buildString {
-                append(entry.displayName)
-                if (entry.isMe) append("（我）")
+    if (showLegacyImportConfirm) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!state.legacyImportBusy) showLegacyImportConfirm = false
             },
-            modifier = Modifier.weight(1f),
-            fontSize = 12.sp,
-            fontWeight = if (entry.isMe) FontWeight.SemiBold else FontWeight.Normal,
-        )
-        Text(
-            if (daily) "+${entry.todayPoints}" else "${entry.totalPoints}",
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.primary,
+            title = { Text("导入旧版学习记录？") },
+            text = {
+                Text(
+                    "这些记录来自账号隔离功能上线前，当前尚未归属任何账号。" +
+                        "确认后会合并到「${state.session?.displayName.orEmpty()}」；" +
+                        "访客记录不会自动合并。",
+                    fontSize = 13.sp,
+                    lineHeight = 21.sp,
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.importLegacyLearning()
+                        showLegacyImportConfirm = false
+                    },
+                    enabled = !state.legacyImportBusy && state.session != null,
+                ) {
+                    Text("确认导入")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showLegacyImportConfirm = false },
+                    enabled = !state.legacyImportBusy,
+                ) {
+                    Text("保留不动")
+                }
+            },
         )
     }
 }
@@ -444,7 +471,7 @@ private fun LoginDialog(
         onDismissRequest = onDismiss,
         title = { Text("登录") },
         text = {
-            Column {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
                 Text(
                     "使用希悦（Seiue）账号登录。账号体系由 my.bdfz.net 统一管理，" +
                         "本应用不保存你的密码。",
@@ -504,8 +531,11 @@ private fun FeedbackDialog(
         onDismissRequest = { if (!state.feedbackBusy) onDismiss() },
         title = { Text("意见反馈") },
         text = {
-            Column {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
                     categories.forEach { option ->
                         val selected = option == category
                         OutlinedButton(
@@ -557,10 +587,30 @@ private fun FeedbackDialog(
                         color = MaterialTheme.colorScheme.primary,
                     )
                 }
+                state.feedbackLastReceiptId?.let { receiptId ->
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        if (state.feedbackLastNotificationSent == true) {
+                            "上次后台发送已确认保存并通知运营人员。回执 ${receiptId.take(8)}"
+                        } else {
+                            "上次后台发送已确认保存，通知状态待复核。回执 ${receiptId.take(8)}"
+                        },
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                if (state.feedbackQueued) {
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        "已加密保存至待发送队列，联网后将自动重试；后台确认保存后会移出队列。重新打开此页可查看最近回执。",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
         },
         confirmButton = {
-            if (state.feedbackReceiptId != null) {
+            if (state.feedbackReceiptId != null || state.feedbackQueued) {
                 Button(onClick = onDismiss) { Text("完成") }
             } else {
                 Button(

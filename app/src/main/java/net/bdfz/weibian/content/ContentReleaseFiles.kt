@@ -19,17 +19,57 @@ internal class ContentReleaseFiles(private val root: File) {
         val sha256: String,
     )
 
+    data class ValidatedRelease<T : Any>(
+        val release: Release,
+        val value: T,
+    )
+
     private val activeDir get() = File(root, ACTIVE)
     private val previousDir get() = File(root, PREVIOUS)
     private val stagedDir get() = File(root, STAGED)
 
-    fun readActiveOrPrevious(): Release? {
+    fun readActiveOrPrevious(): Release? = synchronized(FILE_LOCK) {
         migrateLegacyIfNeeded()
-        readSlot(activeDir)?.let { return it }
+        readSlot(activeDir)?.let { return@synchronized it }
         if (readSlot(previousDir) != null && restorePrevious()) {
-            return readSlot(activeDir)
+            return@synchronized readSlot(activeDir)
         }
-        return readSlot(previousDir)
+        readSlot(previousDir)
+    }
+
+    /**
+     * Read, parse and—only when parsing the current active slot fails—restore
+     * the parsed previous slot while holding the same process-wide file lock.
+     * This prevents a stale reader from rolling back a newer concurrent
+     * install after it has already inspected an older active release.
+     */
+    fun <T : Any> readValidatedActiveOrPrevious(
+        validate: (String, String) -> T,
+        onRejected: (Release, Throwable) -> Unit = { _, _ -> },
+    ): ValidatedRelease<T>? = synchronized(FILE_LOCK) {
+        migrateLegacyIfNeeded()
+        val active = readSlot(activeDir)
+        if (active != null) {
+            val validated = runCatching {
+                validate(active.body, active.contentVersion)
+            }
+            validated.getOrNull()?.let {
+                return@synchronized ValidatedRelease(active, it)
+            }
+            validated.exceptionOrNull()?.let { onRejected(active, it) }
+        }
+
+        val previous = readSlot(previousDir) ?: return@synchronized null
+        val validatedPrevious = runCatching {
+            validate(previous.body, previous.contentVersion)
+        }
+        validatedPrevious.exceptionOrNull()?.let {
+            onRejected(previous, it)
+            return@synchronized null
+        }
+        val value = validatedPrevious.getOrNull() ?: return@synchronized null
+        restorePreviousLocked()
+        ValidatedRelease(previous, value)
     }
 
     fun install(
@@ -37,43 +77,54 @@ internal class ContentReleaseFiles(private val root: File) {
         expectedSha256: String,
         contentVersion: String,
         validate: (String, String) -> Unit,
-    ): Boolean {
+    ): Boolean = synchronized(FILE_LOCK) {
         val expected = expectedSha256.lowercase()
-        if (ContentStore.sha256(body.toByteArray()) != expected) return false
-        runCatching { validate(body, contentVersion) }.getOrElse { return false }
+        if (ContentStore.sha256(body.toByteArray()) != expected) {
+            return@synchronized false
+        }
+        runCatching { validate(body, contentVersion) }
+            .getOrElse { return@synchronized false }
 
         root.mkdirs()
         stagedDir.deleteRecursively()
-        if (!writeSlot(stagedDir, Release(body, contentVersion, expected))) return false
-        val staged = readSlot(stagedDir) ?: return false
+        if (!writeSlot(stagedDir, Release(body, contentVersion, expected))) {
+            return@synchronized false
+        }
+        val staged = readSlot(stagedDir) ?: return@synchronized false
         if (staged.sha256 != expected) {
             stagedDir.deleteRecursively()
-            return false
+            return@synchronized false
         }
         runCatching { validate(staged.body, staged.contentVersion) }.getOrElse {
             stagedDir.deleteRecursively()
-            return false
+            return@synchronized false
         }
 
         previousDir.deleteRecursively()
         val movedActive = if (activeDir.exists()) activeDir.renameTo(previousDir) else true
         if (!movedActive) {
             stagedDir.deleteRecursively()
-            return false
+            return@synchronized false
         }
-        if (stagedDir.renameTo(activeDir)) return true
+        if (stagedDir.renameTo(activeDir)) return@synchronized true
 
         // The new slot could not be promoted. Restore the old active slot.
         if (previousDir.exists() && !activeDir.exists()) previousDir.renameTo(activeDir)
         stagedDir.deleteRecursively()
-        return false
+        false
     }
 
-    fun restorePrevious(): Boolean {
+    fun restorePrevious(): Boolean = synchronized(FILE_LOCK) {
+        restorePreviousLocked()
+    }
+
+    private fun restorePreviousLocked(): Boolean {
         if (readSlot(previousDir) == null) return false
         val failedDir = File(root, FAILED)
         failedDir.deleteRecursively()
-        if (activeDir.exists() && !activeDir.renameTo(failedDir)) return false
+        if (activeDir.exists() && !activeDir.renameTo(failedDir)) {
+            return false
+        }
         if (!previousDir.renameTo(activeDir)) {
             if (failedDir.exists() && !activeDir.exists()) failedDir.renameTo(activeDir)
             return false
@@ -141,6 +192,7 @@ internal class ContentReleaseFiles(private val root: File) {
     }
 
     private companion object {
+        val FILE_LOCK = Any()
         const val ACTIVE = "active"
         const val PREVIOUS = "previous"
         const val STAGED = "staged"

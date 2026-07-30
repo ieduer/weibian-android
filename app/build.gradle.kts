@@ -22,11 +22,11 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "net.bdfz.weibian"
+        applicationId = "net.bdfz.weibian.direct"
         minSdk = 23
         targetSdk = 37
-        versionCode = 3
-        versionName = "1.1.1"
+        versionCode = 4
+        versionName = "1.1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -47,7 +47,6 @@ android {
     productFlavors {
         create("direct") {
             dimension = "distribution"
-            applicationIdSuffix = ".direct"
             buildConfigField("boolean", "SELF_UPDATE_ENABLED", "true")
         }
         create("play") {

@@ -2,17 +2,19 @@
 
 Status: `published-limited`
 Public release: v1.0.0 / versionCode 1
-Release candidate: v1.1.1 / versionCode 3（immutable staged，未成为 current／accepted）
+Historical staged candidate: v1.1.1 / versionCode 3（未成为 current／accepted）
+Next source candidate: v1.1.2 / versionCode 4（未构建、未签名、未验收）
 Verified release checkpoint: `e623e370a60bff33609e8bf5ad2748f559e20471`
 CI: GitHub Actions run `30466463323`, success
 Last production-candidate verification: 2026-07-29
 Source: `/Users/ylsuen/CF/lunyu-yizhu-android`
 
 这是本项目开发、发布、值守、故障处理和交接的项目级事实入口。
-“已公开发布”不等于 production-supported；本项目仍有实体平板、实体离线／
-恢复、真实反馈、真实差异内容、final exact install 与 pointer/GitHub/landing
-切换门未闭环。User Center registry 已 live，但 clean source reconciliation
-仍是共享枢纽技术债。
+“已公开发布”不等于 production-supported；本项目仍有实体离线／恢复、真实
+反馈、内容 previous/corrupt-active 恢复、v1.1.2 final exact install、已获批
+的单次手机 forced expanded-layout 平板替代验收，以及
+pointer/GitHub/landing 切换门未闭环。这个替代只适用于本次 Weibian release，
+必须恢复所有设备设置；不得泛化到舰队未来 release 的实体平板规则。
 
 ## 0. 必读顺序与状态用词
 
@@ -38,11 +40,12 @@ Source: `/Users/ylsuen/CF/lunyu-yizhu-android`
 - “v1.0.0 已公开发布”
 - “v1.1.1 / code 3 的 final APK 与 release.json 已 immutable staged，但尚未
   移动公开更新指针、建立 GitHub Release 或成为 accepted release”
+- “当前源码下一候选为 v1.1.2 / code 4；Direct/Play 共用
+  `net.bdfz.weibian.direct`，尚未构建或验收”
 - “Worker 排行榜、内容不可变路由和差量契约已上线”
-- “实体 OnePlus 手机上的 pre-final code 3 候选已通过‘我’页闪退回归、AI
-  路径与 session persistence；不代表 final exact APK 已验收”
-- “User Center v240 registry 已 100% live；clean Git source reconciliation
-  仍开放”
+- “LE2120 与 IN2020 已安装 byte-identical final code 3 baseline，并通过
+  ‘我’页、差量／整包回落、重启和稳定内容恢复；不代表 code 4 已验收”
+- “User Center v242 已 100% live；v240 是 exact feedback rollback”
 - “canonical portal `i.rdfzer.com` 返回 200”
 - “Companion disposition 是 `not-applicable`，没有 Weibian WebView”
 - “当前 lifecycle 为 `published-limited`”
@@ -56,6 +59,7 @@ Source: `/Users/ylsuen/CF/lunyu-yizhu-android`
 - “实体手机和平板都已验证”
 - “差异内容版本已完成线上导入与回滚”
 - “v1.1.1 已成为 current／accepted release”
+- “v1.1.2 已构建、签名、current 或 accepted”
 - “应用内自更新端到端已验证”
 
 ## 1. App identity record
@@ -69,9 +73,10 @@ Source: `/Users/ylsuen/CF/lunyu-yizhu-android`
 | default branch | `main` |
 | v1.0.0 source/tag | `6512b57f0148e51b98452d166ce75c139ff68855` / `v1.0.0` |
 | siteKey | `weibian` |
-| base / Play package | `net.bdfz.weibian` |
+| Kotlin namespace | `net.bdfz.weibian`（不是安装身份） |
 | Direct package | `net.bdfz.weibian.direct` |
-| Direct update | 客户端代码 enabled；公开 v1.0.0 `latest.json.appId` 仍错误，live contract 未通过 |
+| Play package | `net.bdfz.weibian.direct`（与 Direct 同一安装身份／签名 lineage） |
+| Direct update | 客户端代码 enabled；公开 v1.0.0 `latest.json.appId` 已修正为 `.direct` 并逐 byte 读回；code4 两机原位更新未验收 |
 | Play update | disabled；商店流程未验收 |
 | public host | `weibian.bdfz.net` |
 | Worker | `weibian-content` |
@@ -82,11 +87,12 @@ Source: `/Users/ylsuen/CF/lunyu-yizhu-android`
 | APK SHA-256 | `21fddd9a82a6f486f5aa2e817716615fcd58b1d0d4f71ddff511eaaf8a1111ce` |
 | APK size | 2,737,821 bytes |
 | signer certificate SHA-256 | `a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282` |
-| candidate source | v1.1.1 / code 3 release checkpoint `e623e370…59e20471` |
-| candidate APK | immutable staged；`…/v1.1.1/de47da19/weibian-1.1.1.apk`；SHA-256 `de47da19…8da67`；2,738,032 bytes；尚未成为 current／accepted |
+| historical candidate source | v1.1.1 / code 3 release checkpoint `e623e370…59e20471` |
+| historical candidate APK | immutable staged；`…/v1.1.1/de47da19/weibian-1.1.1.apk`；SHA-256 `de47da19…8da67`；2,738,032 bytes；不得升格为 current／accepted |
+| next source candidate | v1.1.2 / code 4；Direct/Play canonical package 均为 `net.bdfz.weibian.direct`；尚无 release artifact |
 | signing authority | `/Users/ylsuen/.android/weibian-release.env` |
-| local data class | Room schema 1；学习记录不可再生 |
-| central data class | `student_owned`；User Center progress/feedback |
+| local data class | Room schema 2；按 owner binding 隔离的学习记录与终态隔离 outbox，不可再生 |
+| central data class | `student_owned`；User Center progress/feedback；榜单 Worker D1 保存假名化核验作答事件 |
 | content schema | `lunyu-content-v1`, schemaVersion 1 |
 | content version | `fc68413c7b70da0e` |
 | lifecycle | `published-limited` |
@@ -97,9 +103,9 @@ Source: `/Users/ylsuen/CF/lunyu-yizhu-android`
 ### 当前发布证据
 
 - Worker current version:
-  `64f3c319-e3b8-429e-a49c-1e333fd2e15d`
+  `e16da332-cbb5-46fd-82c8-ae7a6d4c69c0`
 - Previous Worker version:
-  `437c965f-d420-43f0-8f08-c73a4b15a73b`
+  `32f8dd97-9d50-49e1-a0cf-9f1277dd0c92`
 - GitHub Release:
   `https://github.com/ieduer/weibian-android/releases/tag/v1.0.0`
 - v1.1.1 release checkpoint / CI:
@@ -112,9 +118,8 @@ Source: `/Users/ylsuen/CF/lunyu-yizhu-android`
   `latest.json` 尚未切换。metadata 为 625 bytes，SHA-256
   `9cfdb82006787800cc1612d8232257191815b7c3d06b33537695ccd946df4275`
 - User Center registry:
-  v240 `96b9db71-a595-4ae3-a557-288b49bffd2f` 100% live，deployment
-  `df473f1b-e57f-4e28-a06a-ef1c868e889f`；rollback v239
-  `c3b71149-0c8a-460b-8613-ff789502a56a`
+  v242 `ec273922-1ec4-442b-8c84-9a5e2f7fcdf5` 100% live；exact feedback
+  rollback v240 `96b9db71-a595-4ae3-a557-288b49bffd2f`
 - Pulse:
   `weibian.bdfz.net`, source `worker_analytics`, status `tracked`
 - canonical portal:
@@ -122,8 +127,9 @@ Source: `/Users/ylsuen/CF/lunyu-yizhu-android`
 - Companion:
   `not-applicable`；无 Weibian WebView service
 
-公开 `latest.json` 的 v1.0.0 `appId` 当前为 `net.bdfz.weibian`，与 Direct
-package 不符。它是待修的公开指针，不是 self-update acceptance evidence。
+公开 v1.0.0 `latest.json.appId` 已于 2026-07-30 修正为 Direct package
+`net.bdfz.weibian.direct`，并完成 cache-busted public byte readback。它仍只
+是 code1 当前指针，不是 code4 self-update acceptance evidence。
 
 版本 ID 是回滚锚，不代表内容、客户端和数据门全部通过。操作前重新读取
 Wrangler/GitHub/R2；不得把本节旧值直接当作当前事实。
@@ -172,11 +178,17 @@ Wrangler/GitHub/R2；不得把本节旧值直接当作当前事实。
 
 Room `weibian-learning.db` 保存：
 
-- chapter progress；
-- task attempts；
-- daily stats；
-- gaokao attempts；
-- sync queue。
+- 按 `ownerBinding` 隔离的 chapter progress、task attempts、daily stats 与
+  gaokao attempts；
+- User Center progress sync queue；
+- authenticated authored-task verified-answer outbox；
+- 无法重试的终态项目及其不含敏感 payload 的隔离原因。
+
+v1 → v2 迁移把旧版未分区记录放入 `legacy-local-v1`，不会自动归给随后登录的
+账号；用户必须在 App 中明确选择导入。访客使用 `guest-v1`，账号 owner binding
+由规范 slug 单向派生，原始 slug 不写进学习表。反馈另存于
+`weibian-feedback-outbox.db` schema 2，payload 由 Android Keystore 加密，
+并以稳定 mutation id、owner binding 和 delivery state 管理。
 
 禁止 `fallbackToDestructiveMigration`。任何 schema 变更必须：
 
@@ -205,10 +217,16 @@ mutation id。服务端仍以 `siteKey + itemKey` 的幂等 PUT 为权威写入�
 
 ### 3.4 段位与排行榜
 
-“修为/段位/每日任务”保留本机即时体验；线上每日榜和总榜由
-`weibian-content` 通过 User Center service binding 读取已写入进度后计算，
-客户端不能提交总分。D1 只保存 HMAC 假名快照，不保存账号、姓名或 Cookie；
-服务端 secret 缺失时 fail closed。榜单是学习激励，不是正式成绩。
+“修为/段位/每日任务”保留本机即时体验，与线上榜单分开命名和显示。App 只
+向 `weibian-content` 提交 event id、当前 content version、canonical task、
+chapter 和所选答案；不能提交正确性、积分、时间、用户或总分。Worker 通过
+User Center service binding 只验证身份，再从精确 allowlist 内容对象核验题目
+与答案，冻结每个假名用户／题目的服务端首次记录结果。
+
+D1 `weibian_answer_events_v2` 保存 HMAC 假名、题目／内容语义身份、所选答案、
+服务端派生的正确性／积分、接收时间与北京时间接收日，不保存账号、姓名、
+Cookie、密码或自由文本。每日榜按服务端接收／核验的北京时间日期，总榜按
+核验答对数；这不是本机“修为/段位”，也不是正式成绩。
 
 ### 3.5 内容权利
 
@@ -249,8 +267,13 @@ certificate。
 - Worker secret `RANKING_PEPPER`
 
 排行榜 D1 为 `weibian-rankings`，Worker 通过 `USER_CENTER` service binding
-读取进度。不得在 APK、Worker source、报告、命令行参数或 Git 中记录 secret
-值；排行榜 secret 缺失必须拒绝认证同步。
+只验证身份，并从 exact R2 content allowlist 核验作答。不得在 APK、Worker
+source、报告、命令行参数或 Git 中记录 secret 值；排行榜 secret 缺失必须
+拒绝认证同步。
+
+`RANKING_PEPPER` 是 D1 用户键的身份材料，必须跟随数据库恢复权限备份，不得
+例行原位轮换。若确需更换，先发布版本化双 key 读写／回填方案，验证旧新榜单
+连续与回滚，再退役旧 key；直接替换会把全部历史拆成新的假名用户。
 
 ## 5. Dependency map
 
@@ -262,6 +285,8 @@ certificate。
 | App → R2 | manifest/APK bytes/hash/size/signer | 安装和自更新 | immutable object + pointer；坏已装版发更高 code |
 | Worker → R2 | `content-releases.js` exact key + public/Worker byte parity | 历史内容可回读 | immutable object 不删除；Worker mapping rollback |
 | Worker → Assets | 当前 manifest/旧客户端兼容 bundle | 稳定指针与 v1.0 兼容 | Worker previous version |
+| Worker → User Center | supplied session → canonical identity；无 Cookie 时只读匿名榜 | 榜单 `isMe` 与作答写入 | User Center binding；401 fail closed |
+| Worker → ranking D1 | first server-recorded authored answer；prepared SQL aggregate | 每日／总榜 | 保留 additive event；Worker version rollback |
 | Pulse → Worker analytics | meta/range/live | 运行可见性 | Pulse owner；App 不直写 |
 | build → source corpora | `build_content.py --check` | 内容、stable ID、alias | 上游 owner；另开 task |
 | GitHub → R2 release | asset bytes/hash 相同 | 第二分发面 | Git tag/Release + immutable R2 |
@@ -290,6 +315,7 @@ curl -sS 'https://pulse.bdfz.net/api/range?range=24h' \
 - GitHub Release 和 R2 APK digest；
 - Worker errors/requests；
 - User Center aggregate（只保留 aggregate）；
+- ranking D1 只读 aggregate（事件数、假名用户数、核验积分；不导出逐行身份材料）；
 - feedback delivery；
 - 版本 adoption/crash/ANR（若有受审核 aggregate）；
 - canonical portal `i.rdfzer.com` 入口；
@@ -311,7 +337,8 @@ Weibian WebView service，而不是要求把它加入 Companion。
 ### 每季
 
 - 实体手机覆盖升级演练；
-- 实体平板 adaptive/accessibility；
+- 实体平板 adaptive/accessibility；本次 Weibian release 例外按 owner 明确
+  批准，改由登记手机 reversible forced expanded-layout 验收并恢复设置；
 - Worker rollback sandbox/受控演练；
 - 内容 staged/previous restore；
 - lifecycle 是否仍为 `published-limited`。
@@ -338,18 +365,21 @@ cd /Users/ylsuen/CF/lunyu-yizhu-android
 JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./gradlew \
   --no-daemon \
   :app:testDirectDebugUnitTest \
+  :app:testPlayDebugUnitTest \
   :app:lintDirectDebug \
-  :app:assembleDirectDebug
+  :app:lintPlayDebug \
+  :app:assembleDirectDebug \
+  :app:assemblePlayDebug
 ```
 
 Release build 只能在 identity release card 完整、项目专用 signing 输入就绪、
 prior signer/version 已核对后执行。唯一 authority 是
 `/Users/ylsuen/.android/weibian-release.env`；必须按 `docs/DEPLOYMENT.md`
 使用 `set -euo pipefail`、`--no-daemon`、clean build，并拒收
-`app-direct-release-unsigned.apk`。本次 final artifact 已锁定在 release
-checkpoint `e623e370…59e20471`；后续状态文档不进入该二进制。若 App 代码、
-资源或 build inputs 再变，必须提高 versionCode 后从新的 clean checkpoint
-重建、重算 hash/size，并重新走完整验收。
+`app-direct-release-unsigned.apk`。code 3 artifact 锁定在历史 release
+checkpoint `e623e370…59e20471`，不得覆盖。当前 App 代码已经变化，因此
+下一候选固定为 v1.1.2 / code 4，必须从新的 clean checkpoint 重建、重算
+hash/size，并重新走完整验收。
 
 ### 内容生成
 
@@ -387,9 +417,9 @@ clean clone 用 `node scripts/bootstrap_public_content.mjs` 恢复精确内容�
 - rollback 和未过门。
 
 `e623e370a60bff33609e8bf5ad2748f559e20471` 与 CI run `30466463323`
-是 v1.1.1 final artifact 的 release checkpoint；该 exact APK 已 immutable
-staged。其后的状态文档不进入 v1.1.1 artifact，也不触发重签；任何二进制修复
-都必须使用同 signer 和更高 versionCode。
+是 v1.1.1 历史 artifact 的 release checkpoint；该 exact APK 已 immutable
+staged 但不得升格。当前下一候选为 v1.1.2 / code 4；任何后续二进制修复
+仍必须使用同 signer 和更高 versionCode。
 
 ### 8.2 Worker/内容
 
@@ -405,12 +435,17 @@ npx wrangler deploy --dry-run
 差异版本导入和回滚均通过后执行。不得覆盖 R2 内容寻址对象，也不得把
 `/api/content/bundle` 兼容 URL 标成 immutable。
 
-当前另有只供实体差异内容验收的 canary Worker version
-`8207191d-81aa-4367-b403-7c6bdd32d27e`，流量为 0%；ordinary production
-仍由 `64f3c319-e3b8-429e-a49c-1e333fd2e15d` 承载。B bundle
+只供实体差异内容验收的 canary Worker version
+`8207191d-81aa-4367-b403-7c6bdd32d27e` 已完成测试且当前不承载流量；
+双机内容验收结束时 ordinary production 已恢复为
+`64f3c319-e3b8-429e-a49c-1e333fd2e15d`；其后 verified-answer ranking v2
+与读路径加固已由
+`e16da332-cbb5-46fd-82c8-ae7a6d4c69c0` 以 100% 承载，立即 rollback 是
+`32f8dd97-9d50-49e1-a0cf-9f1277dd0c92`。B bundle
 `4a97b261…e3703`（871,334 bytes）与 A→B delta `83d407be…8b1f`
-（259 bytes）已 immutable 上传并公开读回，但尚未在实体 App 导入，不能写成
-内容更新验收通过。
+（259 bytes）已 immutable 上传并公开读回；LE2120 与 IN2020 两台实体手机
+均通过真实 delta、故意错误 digest 后 full fallback、装置 SHA、重启持久化
+与 final code3 恢复。corrupt-active → previous slot 恢复仍须另行验收。
 
 ### 8.3 APK
 
@@ -429,7 +464,8 @@ v1.0.0 是第一个已接受 release，没有更低 production APK 可作为已�
 
 Landing page 必须链接到当前 accepted release 的内容寻址 APK，不能链接
 `latest.apk` 便利别名。v1.1.1 pointer 未移动前仍指向 immutable v1.0.0；
-但当前公开 v1.0.0 `latest.json.appId` 错误，不能据此声称 Direct 自更新通过。
+其 `latest.json.appId` 历史错误已修正并公开逐 byte 读回；仍不能据此声称
+尚未发布的 code4 Direct 原位更新通过。
 
 ## 9. 监控和验收
 
@@ -447,8 +483,15 @@ Landing page 必须链接到当前 accepted release 的内容寻址 APK，不能
 
 不能仅用 emulator。production-supported 至少需要：
 
-- 指定实体手机 serial；
-- 指定实体平板 serial；
+- 舰队登记的两台不同 hardware serial 实体手机：OnePlus 9 Pro `LE2120`
+  （`c5467d2b`）与 OnePlus 8 Pro `IN2020`（`6393cccf`）；两台安装同一
+  byte-identical 签名候选并逐台通过 package 唯一性、覆盖升级、cold/
+  foreground/Back、核心流程、离线/恢复、本机资料/Session/outbox/content
+  version 持久化、反馈、自更新与 scoped fatal/ANR；任一台不可达或任一门
+  失败即 fail closed，模拟器不得替代；
+- 本次 Weibian release 用登记手机的 reversible forced expanded-layout
+  关闭 app-specific 大屏门，并逐项恢复 size/density/rotation/proxy/font/
+  keep-awake；未来 release 仍遵守舰队实体平板规则；
 - clean install；
 - v1.0.0 → 更高 code 覆盖升级；
 - cold/force-stop/foreground/back/rotation/multi-window/offline/recovery；
@@ -459,12 +502,13 @@ Landing page 必须链接到当前 accepted release 的内容寻址 APK，不能
 - scoped logcat 无 fatal/ANR；
 - direct/Play 渠道行为分离。
 
-截至当前，实体 OnePlus 上的 pre-final code 3 候选已通过“我”页闪退回归、
-AI 路径与 session persistence。final exact
-`de47da19…8da67` install、physical feedback、offline/recovery、
-rotation/multi-window、差异内容导入／回滚、实体平板和最终
-release/self-update 仍是 open gate。User Center registry v240 已 live，不再是
-open canary gate。
+截至当前，LE2120 与 IN2020 两台实体手机均已装回 final exact code3
+`de47da19…8da67`，并通过真实 delta/full fallback、内容 SHA 与重启持久化；
+IN2020 另通过“我”页闪退回归，既有 OnePlus 证据还覆盖 AI 路径与 session
+persistence。physical feedback、offline/recovery、rotation/multi-window、
+corrupt-active → previous、获批的手机 expanded-layout 平板替代、
+v1.1.2/code4 final build 与最终 release/self-update 仍是 open gate。User
+Center v242 已 live；v240 是 exact feedback rollback。
 
 ## 10. 故障排查
 
@@ -517,7 +561,7 @@ open canary gate。
 |---|---|
 | `i.rdfzer.com` 没有 Weibian | 这是 canonical portal 故障；检查当前 Pages deployment、源条目与 rollback |
 | `allinone.bdfz.net`／`portal.bdfz.net` 522 | 非 canonical 别名的既存状态；不得把它误报为本 App portal gate |
-| User Center 看不到 Weibian | v240 registry 已 live；检查 deployment `df473f1b…` 与 `/api/sites`，必要时按已记录 v239 rollback；不得从未审工作树 deploy |
+| User Center 看不到 Weibian | v242 registry/feedback 已 live；检查 `/api/sites` 与 current deployment，必要时把 Worker 精确回滚到 v240 `96b9db71…ffd2f`；不得从未审工作树 deploy |
 | Companion 出现 Weibian WebView entry | 违反已接受的 `not-applicable` disposition；移除该 entry，不新增 WebView service |
 | Pulse 没数据 | 先看 meta 是否登记，再看 range source/coverage；request 不等于用户 |
 
@@ -528,7 +572,7 @@ open canary gate。
 当前 previous version:
 
 ```text
-437c965f-d420-43f0-8f08-c73a4b15a73b
+32f8dd97-9d50-49e1-a0cf-9f1277dd0c92
 ```
 
 操作前重新读取 `wrangler versions list/deployments list`，确认它仍是目标
@@ -542,10 +586,11 @@ wrangler rollback <REVIEWED_PREVIOUS_VERSION_ID> \
 
 回滚后复验 health、manifest、bundle hash、App import 和 Pulse。
 
-物理内容验收 canary `8207191d-81aa-4367-b403-7c6bdd32d27e` 当前为 0%
-流量；ordinary production rollback anchor 是
-`64f3c319-e3b8-429e-a49c-1e333fd2e15d`。若 canary 被临时提升，结束后须将
-该 ordinary version 恢复至 100% 并读回 deployment。
+物理内容验收 canary `8207191d-81aa-4367-b403-7c6bdd32d27e` 当前不承载
+流量；`64f3c319-e3b8-429e-a49c-1e333fd2e15d` 只是该历史双机内容 canary
+结束时的 restore anchor，**不是当前 rollback**。当前 rollback 以本节开头的
+live readback 为准。若未来临时提升 canary，结束后仍须重复 production
+version 恢复与 health／manifest 读回。
 
 ### APK
 
@@ -583,12 +628,12 @@ wrangler rollback <REVIEWED_PREVIOUS_VERSION_ID> \
 
 | 优先级 | 项目 | 关闭证据 |
 |---|---|---|
-| P1 | 无实体平板正式验收 | 指定实体平板 serial 的 adaptive/accessibility 完整核查记录 |
+| P1 | 本次 expanded-layout 替代尚未验收 | 按 owner 对本次 Weibian release 的唯一例外，在登记手机强制大屏布局通过 adaptive/accessibility，并逐项恢复 size/density/rotation/proxy/font/keep-awake；不得泛化到舰队 |
 | P1 | feedback 未做真实回执 | physical App → API → aggregate D1 → Telegram |
 | P1 | 实体 offline/recovery 矩阵未闭环 | 断网启动、读练、恢复联网、force-stop/rotation/multi-window 与 scoped logcat |
-| P1 | 差量契约尚无真实差异版本导入/回滚 | physical App 的 patch/full fallback、重启与 previous rollback |
-| P1 | final exact APK 未做实体安装验收 | 在指定实体手机覆盖安装 `de47da19…8da67`，确认数据/session/profile，并完成 scoped log |
-| P1 | v1.1.1 release/self-update 未闭环 | immutable R2 已完成；仍须 GitHub/landing byte parity、正确 Direct `latest.json` pointer-last、实体读回 |
+| P1 | 内容 previous/corrupt-active 恢复尚未闭环 | 两台手机的 patch/full fallback、SHA 与重启已通过；仍须破坏 active 后证明 previous slot 恢复 |
+| P1 | v1.1.2 / code 4 尚无 final exact APK | 新 clean checkpoint 构建同 signer artifact，在两台登记手机完成升级、资料保留和 scoped log，并完成本次获批的 phone expanded-layout 替代 |
+| P1 | v1.1.2 release/self-update 未闭环 | 旧 v1.1.1 immutable staging 不可升格；须 code 4 immutable/GitHub/landing byte parity、正确 canonical `latest.json` pointer-last、两台实体手机读回 |
 | Shared-hub debt（非 App lifecycle 硬门） | User Center clean source 未对账 | 将已 live 的单一 registry object 归并到经审 clean Git source；在此之前禁止普通 hub deploy，并验证 production bundle parity |
 | P2 | 注册 UI 预留但服务关闭 | User Center 正式开放或明确永久不支持 |
 
@@ -597,12 +642,14 @@ wrangler rollback <REVIEWED_PREVIOUS_VERSION_ID> \
 任何新功能、共享 hub 改动、新 release、内容分发扩展或 production 状态提升
 都必须另开 task。优先顺序：
 
-1. final exact APK 实体覆盖安装与 physical feedback 回执；
-2. 实体 offline/recovery、rotation/multi-window、真实差异内容导入/回滚和实体平板；
+1. 构建 v1.1.2 / code 4 final exact APK，并完成两台实体手机覆盖安装与
+   physical feedback 回执；
+2. 实体 offline/recovery、rotation/multi-window、内容 corrupt-active →
+   previous 恢复和本次获批的 phone expanded-layout 替代；恢复所有设备设置；
 3. 按 fail-closed 顺序发布正确 Direct `latest.json`，完成
    R2/GitHub/`i.rdfzer.com` 字节一致性和实体自更新；
-4. 另开共享枢纽维护 task 对账 User Center clean source，保持 v240
-   production bundle 可回滚；这项技术债不用于阻断已验证的 Weibian App
+4. 另开共享枢纽维护 task 对账 User Center clean source；保持 v242 current
+   与 v240 exact rollback；这项技术债不用于阻断已验证的 Weibian App
    lifecycle；
 5. Play store。
 

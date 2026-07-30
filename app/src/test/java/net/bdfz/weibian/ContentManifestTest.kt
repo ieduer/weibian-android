@@ -38,29 +38,50 @@ class ContentManifestTest {
     }
 
     @Test
+    fun `rejects content version that is not the digest prefix`() {
+        val payload = validManifest()
+            .put("contentVersion", "0000000000000000")
+            .put(
+                "bundleUrl",
+                "https://weibian.bdfz.net/api/content/bundles/0000000000000000.json",
+            )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            parseContentManifest(payload)
+        }
+    }
+
+    @Test
+    fun `rejects string and decimal numeric fields`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            parseContentManifest(validManifest().put("schemaVersion", "1"))
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            parseContentManifest(validManifest().put("size", 871333.0))
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            parseContentManifest(
+                validManifest().put(
+                    "deltas",
+                    JSONArray().put(
+                        validDelta().put("size", "1024"),
+                    ),
+                ),
+            )
+        }
+    }
+
+    @Test
     fun `accepts bounded immutable delta descriptor`() {
-        val fromSha = "1".repeat(64)
-        val toSha = validManifest().getString("sha256")
         val parsed = parseContentManifest(
             validManifest().put(
                 "deltas",
-                JSONArray().put(
-                    JSONObject()
-                        .put("fromSha256", fromSha)
-                        .put("toSha256", toSha)
-                        .put("sha256", "2".repeat(64))
-                        .put("size", 1024)
-                        .put(
-                            "url",
-                            "https://weibian.bdfz.net/api/content/deltas/" +
-                                "${fromSha.take(8)}-${toSha.take(8)}.json",
-                        ),
-                ),
+                JSONArray().put(validDelta()),
             ),
         )
 
         assertEquals(1, parsed.deltas.size)
-        assertEquals(fromSha, parsed.deltas.single().fromSha256)
+        assertEquals("1".repeat(64), parsed.deltas.single().fromSha256)
     }
 
     private fun validManifest() = JSONObject()
@@ -74,4 +95,19 @@ class ContentManifestTest {
             "bundleUrl",
             "https://weibian.bdfz.net/api/content/bundles/fc68413c7b70da0e.json",
         )
+
+    private fun validDelta(): JSONObject {
+        val fromSha = "1".repeat(64)
+        val toSha = validManifest().getString("sha256")
+        return JSONObject()
+            .put("fromSha256", fromSha)
+            .put("toSha256", toSha)
+            .put("sha256", "2".repeat(64))
+            .put("size", 1024)
+            .put(
+                "url",
+                "https://weibian.bdfz.net/api/content/deltas/" +
+                    "${fromSha.take(8)}-${toSha.take(8)}.json",
+            )
+    }
 }

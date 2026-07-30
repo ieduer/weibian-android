@@ -38,6 +38,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import net.bdfz.weibian.ui.screens.ChallengeScreen
@@ -47,6 +49,7 @@ import net.bdfz.weibian.ui.screens.GaokaoListScreen
 import net.bdfz.weibian.ui.screens.HomeScreen
 import net.bdfz.weibian.ui.screens.MapScreen
 import net.bdfz.weibian.ui.screens.ProfileScreen
+import net.bdfz.weibian.ui.screens.RankingScreen
 
 /**
  * 应用外壳。
@@ -58,6 +61,7 @@ sealed interface Route {
     data object Home : Route
     data object Map : Route
     data object Gaokao : Route
+    data object Ranking : Route
     data object Profile : Route
     data class Chapter(val chapterId: Int) : Route
     data class GaokaoDetail(val gaokaoId: String) : Route
@@ -67,12 +71,13 @@ sealed interface Route {
 /** 正文最大宽度：再宽中文行长就超出舒适阅读区间了。 */
 private val READING_MAX_WIDTH = 760.dp
 
-private data class TabSpec(val route: Route, val label: String, val icon: ImageVector)
+internal data class TabSpec(val route: Route, val label: String, val icon: ImageVector)
 
-private val tabs = listOf(
+internal val primaryTabs = listOf(
     TabSpec(Route.Home, "今日", Icons.Filled.Home),
     TabSpec(Route.Map, "学程", Icons.Filled.Map),
     TabSpec(Route.Gaokao, "真题", Icons.Filled.School),
+    TabSpec(Route.Ranking, "榜单", Icons.Filled.EmojiEvents),
     TabSpec(Route.Profile, "我", Icons.Filled.Person),
 )
 
@@ -81,6 +86,10 @@ fun WeibianApp(viewModel: WeibianViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val challenge by viewModel.challenge.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.checkUpdate(force = false)
+    }
 
     // 路由栈进 saveable，进程被回收后返回栈仍在。
     var stack by rememberSaveable(
@@ -117,15 +126,12 @@ fun WeibianApp(viewModel: WeibianViewModel = viewModel()) {
         }
     }
 
-    val showBottomBar = current is Route.Home || current is Route.Map ||
-        current is Route.Gaokao || current is Route.Profile
-
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
-            if (showBottomBar) {
+            if (current.isPrimaryDestination()) {
                 NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-                    tabs.forEach { tab ->
+                    primaryTabs.forEach { tab ->
                         NavigationBarItem(
                             selected = current::class == tab.route::class,
                             onClick = { selectTab(tab.route) },
@@ -185,6 +191,11 @@ fun WeibianApp(viewModel: WeibianViewModel = viewModel()) {
                         onOpen = { push(Route.GaokaoDetail(it)) },
                     )
 
+                    is Route.Ranking -> RankingScreen(
+                        state = state,
+                        viewModel = viewModel,
+                    )
+
                     is Route.Profile -> ProfileScreen(
                         state = state,
                         viewModel = viewModel,
@@ -238,19 +249,24 @@ private fun tween(durationMillis: Int) =
     androidx.compose.animation.core.tween<Float>(durationMillis)
 
 // rememberSaveable 需要能把路由存进 Bundle，这里用一行字符串编码。
-private fun encodeRoute(route: Route): String = when (route) {
+internal fun Route.isPrimaryDestination(): Boolean =
+    primaryTabs.any { tab -> this::class == tab.route::class }
+
+internal fun encodeRoute(route: Route): String = when (route) {
     is Route.Home -> "home"
     is Route.Map -> "map"
     is Route.Gaokao -> "gaokao"
+    is Route.Ranking -> "ranking"
     is Route.Profile -> "profile"
     is Route.Challenge -> "challenge"
     is Route.Chapter -> "chapter:${route.chapterId}"
     is Route.GaokaoDetail -> "gk:${route.gaokaoId}"
 }
 
-private fun decodeRoute(value: String): Route = when {
+internal fun decodeRoute(value: String): Route = when {
     value == "map" -> Route.Map
     value == "gaokao" -> Route.Gaokao
+    value == "ranking" -> Route.Ranking
     value == "profile" -> Route.Profile
     value == "challenge" -> Route.Challenge
     value.startsWith("chapter:") -> Route.Chapter(value.removePrefix("chapter:").toIntOrNull() ?: 1)

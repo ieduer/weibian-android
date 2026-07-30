@@ -30,9 +30,9 @@ class SecureSessionStore(context: Context) {
     private val prefs = context.applicationContext
         .getSharedPreferences("weibian_secure_session", Context.MODE_PRIVATE)
 
-    fun read(): AppSession? {
-        val encoded = prefs.getString(KEY_SESSION, null) ?: return null
-        return runCatching {
+    fun read(): AppSession? = synchronized(SESSION_LOCK) {
+        val encoded = prefs.getString(KEY_SESSION, null) ?: return@synchronized null
+        runCatching {
             val bytes = Base64.decode(encoded, Base64.NO_WRAP)
             require(bytes.size > IV_SIZE)
             val cipher = Cipher.getInstance(TRANSFORMATION)
@@ -50,12 +50,12 @@ class SecureSessionStore(context: Context) {
                 cookie = json.getString("cookie"),
             )
         }.getOrElse {
-            clear()
+            clearLocked()
             null
         }
     }
 
-    fun write(session: AppSession) {
+    fun write(session: AppSession) = synchronized(SESSION_LOCK) {
         val clearText = JSONObject()
             .put("slug", session.slug)
             .put("displayName", session.displayName)
@@ -70,7 +70,26 @@ class SecureSessionStore(context: Context) {
             .apply()
     }
 
-    fun clear() {
+    fun replaceIfUnchanged(
+        expected: AppSession,
+        replacement: AppSession,
+    ): Boolean = synchronized(SESSION_LOCK) {
+        if (read() != expected) return@synchronized false
+        write(replacement)
+        true
+    }
+
+    fun clearIfUnchanged(expected: AppSession): Boolean = synchronized(SESSION_LOCK) {
+        if (read() != expected) return@synchronized false
+        clearLocked()
+        true
+    }
+
+    fun clear() = synchronized(SESSION_LOCK) {
+        clearLocked()
+    }
+
+    private fun clearLocked() {
         prefs.edit().remove(KEY_SESSION).apply()
     }
 
@@ -105,5 +124,6 @@ class SecureSessionStore(context: Context) {
         const val TRANSFORMATION = "AES/GCM/NoPadding"
         const val IV_SIZE = 12
         const val TAG_SIZE_BITS = 128
+        val SESSION_LOCK = Any()
     }
 }

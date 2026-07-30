@@ -30,13 +30,14 @@ URL、hash、size 与 counts。bootstrap 会限制下载大小并验证这些字
 ./gradlew :app:assembleDirectRelease   # 发布包，需签名环境变量
 ```
 
-两个渠道（flavor）的区别只有 `SELF_UPDATE_ENABLED`：`direct` 包 id 带 `.direct` 后缀，
-可与商店版共存，方便对照测试。
+两个渠道（flavor）共用 canonical package `net.bdfz.weibian.direct` 与同一签名
+lineage，Android 只能保留一个安装项。区别只有更新传输：
+`direct` 的 `SELF_UPDATE_ENABLED=true`，`play` 为 `false` 并交给商店。
 
 ## 测试
 
 ```bash
-./gradlew :app:testDirectDebugUnitTest
+./gradlew :app:testDirectDebugUnitTest :app:testPlayDebugUnitTest
 ```
 
 52 项单元测试，分九组：
@@ -48,8 +49,8 @@ URL、hash、size 与 counts。bootstrap 会限制下载大小并验证这些字
   校验的是真正会装进 APK 的那份内容：512 章、二十篇章数、每章原文译文非空、
   别名可解析、215 题答案与诊断齐备、真题回挂章句、出题稳定性、界面用字为简体。
 - `MarkdownStripTest` —— 锁定 AI 纯文本渲染的 Markdown 清理边界。
-- `AppUpdateManifestTest` —— 锁定 Direct 精确包名、不可变 APK URL、hash、
-  size 与发布时间契约。
+- `AppUpdateManifestTest` —— 锁定 Direct/Play 同一安装包名、渠道更新开关、
+  前台检查限流/去重、严格 JSON 型别、不可变 APK URL、hash、size 与发布时间契约。
 - `ContentManifestTest` / `ContentDeltaTest` —— 锁定内容寻址路由和差量重建。
 - `ContentReleaseFilesTest` —— 锁定 staged/active/previous 原子发布与恢复。
 - `ProgressPayloadTest` —— 锁定 outbox schema、mutation id 与客户端来源字段。

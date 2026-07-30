@@ -6,6 +6,7 @@ import net.bdfz.weibian.sync.ProgressClientInfo
 import net.bdfz.weibian.sync.buildProgressPayload
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
@@ -45,6 +46,8 @@ class ProgressPayloadTest {
         assertEquals("net.bdfz.weibian.direct", meta.getString("applicationId"))
         assertEquals(2, meta.getInt("appVersionCode"))
         assertEquals("fc68413c7b70da0e", meta.getString("contentVersion"))
+        assertFalse(payload.has("ownerBinding"))
+        assertFalse(meta.has("ownerBinding"))
     }
 
     @Test
