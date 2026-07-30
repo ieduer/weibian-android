@@ -588,7 +588,7 @@ export function rankingEventErrorStatus(error) {
 }
 
 const APK_LATEST =
-  'https://img.bdfz.net/apps/weibian-android/releases/v1.0.0/21fddd9a/weibian-1.0.0.apk';
+  'https://img.bdfz.net/apps/weibian-android/releases/v1.1.2/956810c9/weibian-1.1.2.apk';
 
 function landingPage(counts) {
   const stat = (value, label) =>
