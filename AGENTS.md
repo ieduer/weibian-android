@@ -33,8 +33,8 @@
 | Direct / Play package | `net.bdfz.weibian.direct`（同一 App、同一签名 lineage） |
 | public host / Worker | `weibian.bdfz.net` / `weibian-content` |
 | update prefix | `img.bdfz.net/apps/weibian-android/` |
-| current public release | Direct R2 / GitHub v1.1.2 / code 4；production landing 仍未切换 |
-| lifecycle | `published-limited`，不是 `production-supported` |
+| current public release | Direct R2 / GitHub / production landing v1.1.2 / code 4；deployment `3f5d9c74…` |
+| lifecycle | Direct `production-supported`；Play channel 尚未启用 |
 
 它与 `lunyu`、`lunyu-battle`、`lunyu-battle-android`、`recite-android`
 都不是同一项目。上游语料只读；不要在本任务顺手改上游站点或共享 hub。
@@ -56,22 +56,27 @@
   `net.bdfz.weibian.direct`，不得并存成两个 App。
 - v1.1.2 / code 4 的 immutable APK、`latest.apk` 与 `latest.json` 已按
   pointer-last 上线，GitHub v1.1.2 Release 与 R2 bytes 一致；production
-  landing 新版只在 `1ce95b1a…@0%` 候选。本状态仍不代表双机、实体平板或
-  lifecycle 门已关闭。
-- 每个候选必须在舰队登记的 OnePlus 9 Pro `LE2120`
-  （hardware serial `c5467d2b`）与 OnePlus 8 Pro `IN2020`
-  （hardware serial `6393cccf`）两台实体手机上安装同一 byte-identical
-  签名 APK，并逐台通过 package 唯一性、覆盖升级、cold/foreground/Back、
-  真实登录、核心/榜单、离线/恢复、本机资料/Session/outbox/content version
-  持久化、反馈、自更新与 scoped fatal/ANR；任一台缺席或任一门失败都不得
-  提升为 `production-supported`。模拟器不得替代任一手机；两机门之外还必须
-  有独立实体平板完成 adaptive-layout 与原位升级，手机 forced
-  expanded-layout 只能作为补充证据，不能替代实体平板。
-- 当前 IN2020 已完成 code4 原位升级验收子集与补充 expanded-layout，并恢复
-  基线；clean install 和完整登录／同步／登出撤销闭环尚未重跑，不能称完整矩阵。
+  deployment `3f5d9c74…` 已由 `1ce95b1a…@100%` 承载 v1.1.2 landing，
+  `e16da332…` 是 exact rollback。当前 Direct lifecycle 为
+  `production-supported`。
+- 每个候选从舰队登记的 OnePlus 9 Pro `LE2120`（hardware serial
+  `c5467d2b`）或 OnePlus 8 Pro `IN2020`（hardware serial `6393cccf`）
+  中选定并记录一台实体手机，在该机安装 exact 签名 APK，并通过 package
+  唯一性、覆盖升级、cold/foreground/Back、真实登录、核心/榜单、
+  离线/恢复、本机资料/Session/outbox/content version 持久化、反馈、自更新
+  与 scoped fatal/ANR。平板效果在同机保存基线后，以可逆 expanded
+  smallest-width、200% 字级、横竖屏和多窗口验收，最后恢复并读回
+  size/density/font/rotation/proxy/keep-awake。第二台手机与模拟器只作补充。
+- 当前选定门机为 IN2020；它已完成 code4 原位升级验收、sw753dp／
+  200% font expanded-layout、同机 disposable-user clean profile，并恢复
+  基线；本机 env canonical 账号的登录／同步／登出／重启读回也已通过，
+  Pulse 聚合进度 7→8 行。另一个 disposable user 中的 active byte 0
+  故意损坏后，exact code4 已把 previous 恢复为原 SHA；UI、slot state 与
+  scoped logs 通过，user/helper/签名测试产物均清理。production landing
+  随后提升并完成普通流量读回。
   LE2120 只完成 code4 原位更新、登录、榜单与反馈；owner 已叫停后续操作，
   且其临时 Wi-Fi proxy 是否已人工恢复为 None 尚未确认。未经重新授权不得
-  触碰该机，也不得把部分证据扩写成双机通过。
+  触碰该机；它不再是本 release 的必要门。
 - `bdfz-user-center`、Companion、portal/nav/Pulse 或 canonical report
   被其他 active task 持有时只能只读验证。
 

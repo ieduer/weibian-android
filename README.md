@@ -5,7 +5,7 @@
 
 一个**原生 Android 应用**（Kotlin + Jetpack Compose），不是 WebView 套壳。
 
-当前 lifecycle 仍为 `published-limited`。Direct R2 当前版已按 pointer-last
+当前 Direct lifecycle 为 `production-supported`。Direct R2 当前版已按 pointer-last
 发布为 v1.1.2 / versionCode 4：clean source
 `e65dc572af19ed99cf520d52aa01de72508680a9` 与 GitHub Actions
 [run 30516534134](https://github.com/ieduer/weibian-android/actions/runs/30516534134)
@@ -21,14 +21,21 @@ Play AAB 为 4,988,101 bytes／SHA-256
 IN2020 已从保留资料的 code3 App 通过真实应用内更新链原位升级到 exact code4，
 并通过资料／Session、榜单、反馈、offline/recovery、rotation/multi-window、
 AI／注释、当前版本自检、补充 expanded-layout 与单一 package 核对，设备设置
-已恢复。LE2120 也已原位升级到同一 code4 并通过登录、榜单与反馈，但 owner
-随后叫停后续操作；其临时 Wi-Fi proxy 是否已人工恢复为 None 尚未确认。
+已恢复。按 2026-07-30 新单机政策，IN2020 是本 release 的选定门机，
+expanded-layout 可满足同机平板效果门。它又以一次性 Android 次要使用者完成
+data-safe clean-profile 验收，并使用本机 env canonical 账号完成
+登录→新增非计分进度→同步→冷启读回→登出→未登录冷启→重新登录读回；
+Pulse 聚合进度由 7 行增至 8 行且仍为 1 位用户。LE2120 也曾原位升级到同一 code4
+并通过登录、榜单与反馈，但 owner 随后叫停后续操作；其临时 Wi-Fi proxy
+是否已人工恢复为 None 尚未确认，且不再是本 release 的必要门。
 [GitHub v1.1.2 Release](https://github.com/ieduer/weibian-android/releases/tag/v1.1.2)
-已发布且 bytes 与 R2 一致；新版 landing 仅为
-`1ce95b1a-e05c-4203-b082-324d6758aca5@0%` 候选，ordinary production 仍是
-`e16da332-cbb5-46fd-82c8-ae7a6d4c69c0@100%`。LE2120 完整矩阵、独立实体
-平板和 physical active-corrupt → previous 仍未关闭，因此不得称为
-`production-supported`。
+已发布且 bytes 与 R2 一致。IN2020 的 disposable user 物理验收又证明：
+active 内容 byte 0 故意损坏后，exact code4 冷启会拒绝坏 slot 并把 previous
+原子恢复为原 SHA；测试 user、helper、设备暂存和本机正式签名测试产物随后
+全部删除，owner App 未卸载或清资料。production deployment
+`3f5d9c74-593a-422b-8cbb-94ec31126b20` 已把
+`1ce95b1a-e05c-4203-b082-324d6758aca5` 提升至 100%，
+`e16da332-cbb5-46fd-82c8-ae7a6d4c69c0` 保留为 exact rollback。
 v1.0.0 是历史上一版；v1.1.1 / code3 只保留为历史 immutable staging/baseline，
 都不是当前 Direct 更新指针。
 
@@ -164,7 +171,7 @@ weibian.bdfz.net 热更新  ┘             daily_stats / gaokao_attempts
 
 ---
 
-## 已知缺口
+## 已知缺口与发布证据
 
 诚实记录，不藏着：
 
@@ -176,19 +183,29 @@ weibian.bdfz.net 热更新  ┘             daily_stats / gaokao_attempts
 4. **验收范围**：LE2120 与 IN2020 的 historical code3 baseline 都曾完成真实
    A→B delta、故意拒绝 delta 后整包回落、重启 readback 与稳定 A 恢复。
    本轮两机都从 code3 通过 App updater 原位升级到 byte-identical exact code4。
-   IN2020 另通过资料／Session、榜单、反馈、offline/recovery、Back、
+   这些双机结果是超过现行单机最低门的历史补充。当前选定门机 IN2020
+   另通过资料／Session、榜单、反馈、offline/recovery、Back、
    rotation/multi-window、AI／注释、current-update、single-package 与补充
-   expanded-layout，且设置已恢复。LE2120 只完成登录、榜单与反馈后由 owner
+   sw753dp／200% font expanded-layout，且设置已恢复，故同机平板效果门已满足。
+   LE2120 只完成登录、榜单与反馈后由 owner
    叫停；临时 Wi-Fi proxy 是否已人工恢复为 None 未确认，未经重新授权不再
-   触碰。两机完整矩阵、独立实体平板及 active-corrupt → previous 仍未关闭。
+   触碰。IN2020 已用同机 disposable user/profile 完成 exact APK 的
+   clean-profile 启动、核心内容、访客分区、手动自检与 scoped log 门，并以
+   本机 env 账号完成登录／同步／登出／重启读回；临时 user、测试 package 与
+   credential-bearing 临时文件均已移除。随后另用 disposable user 10 与
+   同 signer 临时 instrumentation，在 owner 外建立两个相同有效 slot，只把
+   active byte 0 从 123 改为 122；code4 冷启 353 ms 后 previous 已恢复为
+   active 原 SHA，previous/staged/failed 全部消失，512 章 UI 与 scoped
+   fatal/ANR 均通过。user 10、helper、设备暂存与所有本机签名测试产物已删除。
 5. **发布边界**：v1.1.2 Direct immutable APK、同目录 `release.json`、
    `latest.apk` 和 `latest.json` 已上线并逐字节读回，pointer 最后移动；当前
    immutable URL 是
    `https://img.bdfz.net/apps/weibian-android/releases/v1.1.2/956810c9/weibian-1.1.2.apk`。
    GitHub v1.1.2 Release 的 APK 与 `release.json` digest 均一致；landing
-   source commit `4829b5b…` 的 CI 已绿，Worker candidate `1ce95b1a…` 只占
-   0%，普通流量仍指向 v1.0.0 下载页。硬门未闭环，所以仍为
-   `published-limited`；v1.0.0 与 v1.1.1 只属历史证据。
+   source commit `4829b5b…` 的 CI 已绿，Worker `1ce95b1a…` 已在 deployment
+   `3f5d9c74…` 承载 100% 普通流量并通过 health/content/rankings、Pulse 与
+   桌面／390 px 真实浏览器读回。当前 Direct lifecycle 为
+   `production-supported`；v1.0.0 与 v1.1.1 只属历史证据。
 6. **公开入口**：canonical portal 是 `https://i.rdfzer.com`，当前返回 200；
    `allinone.bdfz.net` 与 `portal.bdfz.net` 是非 canonical 别名，当前 522 不作为
    本 App 的发布入口。Companion disposition 为 `not-applicable`，不得新增

@@ -132,12 +132,17 @@ Direct 与 Play 都必须解析为 canonical package `net.bdfz.weibian.direct`�
   `https://img.bdfz.net/apps/weibian-android/releases/v1.1.2/956810c9/weibian-1.1.2.apk`
 
 immutable APK／`release.json`、`latest.apk` 与 `latest.json` 已按 fail-closed
-顺序上线，`latest.json` 最后移动。两台登记手机都经真实 App updater 从 code3
-原位升级到 byte-identical exact code4；IN2020 完成已记录的原位升级验收子集，
-但未在保留资料约束下执行 clean install，也未重跑完整登录／同步／登出撤销
-闭环。LE2120 只完成登录、榜单与反馈后由 owner 叫停，且临时 Wi-Fi proxy
-是否恢复为 None 未确认。这不是完整双机 release acceptance，也不改变
-`published-limited` lifecycle。
+顺序上线，`latest.json` 最后移动。两台登记手机历史上都经真实 App updater
+从 code3 原位升级到 byte-identical exact code4。按 2026-07-30 新单机政策，
+IN2020 是选定门机；它完成已记录的原位升级验收子集与同机平板效果并恢复
+基线。2026-07-30 又以同机一次性 Android 次要使用者完成 data-safe
+clean-profile 启动、核心内容、访客分区、手动自检与 scoped log 验收；本机
+env canonical 账号的登录／同步／登出／重启读回也通过，Pulse progress
+aggregate 由 7 行增至 8 行。LE2120 的部分证据保留为历史，owner 叫停后
+不得再触碰，也不再是必要门。IN2020 随后在另一个 disposable user 中通过
+active 单 byte 损坏后 previous-slot 物理恢复；测试 user、helper 与签名产物
+全部清理。production landing 已提升并通过普通流量读回，当前 Direct
+lifecycle 为 `production-supported`。
 
 **历史证据：**截至 2026-07-29，v1.1.1 / versionCode 3 的 final candidate
 已从 clean checkpoint `e623e370a60bff33609e8bf5ad2748f559e20471`
@@ -218,8 +223,8 @@ sha256 格式非法、size ≤ 0、清单体积超限。这些校验都在
 
 当前公开 `latest.json` 已按 pointer-last 指向 v1.1.2 / versionCode 4，包名
 为 `net.bdfz.weibian.direct`，并与 immutable Direct APK 的 bytes/hash/size
-逐项读回一致。IN2020 的真实 App updater code3 → code4 已通过；LE2120 尚未
-重新授权，因此不得把单机结果扩写成双机自更新验收完成。
+逐项读回一致。选定门机 IN2020 的真实 App updater code3 → code4 已通过；
+LE2120 的历史附加证据不再构成必要门，未经重新授权也不得触碰。
 
 正式上传前，必须让仓库内 release guard 同时核对 APK、metadata、签名和
 内容寻址 URL；不能靠人工目测 JSON：
@@ -252,8 +257,7 @@ CI 以 `node --test scripts/test/*.test.mjs` 锁定这条防线。
 - 同样的 APK、同样的 sha256、同样的签名指纹
 - 附 R2 不可变 URL
 - 写明构建与安装方法
-- 写明仍未通过的 LE2120 完整矩阵、独立实体平板、physical
-  active-corrupt → previous、production landing 与 lifecycle 门
+- 写明当前 lifecycle、production Worker、exact rollback 与任何仍开放门
 
 v1.1.2 GitHub Release 已建立：
 
@@ -265,11 +269,13 @@ v1.1.2 GitHub Release 已建立：
   `0c8e317d1941c9b17f06f7d6b899a254b4f1f71da7ad78d05425cadf8330b67e`
 
 landing source commit `4829b5bddf1bf3b18f01f8787f33082a96e5aaf7` 的 CI
-run `30524470369` 已通过。Worker candidate
-`1ce95b1a-e05c-4203-b082-324d6758aca5` 保持 0%，ordinary production
-`e16da332-cbb5-46fd-82c8-ae7a6d4c69c0` 保持 100%；版本覆写的 API、
-invalid-session 401、exact landing link 与真实浏览器均通过。两机完整矩阵和
-独立实体平板未关闭前不得提升 candidate 流量。
+run `30524470369` 已通过。IN2020 clean-profile、canonical 身份闭环和
+physical active-corrupt → previous 已在 2026-07-30 关闭。production
+deployment `3f5d9c74-593a-422b-8cbb-94ec31126b20` 已把
+`1ce95b1a-e05c-4203-b082-324d6758aca5` 提升到 100%，
+`e16da332-cbb5-46fd-82c8-ae7a6d4c69c0` 保留为 exact rollback。普通流量的
+API、invalid-session 401、immutable APK、exact landing link、Pulse 和
+桌面／390 px 真实浏览器均通过。
 
 canonical portal 下载入口只更新 `https://i.rdfzer.com`。非 canonical 的
 `allinone.bdfz.net`／`portal.bdfz.net` 522 不得被写成成功发布面。

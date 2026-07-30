@@ -1,6 +1,6 @@
 # Security review — v1.1.2 / code 4 source freeze
 
-Date: 2026-07-29
+Date: 2026-07-29; production closeout verified 2026-07-30
 Scope: Android Direct client, `weibian-content` Worker, D1 rankings, content and
 update contracts, plus the task-owned immutable R2 content prefix. Shared User
 Center, APIS, Pulse and portal implementations were treated as external
@@ -15,13 +15,25 @@ R2 immutable artifacts, `latest.apk` and `latest.json` are live pointer-last.
 IN2020 passed the real App updater from code 3 to exact code 4 plus data/Session,
 ranking, feedback, offline/recovery, rotation/multi-window, AI/annotation,
 current-update, single-package and supplemental expanded-layout checks, then had
-its settings restored. LE2120 installed the same code 4 and passed login,
-ranking and feedback before the owner stopped further work; restoration of its
-temporary Wi-Fi proxy is unconfirmed. GitHub v1.1.2 matches R2 and the new
-landing passed as a zero-percent candidate, but this is still not full release
-acceptance: the LE2120 matrix, a separate physical tablet and physical
-active-corrupt → previous remain open. User Center registry and feedback v242
-are live.
+its settings restored. Under the 2026-07-30 single-phone policy, IN2020 is the
+selected gate device and that expanded run satisfies the phone-based tablet
+effect gate. LE2120 installed the same code 4 and passed login, ranking and
+feedback before the owner stopped further work; restoration of its temporary
+Wi-Fi proxy is unconfirmed, but it is no longer a required device for this
+release and must not be touched without reauthorization. GitHub v1.1.2 matches
+R2. IN2020 subsequently passed a disposable-user
+clean-profile run against the same exact code 4 package plus a local-env
+canonical login/sync/logout/restart/readback loop. The temporary user, helper
+package and credential-bearing temporary files were removed. A separate
+same-signer helper in disposable user 10 then changed only active byte 0;
+code 4 rejected the corrupt slot and promoted previous back to the original
+content SHA on a physical cold launch. Slot state, UI and scoped logs passed,
+and the user, helper, device files and every local signed test artifact were
+removed without uninstalling or clearing owner data. Production deployment
+`3f5d9c74…` now serves landing version `1ce95b1a…` at 100%, with
+`e16da332…` retained as exact rollback. Ordinary API, immutable APK, Pulse and
+desktop/mobile browser readback passed. The Direct lifecycle is
+`production-supported`; User Center registry and feedback v242 are live.
 
 ## Fixed in this candidate
 
@@ -34,7 +46,7 @@ are live.
 | Medium | Public rights wording contradicted the owner-authorized release scope | Landing page and repository documentation now point to the rights receipt | Production landing-page readback |
 | Medium | A Worker-bundled “immutable” route could no longer serve an older content version after a new deployment | Authorized bundles now live in non-overwritten R2 hash paths; an exact code allowlist exposes reviewed versions | Public byte/size/hash parity and unknown-version 404 |
 | Medium | Profile favorites and notes reused the same `chapterId` key in one `LazyColumn`, so the same chapter in both sections crashed the main thread | Keys are now section-namespaced (`favorite:*`, `note:*`, `achievement:*`) | Regression unit tests plus physical OnePlus pre-final code 3 candidate full-profile scrolling with no scoped App fatal |
-| Medium | Localized feedback labels did not match the User Center wire enum and could collapse to the wrong category | UI labels now map to the approved wire codes and receipts require stored/notification fields | Unit tests, source review and stored/notified physical receipts on both registered phones; the rest of the device matrix remains open |
+| Medium | Localized feedback labels did not match the User Center wire enum and could collapse to the wrong category | UI labels now map to the approved wire codes and receipts require stored/notification fields | Unit tests, source review and stored/notified historical receipts on both registered phones; current release acceptance follows the selected-phone matrix below |
 
 ## Verified controls
 
@@ -108,13 +120,23 @@ are live.
   code4 feedback path passed; LE2120 also produced an authenticated saved and
   notified receipt before the owner stopped further work.
 - IN2020 passed a reversible forced expanded-layout run and every captured
-  setting was restored. This is supplemental evidence only: the current fleet
-  rule still requires a separate physical tablet for adaptive-layout and
-  in-place-upgrade acceptance.
-- Final code4 offline/recovery, rotation and multi-window passed on IN2020 but
-  still require an independently authorized LE2120 pass. The temporary LE2120
-  per-network proxy may still be `127.0.0.1:9`; only an owner-confirmed manual
-  restore to None closes that device-state risk.
+  setting was restored. Under the current fleet rule this closes the
+  phone-based tablet-effect gate for this release.
+- Final code4 offline/recovery, rotation and multi-window passed on selected
+  device IN2020. The temporary LE2120 per-network proxy may still be
+  `127.0.0.1:9`; that remains a historical device-state risk but no longer
+  blocks this release, and the stopped device must not be touched.
+- The IN2020 disposable Android user mapped the already installed exact code 4
+  package into an isolated 0/512 clean state. Guest isolation, a chapter and its
+  translation/annotations, manual current-version update check and scoped
+  fatal/ANR review passed. The task switched back to owner and removed that
+  disposable user without uninstalling or clearing the owner App.
+- The canonical identity loop used credentials only from the local approved env
+  and never persisted or logged them. A non-scoring progress canary synced,
+  Pulse aggregate progress rows moved from 7 to 8 while users remained 1, cold
+  restart readback passed, logout survived restart as logged-out, and login
+  readback passed again. User Center v242 has no token denylist, so this is a
+  client logout closure and not a claim of server-side token revocation.
 - A differing B bundle (`4a97b261…e3703`) and A→B delta
   (`83d407be…8b1f`) are publicly readable immutable staging objects; their
   canary version was exercised on both registered phones and then removed from
@@ -124,17 +146,22 @@ are live.
 - The public update manifest now points to v1.1.2/code4 at the exact immutable
   `…/v1.1.2/956810c9/` path; `latest.apk` and `latest.json` were written after
   immutable readback, with the pointer last. Both registered phones accepted
-  that updater path. GitHub v1.1.2 is byte-identical; production landing remains
-  historical while candidate `1ce95b1a…` stays at zero percent.
+  that updater path. GitHub v1.1.2 is byte-identical; production deployment
+  `3f5d9c74…` serves `1ce95b1a…@100%` and retains `e16da332…` as exact rollback.
 - The final exact `de47da19…8da67` code3 APK is historical prior-version
-  evidence. Both phones now contain exact code4; LE2120 has only the bounded
-  updater/login/ranking/feedback subset and cannot be counted as a full pass.
-- Full-bundle fallback is not physical active-corrupt → previous proof. That
-  deliberate corruption test remains open until its risk is explicitly approved.
-  The production APK is non-debuggable and exposes no provider or test hook for
-  mutating private `filesDir/content/{active,previous}`. Any same-package
-  production-signed instrumentation/helper therefore needs separate explicit
-  authorization before use.
+  evidence. Both phones historically received exact code4; selected device
+  IN2020 carries the release gate, while LE2120 has only the bounded
+  updater/login/ranking/feedback subset and is supplementary evidence.
+- Full-bundle fallback was not accepted as physical active-corrupt → previous
+  proof. After explicit authorization, a temporary production-signed
+  instrumentation package ran only in disposable user 10 against exact code 4.
+  It validated identical 871,333-byte active/previous slots at
+  `fc68413c…ffa75`, changed only active offset 0 from 123 to 122, and produced
+  corrupt SHA `f89eb7b1…35554`. A 353 ms cold launch restored active to the
+  original SHA and removed previous/staged/failed. The 512-chapter UI and
+  fatal/ANR review passed; the disposable user, helper and signed build tree were
+  then deleted. This bounded receipt does not create a permanent production test
+  hook.
 - Canonical portal `i.rdfzer.com` returns 200. The 522
   `allinone.bdfz.net`/`portal.bdfz.net` aliases are noncanonical and are not
   used as release evidence. Companion is explicitly `not-applicable`; there is
