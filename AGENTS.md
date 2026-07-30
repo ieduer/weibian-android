@@ -74,6 +74,10 @@
   故意损坏后，exact code4 已把 previous 恢复为原 SHA；UI、slot state 与
   scoped logs 通过，user/helper/签名测试产物均清理。production landing
   随后提升并完成普通流量读回。
+- 本次 legacy closeout 由 owner 明确指定两台手机已安装的 byte-exact code3
+  作为 code4 实体原位升级基线；这不把 code3 重分类为 public accepted
+  release，也不得成为未来例外。下一版必须从当前 public accepted code4
+  在选定门机原位升级。
   LE2120 只完成 code4 原位更新、登录、榜单与反馈；owner 已叫停后续操作，
   且其临时 Wi-Fi proxy 是否已人工恢复为 None 尚未确认。未经重新授权不得
   触碰该机；它不再是本 release 的必要门。

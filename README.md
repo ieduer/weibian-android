@@ -38,6 +38,9 @@ active 内容 byte 0 故意损坏后，exact code4 冷启会拒绝坏 slot 并�
 `e16da332-cbb5-46fd-82c8-ae7a6d4c69c0` 保留为 exact rollback。
 v1.0.0 是历史上一版；v1.1.1 / code3 只保留为历史 immutable staging/baseline，
 都不是当前 Direct 更新指针。
+本次 legacy closeout 依 owner 明确指示，以两台手机已安装的 byte-exact code3
+作为 code4 实体原位升级基线；code3 并未因此成为 public accepted release。
+未来 release 仍必须从当前 public accepted code4 在选定门机原位升级。
 
 ---
 

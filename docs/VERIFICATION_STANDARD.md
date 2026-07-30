@@ -208,7 +208,7 @@ release，没有可供已安装客户端降级的更早 production APK。
 | Play artifacts | APK 2,819,963 bytes／SHA-256 `7bf92fcfc4fab561aee5f2e95a4ad80d67b9c7161778a667b8f7b33cc9427f7f`；AAB 4,988,101 bytes／SHA-256 `6a37903152ede8c5a9b4f9d547af99454cb75d501f19e3b96491969131b132a4`；与 Direct 共用 canonical package/signing lineage |
 | R2 release | `…/v1.1.2/956810c9/weibian-1.1.2.apk` 与同目录 `release.json` 已 immutable 上线并公开精确读回；`latest.apk` 后写，`latest.json` 最后移动到 code4 |
 | GitHub Release | [v1.1.2](https://github.com/ieduer/weibian-android/releases/tag/v1.1.2) target `e65dc572…`；APK 2,819,959 bytes / SHA-256 `956810c9…e15c3`；`release.json` 741 bytes / SHA-256 `0c8e317d…0b67e` |
-| IN2020 code4 | 当前选定门机；真实 App updater 从 code3 原位升级；资料／Session、榜单、反馈、offline/recovery、Back、rotation/multi-window、AI／注释、current-update、single-package 均通过；sw753dp／200% font expanded-layout 通过且设备基线恢复 |
+| IN2020 code4 | 当前选定门机；依 owner 对本次 legacy closeout 的明确指示，以已安装 byte-exact code3 作为实体验收基线，经真实 App updater 原位升级；code3 不因此成为 public accepted release，未来 release 必须从当前 public accepted code4 升级；资料／Session、榜单、反馈、offline/recovery、Back、rotation/multi-window、AI／注释、current-update、single-package 均通过；sw753dp／200% font expanded-layout 通过且设备基线恢复 |
 | LE2120 code4 | 历史补充证据；真实 App updater 原位升级到同一 APK，登录、榜单与反馈通过后 owner 叫停；临时 Wi-Fi proxy 是否恢复为 None 未确认，未经重新授权不得触碰，但它不再是本 release 的必要门 |
 | User Center | v242 `ec273922-1ec4-442b-8c84-9a5e2f7fcdf5` current；v240 `96b9db71-a595-4ae3-a557-288b49bffd2f` exact rollback |
 | Worker / landing | deployment `3f5d9c74…` 由 v1.1.2 `1ce95b1a…@100%` 承载；ordinary exact API、invalid-session 401、content/ranking、Pulse、immutable APK 与桌面／390 px 真实浏览器通过；rollback `e16da332…` |

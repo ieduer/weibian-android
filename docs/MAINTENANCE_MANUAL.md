@@ -24,6 +24,13 @@ GitHub v1.1.2 与 R2 bytes 一致；production deployment `3f5d9c74…`
 现由 `1ce95b1a…@100%` 承载 v1.1.2 landing，`e16da332…` 是 exact rollback。
 当前 Direct lifecycle 为 `production-supported`。
 
+本次 legacy closeout 由 owner 明确指定已安装的 byte-exact code3 作为 code4
+实体原位升级基线；code3 从未因此成为 public accepted release。未来 release
+必须从当前 public accepted code4 在选定门机原位升级。另保留历史治理顺序
+偏差：v1.1.2 mutable pointer／GitHub Release 早于当时全部实体门关闭，
+landing/lifecycle 直到 2026-07-30 全部硬门通过后才提升；未来不得照此顺序
+先移动 pointer。
+
 ## 0. 必读顺序与状态用词
 
 每次工作依序阅读：

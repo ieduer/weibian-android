@@ -144,6 +144,13 @@ active 单 byte 损坏后 previous-slot 物理恢复；测试 user、helper 与�
 全部清理。production landing 已提升并通过普通流量读回，当前 Direct
 lifecycle 为 `production-supported`。
 
+本次是 legacy closeout 的明确例外：owner 指定两台手机已安装的 byte-exact
+code3 作为 code4 实体原位升级基线。它不把 code3 重分类为 public accepted
+release；未来版本必须从当前 public accepted code4 在选定门机原位升级。
+另需保留治理顺序偏差：v1.1.2 mutable pointer 与 GitHub Release 早于当时
+全部实体门完成，landing/lifecycle 始终保持未提升，直到 2026-07-30 硬门
+关闭后才 promotion。此顺序不得成为未来先移动 pointer 的先例。
+
 **历史证据：**截至 2026-07-29，v1.1.1 / versionCode 3 的 final candidate
 已从 clean checkpoint `e623e370a60bff33609e8bf5ad2748f559e20471`
 构建：
