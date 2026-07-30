@@ -1,19 +1,21 @@
 /**
  * 韦编内容接口 —— weibian.bdfz.net
  *
- * 负责两条项目自有边界：下发版本化内容包，以及从 User Center 已写入进度
- * 派生匿名学习榜。它不成为新的身份或原始学习记录权威。
+ * 负责两条项目自有边界：下发版本化内容包，以及用同一份不可变内容在服务端
+ * 核验人工精编题的原始作答事件并派生匿名学习榜。身份仍由 User Center 负责。
  *
  * 端点：
  *   GET /api/content/manifest   内容清单（版本、sha256、体积、条目数）
  *   GET /api/content/bundles/<CONTENT_VERSION>.json  不可变完整内容包
  *   GET /api/content/bundle     旧客户端兼容入口（不可长期缓存）
- *   GET|POST /api/rankings      匿名榜读取 / 当前用户可信进度刷新
+ *   GET|POST /api/rankings      code 3 兼容榜读取（POST 不再接收客户端分数）
+ *   GET /api/rankings/v2        服务端核验作答榜
+ *   POST /api/ranking-events    当前已登录用户的原始人工题作答 outbox
  *   GET /api/health             健康探针
  *
  * 刻意不做的事：
- *   · 不保存身份、Cookie 或原始进度 —— 那些仍由 my.bdfz.net 负责；
- *     排行榜只经 service binding 读取并保存 HMAC 假名聚合快照；
+ *   · 不保存身份、Cookie、自由文本或 User Center 一般进度；
+ *     排行 D1 只保存 HMAC 假名、稳定题号、所选 option、服务端判定与时间；
  *   · 不代理 AI —— 一律走 apis.bdfz.net 统一网关，本处不持有任何模型密钥。
  *
  * 当前 manifest 与旧客户端兼容 bundle 跟随 Worker Assets；已审核版本的
@@ -22,12 +24,17 @@
  */
 
 import {
+  ANSWER_EVENT_SCHEMA,
   beijingDayKey,
-  MAX_CHAPTERS,
-  MAX_POINTS,
+  buildAuthoredTaskIndex,
+  MAX_AUTHORED_TASKS,
+  MAX_EVENT_BODY_BYTES,
+  parseAnswerEventBatch,
+  RANKING_SCHEMA,
+  requireCompleteAuthoredTaskIndex,
   rankForPoints,
   requireRankingPepper,
-  summarizeProgress,
+  validateAuthoredAnswer,
 } from './ranking.js';
 import {
   contentReleaseForVersion,
@@ -38,15 +45,13 @@ const CACHE_IMMUTABLE = 'public, max-age=31536000, immutable';
 const CACHE_MANIFEST = 'public, max-age=300';
 const CACHE_MUTABLE = 'public, max-age=0, must-revalidate';
 const USER_CENTER_ORIGIN = 'https://my.bdfz.net';
-const RANKING_SCHEMA = 'weibian-rankings-v1';
-const RANKING_TABLE = 'weibian_ranking_snapshots';
+const RANKING_TABLE = 'weibian_answer_events_v2';
 const MAX_RANKING_LIMIT = 30;
-const MIN_RANKING_SYNC_INTERVAL_MS = 10_000;
 
 /** App 与站点都可能来取内容，内容本身是公开资料，允许跨源读取。 */
 const CORS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Max-Age': '86400',
 };
@@ -68,8 +73,17 @@ async function readAsset(env, path) {
   return response;
 }
 
-function cookieHeader(request) {
-  return (request.headers.get('Cookie') || '').slice(0, 4096);
+function sessionCookieHeader(request) {
+  const raw = (request.headers.get('Cookie') || '').slice(0, 4096);
+  for (const segment of raw.split(';')) {
+    const cookie = segment.trim();
+    if (!cookie.startsWith('bdfz_uc_session=')) continue;
+    const value = cookie.slice('bdfz_uc_session='.length);
+    if (value && value.length <= 2048 && !/[\r\n;]/.test(value)) {
+      return `bdfz_uc_session=${value}`;
+    }
+  }
+  return '';
 }
 
 function boundedRankingLimit(url) {
@@ -90,8 +104,17 @@ async function userCenterJson(env, path, cookie) {
 }
 
 function sessionSlug(payload) {
-  if (!payload || payload.authenticated !== true || !payload.user) return '';
-  return String(payload.user.slug || '').trim().slice(0, 96);
+  if (
+    !payload ||
+    payload.authenticated !== true ||
+    !payload.user ||
+    typeof payload.user !== 'object' ||
+    typeof payload.user.slug !== 'string'
+  ) {
+    return '';
+  }
+  const slug = payload.user.slug.trim();
+  return slug.length >= 1 && slug.length <= 96 ? slug : '';
 }
 
 async function hmacUserKey(slug, pepper) {
@@ -103,15 +126,19 @@ async function hmacUserKey(slug, pepper) {
     false,
     ['sign'],
   );
-  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(slug));
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    encoder.encode(`weibian-ranking-v2\u0000${slug}`),
+  );
   return [...new Uint8Array(signature)]
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');
 }
 
 async function authenticateRanking(request, env) {
-  const cookie = cookieHeader(request);
-  if (!cookie.includes('bdfz_uc_session=')) return null;
+  const cookie = sessionCookieHeader(request);
+  if (!cookie) return null;
   const pepper = requireRankingPepper(env.RANKING_PEPPER);
   const slug = sessionSlug(await userCenterJson(env, '/api/session', cookie));
   if (!slug) return null;
@@ -122,42 +149,97 @@ async function authenticateRanking(request, env) {
 }
 
 function publicRankingName(userKey) {
-  return `学子·${userKey.slice(0, 4).toUpperCase()}`;
+  return `学子·${userKey.slice(0, 8).toUpperCase()}`;
 }
 
-function publicRankingEntry(row, meKey) {
-  return {
+export function publicRankingEntry(row, meKey, legacyShape = false) {
+  const correctAnswers = Number(row.verified_correct_answers || 0);
+  const answeredQuestions = Number(row.answered_questions || 0);
+  const activeChapters = Number(row.active_chapters || 0);
+  const base = {
     position: Number(row.position || 0),
-    displayName: row.public_name,
+    displayName: publicRankingName(row.user_key),
     totalPoints: Number(row.total_points || 0),
     todayPoints: Number(row.daily_points || 0),
-    completedChapters: Number(row.completed_chapters || 0),
-    activeChapters: Number(row.active_chapters || 0),
     rankName: rankForPoints(Number(row.total_points || 0)).name,
     isMe: Boolean(meKey && row.user_key === meKey),
   };
+  if (legacyShape) {
+    return {
+      ...base,
+      // Code 3 requires these names. They now describe server-verified authored
+      // answers rather than the retired client-supplied progress snapshot.
+      // V2 cannot prove whole-chapter completion, so never relabel question
+      // counts as completed chapters for a legacy client.
+      completedChapters: 0,
+      activeChapters,
+    };
+  }
+  return {
+    ...base,
+    verifiedCorrectAnswers: correctAnswers,
+    verifiedAnsweredQuestions: answeredQuestions,
+    activeChapters,
+  };
 }
 
-async function loadRankings(env, dayKey, limit, meKey = '') {
-  const dailySql = `
-    SELECT *, ROW_NUMBER() OVER (
-      ORDER BY daily_points DESC, total_points DESC,
-               completed_chapters DESC, updated_at ASC
-    ) AS position
+function rankingTotalsSql() {
+  return `
+    SELECT user_key,
+           SUM(points) AS total_points,
+           SUM(correct) AS verified_correct_answers,
+           COUNT(*) AS answered_questions,
+           COUNT(DISTINCT chapter_id) AS active_chapters,
+           MIN(received_at_ms) AS first_received_at
       FROM ${RANKING_TABLE}
-     WHERE day_key = ? AND daily_points > 0
+     GROUP BY user_key
+  `;
+}
+
+function rankingDailySql() {
+  return `
+    SELECT user_key,
+           SUM(points) AS daily_points,
+           SUM(correct) AS daily_correct_answers,
+           COUNT(*) AS daily_answered_questions,
+           MIN(received_at_ms) AS first_daily_received_at
+      FROM ${RANKING_TABLE}
+     WHERE beijing_day = ?
+     GROUP BY user_key
+  `;
+}
+
+async function loadRankings(env, dayKey, limit, meKey = '', legacyShape = false) {
+  const dailySql = `
+    WITH totals AS (${rankingTotalsSql()}),
+         daily AS (${rankingDailySql()})
+    SELECT totals.*, daily.daily_points,
+           ROW_NUMBER() OVER (
+             ORDER BY daily.daily_points DESC, totals.total_points DESC,
+                      totals.verified_correct_answers DESC,
+                      totals.first_received_at ASC, totals.user_key ASC
+           ) AS position
+      FROM totals
+      JOIN daily ON daily.user_key = totals.user_key
+     WHERE daily.daily_points > 0
   `;
   const totalSql = `
-    SELECT *, ROW_NUMBER() OVER (
-      ORDER BY total_points DESC, completed_chapters DESC,
-               active_chapters DESC, updated_at ASC
-    ) AS position
-      FROM ${RANKING_TABLE}
-     WHERE total_points > 0
+    WITH totals AS (${rankingTotalsSql()}),
+         daily AS (${rankingDailySql()})
+    SELECT totals.*, COALESCE(daily.daily_points, 0) AS daily_points,
+           ROW_NUMBER() OVER (
+             ORDER BY totals.total_points DESC,
+                      totals.verified_correct_answers DESC,
+                      totals.answered_questions ASC,
+                      totals.first_received_at ASC, totals.user_key ASC
+           ) AS position
+      FROM totals
+      LEFT JOIN daily ON daily.user_key = totals.user_key
+     WHERE totals.total_points > 0
   `;
   const [dailyResult, totalResult] = await Promise.all([
     env.DB.prepare(`${dailySql} LIMIT ?`).bind(dayKey, limit).all(),
-    env.DB.prepare(`${totalSql} LIMIT ?`).bind(limit).all(),
+    env.DB.prepare(`${totalSql} LIMIT ?`).bind(dayKey, limit).all(),
   ]);
   const dailyRows = dailyResult.results || [];
   const totalRows = totalResult.results || [];
@@ -170,112 +252,317 @@ async function loadRankings(env, dayKey, limit, meKey = '') {
         .bind(dayKey, meKey)
         .all(),
       env.DB.prepare(`SELECT * FROM (${totalSql}) WHERE user_key = ?`)
-        .bind(meKey)
+        .bind(dayKey, meKey)
         .all(),
     ]);
     meDaily ||= dailyMine.results?.[0] || null;
     meTotal ||= totalMine.results?.[0] || null;
   }
   return {
-    daily: dailyRows.map((row) => publicRankingEntry(row, meKey)),
-    total: totalRows.map((row) => publicRankingEntry(row, meKey)),
-    meDaily: meDaily ? publicRankingEntry(meDaily, meKey) : null,
-    meTotal: meTotal ? publicRankingEntry(meTotal, meKey) : null,
+    daily: dailyRows.map((row) => publicRankingEntry(row, meKey, legacyShape)),
+    total: totalRows.map((row) => publicRankingEntry(row, meKey, legacyShape)),
+    meDaily: meDaily ? publicRankingEntry(meDaily, meKey, legacyShape) : null,
+    meTotal: meTotal ? publicRankingEntry(meTotal, meKey, legacyShape) : null,
   };
 }
 
-async function syncCurrentRanking(env, auth, nowMs) {
-  const existing = await env.DB.prepare(
-    `SELECT synced_at_ms FROM ${RANKING_TABLE} WHERE user_key = ?`,
-  ).bind(auth.userKey).first();
-  if (existing && nowMs - Number(existing.synced_at_ms || 0) < MIN_RANKING_SYNC_INTERVAL_MS) {
-    return false;
-  }
+const rankingTaskCache = new Map();
 
-  const progress = await userCenterJson(
-    env,
-    '/api/progress?site=weibian',
-    auth.cookie,
-  );
-  const summary = summarizeProgress(progress);
-  const dayKey = beijingDayKey(new Date(nowMs));
-  await env.DB.prepare(
-    `INSERT INTO ${RANKING_TABLE} (
-       user_key, public_name, total_points, daily_points, completed_chapters,
-       active_chapters, day_key, source_updated_at, synced_at_ms, updated_at
-     ) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-     ON CONFLICT(user_key) DO UPDATE SET
-       public_name = excluded.public_name,
-       daily_points = CASE
-         WHEN ${RANKING_TABLE}.day_key = excluded.day_key
-         THEN MIN(?, ${RANKING_TABLE}.daily_points
-           + MAX(0, excluded.total_points - ${RANKING_TABLE}.total_points))
-         ELSE MAX(0, excluded.total_points - ${RANKING_TABLE}.total_points)
-       END,
-       total_points = MAX(${RANKING_TABLE}.total_points, excluded.total_points),
-       completed_chapters = MAX(
-         ${RANKING_TABLE}.completed_chapters,
-         excluded.completed_chapters
-       ),
-       active_chapters = MAX(
-         ${RANKING_TABLE}.active_chapters,
-         excluded.active_chapters
-       ),
-       day_key = excluded.day_key,
-       source_updated_at = MAX(
-         ${RANKING_TABLE}.source_updated_at,
-         excluded.source_updated_at
-       ),
-       synced_at_ms = excluded.synced_at_ms,
-       updated_at = CURRENT_TIMESTAMP`,
-  ).bind(
-    auth.userKey,
-    publicRankingName(auth.userKey),
-    summary.totalPoints,
-    summary.completedChapters,
-    summary.activeChapters,
-    dayKey,
-    summary.sourceUpdatedAt,
-    nowMs,
-    MAX_POINTS,
-  ).run();
-  return true;
+function bytesToHex(bytes) {
+  return [...new Uint8Array(bytes)]
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
 }
 
-async function handleRankings(request, env) {
-  const url = new URL(request.url);
-  const shouldSync = request.method === 'POST';
+async function sha256Hex(bytes) {
+  return bytesToHex(await crypto.subtle.digest('SHA-256', bytes));
+}
+
+async function loadRankingTaskIndex(env, contentVersion) {
+  const release = contentReleaseForVersion(contentVersion);
+  if (!release) throw new Error('content-version-not-accepted');
+  if (!env.CONTENT_R2 || typeof env.CONTENT_R2.get !== 'function') {
+    throw new Error('ranking-content-binding-missing');
+  }
+  const cached = rankingTaskCache.get(contentVersion);
+  if (cached?.releaseSha256 === release.sha256) return cached.taskIndex;
+
+  const object = await env.CONTENT_R2.get(release.key);
+  if (!object || Number(object.size || 0) !== release.size) {
+    throw new Error('ranking-content-unavailable');
+  }
+  const bytes = await object.arrayBuffer();
+  if (bytes.byteLength !== release.size) throw new Error('ranking-content-size-mismatch');
+  if (await sha256Hex(bytes) !== release.sha256) {
+    throw new Error('ranking-content-hash-mismatch');
+  }
+  const taskIndex = requireCompleteAuthoredTaskIndex(
+    JSON.parse(new TextDecoder().decode(bytes)),
+  );
+  rankingTaskCache.set(contentVersion, {
+    releaseSha256: release.sha256,
+    taskIndex,
+  });
+  return taskIndex;
+}
+
+async function readBoundedJson(request) {
+  if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get('Content-Type') || '')) {
+    throw new Error('answer-event-body-content-type');
+  }
+  const declaredHeader = request.headers.get('Content-Length');
+  if (
+    declaredHeader !== null &&
+    (!/^\d+$/.test(declaredHeader) || Number(declaredHeader) > MAX_EVENT_BODY_BYTES)
+  ) {
+    throw new Error('answer-event-body-too-large');
+  }
+  const reader = request.body?.getReader();
+  if (!reader) throw new Error('answer-event-body-invalid');
+  const chunks = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_EVENT_BODY_BYTES) {
+        await reader.cancel('answer-event-body-too-large');
+        throw new Error('answer-event-body-too-large');
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  if (totalBytes < 2) {
+    throw new Error('answer-event-body-invalid');
+  }
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  try {
+    return JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    throw new Error('answer-event-json-invalid');
+  }
+}
+
+async function rankingReadiness(env) {
+  requireRankingPepper(env.RANKING_PEPPER);
+  if (!env.DB || typeof env.DB.prepare !== 'function') {
+    throw new Error('ranking-d1-binding-missing');
+  }
+  if (!env.USER_CENTER || typeof env.USER_CENTER.fetch !== 'function') {
+    throw new Error('ranking-user-center-binding-missing');
+  }
+  const anonymousSession = await userCenterJson(env, '/api/session', '');
+  if (anonymousSession?.authenticated !== false) {
+    throw new Error('ranking-user-center-session-unhealthy');
+  }
+  await env.DB.prepare(
+    `SELECT event_id, user_key, canonical_task_id, chapter_id,
+            content_version, task_semantic_digest, selected_option,
+            correct, points, received_at_ms, beijing_day
+       FROM ${RANKING_TABLE}
+      LIMIT 1`,
+  ).first();
+  const manifest = await readAsset(env, '/manifest.json');
+  if (!manifest) throw new Error('ranking-content-manifest-missing');
+  const body = await manifest.json();
+  const contentVersion = String(body.contentVersion || '');
+  const taskIndex = await loadRankingTaskIndex(env, contentVersion);
+  return { contentVersion, eligibleTaskCount: taskIndex.size };
+}
+
+function answerReceipt(row, status, submittedEventId = row.event_id) {
+  return {
+    eventId: submittedEventId,
+    canonicalEventId: row.event_id,
+    taskId: row.canonical_task_id,
+    status,
+    recorded: true,
+    correct: Number(row.correct || 0) === 1,
+    points: Number(row.points || 0),
+    receivedAt: new Date(Number(row.received_at_ms)).toISOString(),
+    beijingDay: row.beijing_day,
+  };
+}
+
+function conflictAnswerReceipt(event) {
+  return {
+    eventId: event.eventId,
+    canonicalEventId: null,
+    taskId: event.taskId,
+    status: 'conflict',
+    recorded: false,
+    error: 'answer-event-id-conflict',
+  };
+}
+
+function sameAnswerEvent(row, event, taskSemanticDigest) {
+  return row.canonical_task_id === event.taskId &&
+    row.chapter_id === event.chapterId &&
+    row.content_version === event.contentVersion &&
+    row.task_semantic_digest === taskSemanticDigest &&
+    row.selected_option === event.chosenOptionId;
+}
+
+async function recordVerifiedAnswer(env, auth, event, nowMs, taskSemanticDigest) {
+  const sameId = await env.DB.prepare(
+    `SELECT * FROM ${RANKING_TABLE} WHERE event_id = ?`,
+  ).bind(event.eventId).first();
+  if (sameId) {
+    if (sameId.user_key !== auth.userKey ||
+        !sameAnswerEvent(sameId, event, taskSemanticDigest)) {
+      const error = new Error('answer-event-id-conflict');
+      error.status = 409;
+      throw error;
+    }
+    return answerReceipt(sameId, 'replayed', event.eventId);
+  }
+
+  const firstForTask = await env.DB.prepare(
+    `SELECT * FROM ${RANKING_TABLE}
+      WHERE user_key = ? AND canonical_task_id = ?`,
+  ).bind(auth.userKey, event.taskId).first();
+  if (firstForTask) {
+    return answerReceipt(firstForTask, 'already-recorded', event.eventId);
+  }
+
+  const dayKey = beijingDayKey(new Date(nowMs));
+  await env.DB.prepare(
+    `INSERT OR IGNORE INTO ${RANKING_TABLE} (
+       event_id, user_key, canonical_task_id, chapter_id, content_version,
+       task_semantic_digest, selected_option, correct, points,
+       received_at_ms, beijing_day
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).bind(
+    event.eventId,
+    auth.userKey,
+    event.taskId,
+    event.chapterId,
+    event.contentVersion,
+    taskSemanticDigest,
+    event.chosenOptionId,
+    event.correct ? 1 : 0,
+    event.points,
+    nowMs,
+    dayKey,
+  ).run();
+
+  const recorded = await env.DB.prepare(
+    `SELECT * FROM ${RANKING_TABLE}
+      WHERE user_key = ? AND canonical_task_id = ?`,
+  ).bind(auth.userKey, event.taskId).first();
+  if (!recorded) {
+    const conflicting = await env.DB.prepare(
+      `SELECT * FROM ${RANKING_TABLE} WHERE event_id = ?`,
+    ).bind(event.eventId).first();
+    if (conflicting) {
+      const error = new Error('answer-event-id-conflict');
+      error.status = 409;
+      throw error;
+    }
+    throw new Error('answer-event-not-recorded');
+  }
+  if (recorded.event_id === event.eventId) {
+    return answerReceipt(recorded, 'accepted', event.eventId);
+  }
+  return answerReceipt(recorded, 'already-recorded', event.eventId);
+}
+
+async function handleAnswerEvents(request, env) {
   const auth = await authenticateRanking(request, env);
-  if (shouldSync && !auth) {
+  if (!auth) {
     return json(
       { ok: false, error: 'login-required' },
       { status: 401, headers: { 'Cache-Control': 'no-store' } },
     );
   }
+  const rawEvents = parseAnswerEventBatch(await readBoundedJson(request));
+  const taskIndexes = new Map();
+  const validated = [];
+  for (const event of rawEvents) {
+    let taskIndex = taskIndexes.get(event.contentVersion);
+    if (!taskIndex) {
+      taskIndex = await loadRankingTaskIndex(env, event.contentVersion);
+      taskIndexes.set(event.contentVersion, taskIndex);
+    }
+    const answer = validateAuthoredAnswer(event, taskIndex, event.contentVersion);
+    validated.push({
+      answer,
+      taskSemanticDigest: await sha256Hex(
+        new TextEncoder().encode(answer.taskSemanticMaterial),
+      ),
+    });
+  }
+
+  const receipts = [];
+  const receivedAtMs = Date.now();
+  for (const item of validated) {
+    try {
+      receipts.push(
+        await recordVerifiedAnswer(
+          env,
+          auth,
+          item.answer,
+          receivedAtMs,
+          item.taskSemanticDigest,
+        ),
+      );
+    } catch (error) {
+      if (rankingEventErrorStatus(error) !== 409) throw error;
+      receipts.push(conflictAnswerReceipt(item.answer));
+    }
+  }
+  return json(
+    {
+      ok: true,
+      schema: ANSWER_EVENT_SCHEMA,
+      receipts,
+    },
+    { headers: { 'Cache-Control': 'no-store' } },
+  );
+}
+
+async function handleRankings(request, env, legacyShape = false) {
+  const url = new URL(request.url);
+  const auth = await authenticateRanking(request, env);
   const nowMs = Date.now();
-  const syncAccepted = auth && shouldSync
-    ? await syncCurrentRanking(env, auth, nowMs)
-    : false;
   const dayKey = beijingDayKey(new Date(nowMs));
   const board = await loadRankings(
     env,
     dayKey,
     boundedRankingLimit(url),
     auth?.userKey || '',
+    legacyShape,
   );
   return json(
     {
       ok: true,
-      schemaVersion: RANKING_SCHEMA,
+      schemaVersion: legacyShape ? 'weibian-rankings-v1' : RANKING_SCHEMA,
       period: { dayKey, timeZone: 'Asia/Shanghai' },
-      maxPoints: MAX_POINTS,
-      maxChapters: MAX_CHAPTERS,
-      syncAccepted,
+      maxPoints: MAX_AUTHORED_TASKS,
+      rankingBasis: 'server-validated-first-authored-answer',
+      syncAccepted: false,
       ...board,
       generatedAt: new Date(nowMs).toISOString(),
     },
     { headers: { 'Cache-Control': 'no-store' } },
   );
+}
+
+export function rankingEventErrorStatus(error) {
+  const explicitStatus = Number(error?.status);
+  if (explicitStatus === 409) return 409;
+  const message = error instanceof Error ? error.message : '';
+  return /^(?:answer-event-(?:body-(?:content-type|too-large|invalid)|json-invalid)|client-result-fields-forbidden|content-version-not-accepted|invalid-(?:answer-event(?:-envelope|-count)?|event-id|content-version|task-id|chapter-id|chosen-option)|task-(?:not-ranking-eligible|chapter-mismatch)|unknown-(?:answer-event-field|task-option))$/.test(message)
+    ? 400
+    : 503;
 }
 
 const APK_LATEST =
@@ -353,8 +640,9 @@ export default {
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: CORS });
     }
-    const rankingsPost = url.pathname === '/api/rankings' && request.method === 'POST';
-    if (request.method !== 'GET' && request.method !== 'HEAD' && !rankingsPost) {
+    const allowedPost = request.method === 'POST' &&
+      (url.pathname === '/api/rankings' || url.pathname === '/api/ranking-events');
+    if (request.method !== 'GET' && request.method !== 'HEAD' && !allowedPost) {
       return json({ ok: false, error: 'method-not-allowed' }, { status: 405 });
     }
 
@@ -374,20 +662,37 @@ export default {
       }
 
       case '/api/rankings/health':
-        return json(
-          {
-            ok: true,
-            service: 'weibian-rankings',
-            schemaVersion: RANKING_SCHEMA,
-            d1: Boolean(env.DB),
-            userCenter: Boolean(env.USER_CENTER),
-          },
-          { headers: { 'Cache-Control': 'public, max-age=30' } },
-        );
+        try {
+          const readiness = await rankingReadiness(env);
+          return json(
+            {
+              ok: true,
+              service: 'weibian-rankings',
+              schemaVersion: RANKING_SCHEMA,
+              rankingBasis: 'server-validated-first-authored-answer',
+              ...readiness,
+              d1: true,
+              userCenter: Boolean(env.USER_CENTER),
+              contentR2: true,
+            },
+            { headers: { 'Cache-Control': 'public, max-age=30' } },
+          );
+        } catch (error) {
+          const requestId = crypto.randomUUID();
+          console.error(JSON.stringify({
+            event: 'weibian_rankings_health_failed',
+            requestId,
+            error: error instanceof Error ? error.message.slice(0, 120) : 'unknown',
+          }));
+          return json(
+            { ok: false, error: 'rankings-unhealthy', requestId },
+            { status: 503, headers: { 'Cache-Control': 'no-store' } },
+          );
+        }
 
       case '/api/rankings':
         try {
-          return await handleRankings(request, env);
+          return await handleRankings(request, env, true);
         } catch (error) {
           const requestId = crypto.randomUUID();
           console.error(JSON.stringify({
@@ -399,6 +704,53 @@ export default {
           return json(
             { ok: false, error: 'rankings-unavailable', requestId },
             { status: 503, headers: { 'Cache-Control': 'no-store' } },
+          );
+        }
+
+      case '/api/rankings/v2':
+        try {
+          return await handleRankings(request, env, false);
+        } catch (error) {
+          const requestId = crypto.randomUUID();
+          console.error(JSON.stringify({
+            event: 'weibian_rankings_v2_request_failed',
+            requestId,
+            method: request.method,
+            error: error instanceof Error ? error.message.slice(0, 120) : 'unknown',
+          }));
+          return json(
+            { ok: false, error: 'rankings-unavailable', requestId },
+            { status: 503, headers: { 'Cache-Control': 'no-store' } },
+          );
+        }
+
+      case '/api/ranking-events':
+        if (request.method !== 'POST') {
+          return json({ ok: false, error: 'method-not-allowed' }, { status: 405 });
+        }
+        try {
+          return await handleAnswerEvents(request, env);
+        } catch (error) {
+          const requestId = crypto.randomUUID();
+          const message = error instanceof Error ? error.message : 'unknown';
+          const status = rankingEventErrorStatus(error);
+          console.error(JSON.stringify({
+            event: 'weibian_ranking_event_request_failed',
+            requestId,
+            status,
+            error: message.slice(0, 120),
+          }));
+          return json(
+            {
+              ok: false,
+              error: status === 409
+                ? 'answer-event-id-conflict'
+                : status === 400
+                  ? 'answer-event-rejected'
+                  : 'rankings-unavailable',
+              requestId,
+            },
+            { status, headers: { 'Cache-Control': 'no-store' } },
           );
         }
 
