@@ -295,7 +295,8 @@ canonical portal 下载入口只更新 `https://i.rdfzer.com`。非 canonical �
    `/Users/ylsuen/CF/allinone-pages/public/index.html` 中独立的
    `韦编安卓版` 下载项更新为该 exact content-addressed URL；
 3. 同步更新 `allinone-pages/scripts/verify.mjs` 的 `WEIBIAN_APK_URL` 与
-   `public/sw.js` 的 cache version；
+   `public/sw.js` 的 cache version，并保持导航请求 online network-first、
+   offline cache fallback；
 4. 通过 Portal source verifier、immutable Preview、桌面与 390×844
    真实浏览器验收，再部署 Production；
 5. 从 `https://i.rdfzer.com` 运行 live verifier 并回读 exact href。
