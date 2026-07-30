@@ -287,6 +287,23 @@ API、invalid-session 401、immutable APK、exact landing link、Pulse 和
 canonical portal 下载入口只更新 `https://i.rdfzer.com`。非 canonical 的
 `allinone.bdfz.net`／`portal.bdfz.net` 522 不得被写成成功发布面。
 
+每个后续 Direct release 必须把 canonical portal 下载项当作同一发布事务的
+硬门，而不是发布后的可选补记：
+
+1. 公开回读 immutable APK 的 bytes/hash/size/signer；
+2. 保留 `https://weibian.bdfz.net` 产品入口，并把
+   `/Users/ylsuen/CF/allinone-pages/public/index.html` 中独立的
+   `韦编安卓版` 下载项更新为该 exact content-addressed URL；
+3. 同步更新 `allinone-pages/scripts/verify.mjs` 的 `WEIBIAN_APK_URL` 与
+   `public/sw.js` 的 cache version；
+4. 通过 Portal source verifier、immutable Preview、桌面与 390×844
+   真实浏览器验收，再部署 Production；
+5. 从 `https://i.rdfzer.com` 运行 live verifier 并回读 exact href。
+
+缺一项即不得把该版本称为完整发布或 `production-supported`。Portal 回滚使用
+`allinone-pages/README.md` 记录的上一条 Production deployment；不得删除或
+覆盖 immutable APK。
+
 ---
 
 ## 三、回滚

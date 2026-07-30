@@ -22,6 +22,7 @@
 | 身份与进度 | `my.bdfz.net`（`bdfz-user-center`，D1 `bdfz-user-center-db`）—— **本项目只是调用方** |
 | AI | `apis.bdfz.net` —— **本项目只是调用方，无密钥** |
 | APK 发布 | R2 `blog-images` → `img.bdfz.net/apps/weibian-android/` |
+| canonical Portal 下载项 | `/Users/ylsuen/CF/allinone-pages/public/index.html` + `scripts/verify.mjs#WEIBIAN_APK_URL` → `https://i.rdfzer.com` |
 | signing authority | `/Users/ylsuen/.android/weibian-release.env`（600，不入库、不打印） |
 
 **上游语料是只读的。** 本项目从不写 `CF/lunyu`、`CF/lunyu-battle`、`CF/gaokao`、`CF/gks`。
@@ -76,6 +77,12 @@ JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./gradlew \
 进度契约字段（`itemKey=chapter-<id>`、`state`、`progressPercent`、`meta.*`）
 在 `data/LearningRepository.kt#enqueue` 与 `network/ApiClient.kt#pullProgress`，
 **两边必须同时改**。
+
+每个 Direct release 还必须让 `https://i.rdfzer.com` 的独立
+`韦编安卓版` 下载项与 immutable APK exact URL 同步。Portal 产品入口仍指向
+`https://weibian.bdfz.net`，不得用 APK URL 取代。同步流程、Preview／真实
+浏览器／Production／live verifier 门与回滚见 `docs/DEPLOYMENT.md`；任一项
+缺失即不得维持 `production-supported` 结论。
 
 ## 4. 部署命令与禁止事项
 
