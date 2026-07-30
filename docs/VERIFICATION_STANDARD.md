@@ -149,7 +149,7 @@ release，没有可供已安装客户端降级的更早 production APK。
 | 深色模式 | 靛底暖字，对比正常 |
 | 离线（emulator-only） | 未登录、无网络时全书可读可练；不能替代仍开放的实体 offline/recovery 矩阵 |
 
-**2026-07-29 追加验证（全部通过）：**
+**2026-07-29 历史追加验证（当时全部通过）：**
 
 | 项 | 证据 |
 |---|---|
@@ -164,7 +164,7 @@ release，没有可供已安装客户端降级的更早 production APK。
 | **自检更新身份修正** | 公开 v1.0.0 `latest.json.appId` 已于 2026-07-30 从错误 base 修正为 `.direct`，公开 bytes SHA-256 `d50ead93…e1db3` 且逐 byte 读回；这只修复当前清单身份，不代替 code4 两机高版本覆盖验收 |
 | 登记 live 分层 | nav、Pulse、canonical portal `i.rdfzer.com` 已 live；Companion 为 `not-applicable` 且无 WebView；User Center v242 registry/feedback 已 100% live 并完成 authenticated/idempotent canary 与 representative fan-out smoke；v240 是 exact rollback，clean source reconciliation 仍开放 |
 
-**2026-07-29 正式接管只读复核：**
+**2026-07-29 正式接管只读复核（历史快照）：**
 
 | 项 | 证据 |
 |---|---|
@@ -183,7 +183,7 @@ release，没有可供已安装客户端降级的更早 production APK。
 | Pulse | meta/range 收录 `weibian.bdfz.net`，source `worker_analytics`，read-only 观察为 0 errors |
 | portal | canonical `i.rdfzer.com` 返回 200 且有正确入口；`allinone.bdfz.net`、`portal.bdfz.net` 是非 canonical 522 别名 |
 
-**2026-07-29 production-candidate 追加证据：**
+**2026-07-29 historical production-candidate 追加证据：**
 
 | 项 | 证据 |
 |---|---|
@@ -199,38 +199,55 @@ release，没有可供已安装客户端降级的更早 production APK。
 | signing authority | 唯一 authority 为 `/Users/ylsuen/.android/weibian-release.env`；final `de47da19…8da67` 以 `set -e`、`--no-daemon` 构建，unsigned 输出被拒收 |
 | portal / Companion | canonical portal `i.rdfzer.com` 200；两个 bdfz alias 522 为非 canonical；Companion disposition `not-applicable`、无 Weibian WebView |
 
+**2026-07-30 v1.1.2 / code 4 当前发布证据：**
+
+| 项 | 证据 |
+|---|---|
+| source / CI | clean source `e65dc572af19ed99cf520d52aa01de72508680a9`；GitHub Actions run `30516534134` success |
+| Direct APK | v1.1.2 / code4；2,819,959 bytes；SHA-256 `956810c903005680ba2e77a2c71964956cd2beac428e840862fc0a33724e15c3`；signer `a40f3956…41282` |
+| Play artifacts | APK 2,819,963 bytes／SHA-256 `7bf92fcfc4fab561aee5f2e95a4ad80d67b9c7161778a667b8f7b33cc9427f7f`；AAB 4,988,101 bytes／SHA-256 `6a37903152ede8c5a9b4f9d547af99454cb75d501f19e3b96491969131b132a4`；与 Direct 共用 canonical package/signing lineage |
+| R2 release | `…/v1.1.2/956810c9/weibian-1.1.2.apk` 与同目录 `release.json` 已 immutable 上线并公开精确读回；`latest.apk` 后写，`latest.json` 最后移动到 code4 |
+| GitHub Release | [v1.1.2](https://github.com/ieduer/weibian-android/releases/tag/v1.1.2) target `e65dc572…`；APK 2,819,959 bytes / SHA-256 `956810c9…e15c3`；`release.json` 741 bytes / SHA-256 `0c8e317d…0b67e` |
+| IN2020 code4 | 真实 App updater 从 code3 原位升级；资料／Session、榜单、反馈、offline/recovery、Back、rotation/multi-window、AI／注释、current-update、single-package 均通过；补充 expanded-layout 通过且设备基线恢复 |
+| LE2120 code4 | 真实 App updater 原位升级到同一 APK；登录、榜单与反馈通过后 owner 叫停；offline/recovery、Back、rotation/multi-window、AI／注释、current-update 与 scoped log 未完成，临时 Wi-Fi proxy 是否恢复为 None 未确认 |
+| User Center | v242 `ec273922-1ec4-442b-8c84-9a5e2f7fcdf5` current；v240 `96b9db71-a595-4ae3-a557-288b49bffd2f` exact rollback |
+| Worker / landing | ordinary `e16da332…@100%` 仍给 v1.0.0；v1.1.2 candidate `1ce95b1a…@0%` 的 exact API、invalid-session 401、version-filtered Tail 与真实浏览器已通过；rollback `32f8dd97…` |
+| lifecycle | 仍为 `published-limited`；LE2120 完整矩阵、独立实体平板、physical active-corrupt → previous 与 production landing promotion 尚未关闭 |
+
 **尚未验证（明确缺口，不假装已做）：**
 
-- [ ] **本次 Weibian 大屏替代门**：owner 已明确批准仅本 release 使用登记
-      手机 reversible forced expanded-layout 完成 adaptive/accessibility；
-      通过后必须恢复 size/density/rotation/proxy/font/keep-awake。不得把这项
-      例外泛化为舰队未来 release 可免实体平板。
-- [ ] **应用内反馈** physical App → API → aggregate D1 → Telegram 通知回执。
+- [x] **IN2020 补充 expanded-layout**：以 reversible forced layout 完成
+      sw753dp / 200% font 的主流程、独立榜单、Profile、更新、注释与 AI
+      验证；size/density/rotation/proxy/font/keep-awake 已恢复。
+- [ ] **独立实体平板门**：补充的手机 expanded-layout 不能替代实体平板。
+      必须在独立实体平板完成 byte-identical 原位升级、adaptive/accessibility、
+      核心流程与 scoped fatal/ANR。
+- [x] **IN2020 应用内反馈**：final exact code4 physical App 的回馈链通过；
+      LE2120 仍须在重新授权后独立复验。
 - [x] **两台实体手机差异内容下载／整包回落／重启**：LE2120 与 IN2020
       均通过真实 delta；故意错误 digest 均被拒绝并自动 full fallback；
       active bytes/SHA 精确，force-stop/cold restart 后持久化；测试后 stable
       内容测试后稳定 A 已恢复；当前综合 Worker
       `e16da332-cbb5-46fd-82c8-ae7a6d4c69c0` 为 100%。
-- [ ] **内容 previous/corrupt-active rollback**：上述实机证据未故意破坏
-      active slot，仍须证明自动恢复 previous；不得把 full fallback 扩写成
-      three-slot rollback。
-- [ ] **实体 offline/recovery 矩阵**：断网启动、读练、恢复联网、
-      force-stop/rotation/multi-window 与 scoped logcat 尚未闭环。
-- [ ] **两台实体手机的 final exact APK**：舰队登记的 OnePlus 9 Pro
-      `LE2120`（hardware serial `c5467d2b`）与 OnePlus 8 Pro `IN2020`
-      （hardware serial `6393cccf`）都必须安装 byte-identical 最终签名
-      APK，并逐台通过 package 唯一性、覆盖升级、cold/foreground/Back、
-      核心/榜单、登录/重启、本机资料/Session/outbox/content version 持久化、
-      离线/恢复、反馈、自更新与 scoped fatal/ANR；任一台缺席或任一门失败
-      即 fail closed，模拟器不得替代。
+- [ ] **内容 previous/corrupt-active rollback**：差量拒绝后的 full fallback
+      不等于故意破坏 active 后恢复 previous。physical 破坏测试须先取得风险
+      明示批准；未批准／未执行前保持 open。
+- [ ] **双机实体 offline/recovery 矩阵**：IN2020 的 final code4
+      offline/recovery、rotation/multi-window 已通过；LE2120 由 owner 叫停，
+      仍须重新授权并逐项独立复验。其 Wi-Fi proxy 人工恢复为 None 也须确认。
+- [ ] **两台实体手机的 final exact APK**：IN2020 已安装 exact
+      `956810c9…e15c3` code4 并通过 updater、资料/Session、榜单、反馈、
+      offline/recovery、rotation/multi-window、current-update 与 single-package。
+      LE2120 已安装同一 APK 并通过 updater、登录、榜单与反馈，但剩余矩阵
+      未完成，故双机门仍 fail closed，模拟器不得替代。
 - [ ] **共享枢纽技术债（非本 App lifecycle 硬门）**：User Center v242
       registry/feedback 已 live，v240 是 exact rollback；dirty/stale source
       必须在未来任何普通 User Center deploy 前归并到经审 clean Git source。
-- [ ] **v1.1.2 / code 4 最终 release/self-update**：旧 v1.1.1 immutable
-      APK 与 `release.json` 只能保留为历史 staging，不得升格；公开
-      `latest.json` 仍是 v1.0.0，但 appId 已正确为 `.direct`。须构建
-      code 4、按 pointer-last 完成三面 byte parity，并在两台实体 Direct App
-      读回高版本清单及覆盖升级。
+- [ ] **v1.1.2 / code 4 release closeout**：R2 immutable、`latest.apk`、
+      `latest.json` pointer-last、GitHub Release 与 0% landing candidate
+      已通过；LE2120 完整矩阵、独立实体平板、active-corrupt 与 production
+      landing promotion 尚未完成。旧 v1.0.0 / v1.1.1 仅保留为历史与回滚
+      证据，不是 current pointer。
 
 以下不是 open gate：
 
@@ -240,10 +257,11 @@ release，没有可供已安装客户端降级的更早 production APK。
 > 模拟器证据一律标注为 **emulator-only**。
 > 认证与同步必须用真实账号端到端回读后才能声称可用；界面上有登录框不算同步证据。
 
-**最后验证人／日期**：Codex production-candidate 验证，2026-07-29。
-实体手机既有证据覆盖两台登记手机的 exact code 3 baseline 与内容恢复，不覆盖
-当前功能变更后的 final exact code 4 APK；code4 仍须两台逐台验收。canonical
-新登录/登出、physical feedback、offline/content/rotation/multi-window、
-本次 phone expanded-layout 替代与 release 仍未闭环。
+**最后验证人／日期**：Codex production-candidate 验证，2026-07-30。
+IN2020 已覆盖 final exact code4 updater、资料/Session、榜单、反馈、
+offline/recovery、rotation/multi-window、AI／注释、current-update、
+single-package 与补充 expanded-layout，并恢复设备基线。LE2120 只有 updater、
+登录、榜单、反馈的部分证据且 proxy 恢复未确认。独立实体平板、physical
+active-corrupt → previous 与 production landing promotion 仍未闭环。
 浏览器、R2、GitHub、
 Wrangler、Pulse 和 CI 证据不替代剩余实体 Android 验收。

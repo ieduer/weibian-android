@@ -33,7 +33,7 @@
 | Direct / Play package | `net.bdfz.weibian.direct`（同一 App、同一签名 lineage） |
 | public host / Worker | `weibian.bdfz.net` / `weibian-content` |
 | update prefix | `img.bdfz.net/apps/weibian-android/` |
-| current public release | v1.0.0 / code 1 |
+| current public release | Direct R2 / GitHub v1.1.2 / code 4；production landing 仍未切换 |
 | lifecycle | `published-limited`，不是 `production-supported` |
 
 它与 `lunyu`、`lunyu-battle`、`lunyu-battle-android`、`recite-android`
@@ -54,16 +54,23 @@
 - public v1.0.0 `latest.json.appId` 的旧 base package 历史错误已于
   2026-07-30 修正并逐 byte 读回；Direct 与 Play 必须继续都精确为
   `net.bdfz.weibian.direct`，不得并存成两个 App。
+- v1.1.2 / code 4 的 immutable APK、`latest.apk` 与 `latest.json` 已按
+  pointer-last 上线，GitHub v1.1.2 Release 与 R2 bytes 一致；production
+  landing 新版只在 `1ce95b1a…@0%` 候选。本状态仍不代表双机、实体平板或
+  lifecycle 门已关闭。
 - 每个候选必须在舰队登记的 OnePlus 9 Pro `LE2120`
   （hardware serial `c5467d2b`）与 OnePlus 8 Pro `IN2020`
   （hardware serial `6393cccf`）两台实体手机上安装同一 byte-identical
   签名 APK，并逐台通过 package 唯一性、覆盖升级、cold/foreground/Back、
   真实登录、核心/榜单、离线/恢复、本机资料/Session/outbox/content version
   持久化、反馈、自更新与 scoped fatal/ANR；任一台缺席或任一门失败都不得
-  发布。模拟器不得替代任一手机。仅本次 v1.1.2 / code 4 release，owner 已
-  明确批准在登记手机上以可逆的 forced expanded-layout 完成大屏替代验收；
-  必须恢复 size/density/rotation/proxy/font/keep-awake，且不得把这一例外
-  泛化为舰队或未来 release 可免实体平板。
+  提升为 `production-supported`。模拟器不得替代任一手机；两机门之外还必须
+  有独立实体平板完成 adaptive-layout 与原位升级，手机 forced
+  expanded-layout 只能作为补充证据，不能替代实体平板。
+- 当前 IN2020 已完成 code4 单机矩阵与补充 expanded-layout 验证并恢复基线。
+  LE2120 只完成 code4 原位更新、登录、榜单与反馈；owner 已叫停后续操作，
+  且其临时 Wi-Fi proxy 是否已人工恢复为 None 尚未确认。未经重新授权不得
+  触碰该机，也不得把部分证据扩写成双机通过。
 - `bdfz-user-center`、Companion、portal/nav/Pulse 或 canonical report
   被其他 active task 持有时只能只读验证。
 

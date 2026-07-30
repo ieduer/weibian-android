@@ -114,8 +114,32 @@ v1/v2 签名验证、signer continuity 不符或不是上述 authority 生成的
 Direct 与 Play 都必须解析为 canonical package `net.bdfz.weibian.direct`，
 并由同一 app-signing lineage 签名；渠道只分离更新传输，不得形成两个安装项。
 
-截至 2026-07-29，v1.1.1 / versionCode 3 的 final candidate 已从 clean
-checkpoint `e623e370a60bff33609e8bf5ad2748f559e20471` 构建：
+当前 Direct R2 release 是 v1.1.2 / versionCode 4：
+
+- clean source：
+  `e65dc572af19ed99cf520d52aa01de72508680a9`
+- CI：[run 30516534134](https://github.com/ieduer/weibian-android/actions/runs/30516534134)
+  （success）
+- Direct APK：2,819,959 bytes；SHA-256
+  `956810c903005680ba2e77a2c71964956cd2beac428e840862fc0a33724e15c3`
+- Play APK：2,819,963 bytes；SHA-256
+  `7bf92fcfc4fab561aee5f2e95a4ad80d67b9c7161778a667b8f7b33cc9427f7f`
+- Play AAB：4,988,101 bytes；SHA-256
+  `6a37903152ede8c5a9b4f9d547af99454cb75d501f19e3b96491969131b132a4`
+- signer certificate SHA-256：
+  `a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282`
+- immutable Direct APK：
+  `https://img.bdfz.net/apps/weibian-android/releases/v1.1.2/956810c9/weibian-1.1.2.apk`
+
+immutable APK／`release.json`、`latest.apk` 与 `latest.json` 已按 fail-closed
+顺序上线，`latest.json` 最后移动。两台登记手机都经真实 App updater 从 code3
+原位升级到 byte-identical exact code4；IN2020 完成单机矩阵，LE2120 只完成
+登录、榜单与反馈后由 owner 叫停，且临时 Wi-Fi proxy 是否恢复为 None 未确认。
+这不是完整双机 release acceptance，也不改变 `published-limited` lifecycle。
+
+**历史证据：**截至 2026-07-29，v1.1.1 / versionCode 3 的 final candidate
+已从 clean checkpoint `e623e370a60bff33609e8bf5ad2748f559e20471`
+构建：
 
 - package：`net.bdfz.weibian.direct`
 - size：2,738,032 bytes
@@ -133,10 +157,8 @@ https://img.bdfz.net/apps/weibian-android/releases/v1.1.1/de47da19/weibian-1.1.1
 https://img.bdfz.net/apps/weibian-android/releases/v1.1.1/de47da19/release.json
 ```
 
-这只是 pointer-last 发布中的 immutable staging：`latest.json`、GitHub
-Release 与落地页尚未切换，且当前源码已进入 v1.1.2 / code 4，因此
-v1.1.1 不得再成为 current／accepted release。不得重签或覆盖上述历史对象；
-下一候选必须重新构建并走完整验收。
+这只是历史 immutable staging；v1.1.2 已 supersede 它。不得把 v1.1.1
+重新移动为 current／accepted，不得重签或覆盖上述历史对象。
 
 发布前必须核对（`runbooks/bdfz_android_app_update_standard.md` §5）：
 
@@ -192,11 +214,10 @@ JSON 时，`versionCode` 与 `size` 必须写成正整数，不能带引号：
 sha256 格式非法、size ≤ 0、清单体积超限。这些校验都在
 `update/AppUpdateManager.kt` 里，改契约要两边一起改。
 
-当前公开 `latest.json` 仍是 v1.0.0 / versionCode 1；历史错误
-`appId=net.bdfz.weibian` 已于 2026-07-30 修正为 Direct package
-`net.bdfz.weibian.direct` 并完成公开逐 byte 读回。HTTP 200 仍不代表 code4
-更新契约通过；在 fail-closed 顺序发布高版本指针并由两台实体 Direct App
-完成原位覆盖之前，不得写“code4 自检更新端到端已验证”。
+当前公开 `latest.json` 已按 pointer-last 指向 v1.1.2 / versionCode 4，包名
+为 `net.bdfz.weibian.direct`，并与 immutable Direct APK 的 bytes/hash/size
+逐项读回一致。IN2020 的真实 App updater code3 → code4 已通过；LE2120 尚未
+重新授权，因此不得把单机结果扩写成双机自更新验收完成。
 
 正式上传前，必须让仓库内 release guard 同时核对 APK、metadata、签名和
 内容寻址 URL；不能靠人工目测 JSON：
@@ -229,11 +250,24 @@ CI 以 `node --test scripts/test/*.test.mjs` 锁定这条防线。
 - 同样的 APK、同样的 sha256、同样的签名指纹
 - 附 R2 不可变 URL
 - 写明构建与安装方法
-- 写明仍未通过的 final exact install、physical feedback、
-  offline/content/rotation/multi-window/tablet 和 self-update 门
+- 写明仍未通过的 LE2120 完整矩阵、独立实体平板、physical
+  active-corrupt → previous、production landing 与 lifecycle 门
 
-当前尚未建立 v1.1.2 GitHub Release；不得把旧 v1.1.1 immutable R2 staging
-误写成 GitHub/current release，也不得用它替代 code 4。
+v1.1.2 GitHub Release 已建立：
+
+- tag/source：`v1.1.2` →
+  `e65dc572af19ed99cf520d52aa01de72508680a9`
+- APK：2,819,959 bytes；SHA-256
+  `956810c903005680ba2e77a2c71964956cd2beac428e840862fc0a33724e15c3`
+- `release.json`：741 bytes；SHA-256
+  `0c8e317d1941c9b17f06f7d6b899a254b4f1f71da7ad78d05425cadf8330b67e`
+
+landing source commit `4829b5bddf1bf3b18f01f8787f33082a96e5aaf7` 的 CI
+run `30524470369` 已通过。Worker candidate
+`1ce95b1a-e05c-4203-b082-324d6758aca5` 保持 0%，ordinary production
+`e16da332-cbb5-46fd-82c8-ae7a6d4c69c0` 保持 100%；版本覆写的 API、
+invalid-session 401、exact landing link 与真实浏览器均通过。两机完整矩阵和
+独立实体平板未关闭前不得提升 candidate 流量。
 
 canonical portal 下载入口只更新 `https://i.rdfzer.com`。非 canonical 的
 `allinone.bdfz.net`／`portal.bdfz.net` 522 不得被写成成功发布面。

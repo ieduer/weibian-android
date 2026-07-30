@@ -10,13 +10,18 @@ change is recorded below but is not re-reviewed here as App/Worker code.
 ## Outcome
 
 No unresolved P1/P2 issue was found in the owned v1.1.2 / code 4 App source,
-Worker or operator-documentation scope after independent freeze review. This is
-a code and live-contract review, not release acceptance. Physical feedback,
-offline/recovery, code 3 → code 4 in-place install, the one-release
-expanded-layout tablet substitute and pointer/GitHub/landing release/self-update
-remain open. Differing-content delta/fallback/restart acceptance is complete on
-both registered code 3 baselines. User Center registry and feedback v242 are
-live.
+Worker or operator-documentation scope after independent freeze review. Direct
+R2 immutable artifacts, `latest.apk` and `latest.json` are live pointer-last.
+IN2020 passed the real App updater from code 3 to exact code 4 plus data/Session,
+ranking, feedback, offline/recovery, rotation/multi-window, AI/annotation,
+current-update, single-package and supplemental expanded-layout checks, then had
+its settings restored. LE2120 installed the same code 4 and passed login,
+ranking and feedback before the owner stopped further work; restoration of its
+temporary Wi-Fi proxy is unconfirmed. GitHub v1.1.2 matches R2 and the new
+landing passed as a zero-percent candidate, but this is still not full release
+acceptance: the LE2120 matrix, a separate physical tablet and physical
+active-corrupt → previous remain open. User Center registry and feedback v242
+are live.
 
 ## Fixed in this candidate
 
@@ -62,24 +67,28 @@ live.
   content is hash-addressed.
 - Gitleaks scanned the working tree with redaction enabled and found no secret.
 - Worker tests, release guard tests, JavaScript syntax checks and the historical
-  code 3 Android gates passed at release checkpoint
+  code3 Android gates passed at release checkpoint
   `e623e370a60bff33609e8bf5ad2748f559e20471`; GitHub Actions run
-  `30466463323` is green. The final code 4 freeze separately passed independent
-  source review with zero P1/P2, dual-channel unit/lint, instrumentation and
-  signed R8 build gates; its clean source checkpoint and CI receipt are recorded
-  only after commit/push.
-- The physical OnePlus pre-final code 3 candidate profile regression,
+  `30466463323` is green. Current code4 clean source
+  `e65dc572af19ed99cf520d52aa01de72508680a9` passed independent source review,
+  dual-channel unit/lint, instrumentation, signed R8 build and GitHub Actions run
+  `30516534134`.
+- The physical OnePlus pre-final code3 candidate profile regression,
   AI讲解／non-sensitive 高考批改 and session persistence paths passed without
   exposing credentials or student content. This evidence does not transfer to
   the final exact APK.
 - The only release signing authority is
   `/Users/ylsuen/.android/weibian-release.env`, and its signer matches the
-  accepted v1.0.0 certificate SHA-256. The final candidate is 2,738,032 bytes,
-  SHA-256 `de47da19562515049769c872f738975d8000091f9295f40e691d2928fe18da67`,
+  historical v1.0.0 signing certificate. The current Direct APK is 2,819,959
+  bytes, SHA-256
+  `956810c903005680ba2e77a2c71964956cd2beac428e840862fc0a33724e15c3`,
   with signer certificate SHA-256
   `a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282`.
-  Its immutable APK and `release.json` public readbacks match; it is not yet
-  current or device-accepted.
+  The Play APK is 2,819,963 bytes / SHA-256
+  `7bf92fcfc4fab561aee5f2e95a4ad80d67b9c7161778a667b8f7b33cc9427f7f`;
+  the AAB is 4,988,101 bytes / SHA-256
+  `6a37903152ede8c5a9b4f9d547af99454cb75d501f19e3b96491969131b132a4`.
+  Direct immutable APK and `release.json` public readbacks match.
 - User Center v242 `ec273922-1ec4-442b-8c84-9a5e2f7fcdf5` is at 100%
   production traffic with representative dependency probes and zero observed
   errors; the exact feedback rollback is v240
@@ -95,31 +104,37 @@ live.
   rely on Android's system trust store so normal certificate rotation does not
   brick login or updates.
 - User Center registration and feedback v242 are live; v240 is the exact
-  Worker rollback. The backend authenticated/idempotent feedback canary passed,
-  but final code 4 must still complete physical App → User Center → aggregate
-  D1 → operator Telegram receipt.
-- No physical tablet is currently available. For this Weibian release only, the
-  owner approved a reversible forced expanded-layout run on a registered phone;
-  it remains open until final code 4 passes and every display setting is
-  restored. This does not weaken the fleet-wide physical-tablet rule.
-- Final code 4 offline/recovery, rotation and multi-window still require the
-  scoped two-phone device matrix.
+  Worker rollback. The backend authenticated/idempotent canary and IN2020 final
+  code4 feedback path passed; LE2120 also produced an authenticated saved and
+  notified receipt before the owner stopped further work.
+- IN2020 passed a reversible forced expanded-layout run and every captured
+  setting was restored. This is supplemental evidence only: the current fleet
+  rule still requires a separate physical tablet for adaptive-layout and
+  in-place-upgrade acceptance.
+- Final code4 offline/recovery, rotation and multi-window passed on IN2020 but
+  still require an independently authorized LE2120 pass. The temporary LE2120
+  per-network proxy may still be `127.0.0.1:9`; only an owner-confirmed manual
+  restore to None closes that device-state risk.
 - A differing B bundle (`4a97b261…e3703`) and A→B delta
   (`83d407be…8b1f`) are publicly readable immutable staging objects; their
   canary version was exercised on both registered phones and then removed from
   traffic. Both phones passed delta reconstruction, deliberate delta rejection
   → full-bundle fallback, restart readback and stable-A restore; ordinary users
   receive stable A.
-- The public update manifest still points to v1.0.0 with
-  corrected `appId=net.bdfz.weibian.direct`; public byte readback and both
-  installed code 3 clients' “up to date” UI passed. The v1.1.1 immutable APK
-  and `release.json` are staged but superseded by the v1.1.2 / code 4 source;
-  `latest.json`, GitHub Release and landing remain on v1.0.0. Therefore code 4
-  self-update is not yet accepted.
-- The final exact `de47da19…8da67` code 3 APK is installed on both registered
-  physical phones and is the preserved prior-version baseline. Offline,
-  feedback, rotation, multi-window and in-place update evidence must be repeated
-  on the final exact code 4 artifact.
+- The public update manifest now points to v1.1.2/code4 at the exact immutable
+  `…/v1.1.2/956810c9/` path; `latest.apk` and `latest.json` were written after
+  immutable readback, with the pointer last. Both registered phones accepted
+  that updater path. GitHub v1.1.2 is byte-identical; production landing remains
+  historical while candidate `1ce95b1a…` stays at zero percent.
+- The final exact `de47da19…8da67` code3 APK is historical prior-version
+  evidence. Both phones now contain exact code4; LE2120 has only the bounded
+  updater/login/ranking/feedback subset and cannot be counted as a full pass.
+- Full-bundle fallback is not physical active-corrupt → previous proof. That
+  deliberate corruption test remains open until its risk is explicitly approved.
+  The production APK is non-debuggable and exposes no provider or test hook for
+  mutating private `filesDir/content/{active,previous}`. Any same-package
+  production-signed instrumentation/helper therefore needs separate explicit
+  authorization before use.
 - Canonical portal `i.rdfzer.com` returns 200. The 522
   `allinone.bdfz.net`/`portal.bdfz.net` aliases are noncanonical and are not
   used as release evidence. Companion is explicitly `not-applicable`; there is

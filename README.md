@@ -5,21 +5,32 @@
 
 一个**原生 Android 应用**（Kotlin + Jetpack Compose），不是 WebView 套壳。
 
-当前 lifecycle 为 `published-limited`：公开版仍是 v1.0.0 / versionCode 1；
-v1.1.1 / versionCode 3 的历史候选 APK 与 `release.json` 已按内容寻址公开，
-但 `latest.json`、GitHub Release 与落地页尚未切换，因此尚未成为当前发布版，
-也尚未接受。当前源码的下一候选身份是 v1.1.2 / versionCode 4；它必须重新
-构建、签名并完成全部实体设备门，不能把既有 code 3 staging 直接升格。历史检查点
-`e623e370a60bff33609e8bf5ad2748f559e20471` 的 GitHub Actions
-[run 30466463323](https://github.com/ieduer/weibian-android/actions/runs/30466463323)
-已通过；APK 为 2,738,032 bytes，SHA-256
-`de47da19562515049769c872f738975d8000091f9295f40e691d2928fe18da67`，
+当前 lifecycle 仍为 `published-limited`。Direct R2 当前版已按 pointer-last
+发布为 v1.1.2 / versionCode 4：clean source
+`e65dc572af19ed99cf520d52aa01de72508680a9` 与 GitHub Actions
+[run 30516534134](https://github.com/ieduer/weibian-android/actions/runs/30516534134)
+通过；Direct APK 为 2,819,959 bytes，SHA-256
+`956810c903005680ba2e77a2c71964956cd2beac428e840862fc0a33724e15c3`，
 signer certificate SHA-256 为
 `a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282`。
-当前公开 `latest.json` 仍指向 v1.0.0；历史错误 `appId=net.bdfz.weibian`
-已于 2026-07-30 修正为 APK 真实身份 `net.bdfz.weibian.direct`，公开 bytes
-逐 byte 读回通过。code4 尚未发布，两台实体 Direct App 的高版本覆盖更新
-仍未完成，因此**不得把清单修正扩写成 code4 应用内自更新已验证**。
+同一安装身份的 Play APK 为 2,819,963 bytes／SHA-256
+`7bf92fcfc4fab561aee5f2e95a4ad80d67b9c7161778a667b8f7b33cc9427f7f`，
+Play AAB 为 4,988,101 bytes／SHA-256
+`6a37903152ede8c5a9b4f9d547af99454cb75d501f19e3b96491969131b132a4`。
+
+IN2020 已从保留资料的 code3 App 通过真实应用内更新链原位升级到 exact code4，
+并通过资料／Session、榜单、反馈、offline/recovery、rotation/multi-window、
+AI／注释、当前版本自检、补充 expanded-layout 与单一 package 核对，设备设置
+已恢复。LE2120 也已原位升级到同一 code4 并通过登录、榜单与反馈，但 owner
+随后叫停后续操作；其临时 Wi-Fi proxy 是否已人工恢复为 None 尚未确认。
+[GitHub v1.1.2 Release](https://github.com/ieduer/weibian-android/releases/tag/v1.1.2)
+已发布且 bytes 与 R2 一致；新版 landing 仅为
+`1ce95b1a-e05c-4203-b082-324d6758aca5@0%` 候选，ordinary production 仍是
+`e16da332-cbb5-46fd-82c8-ae7a6d4c69c0@100%`。LE2120 完整矩阵、独立实体
+平板和 physical active-corrupt → previous 仍未关闭，因此不得称为
+`production-supported`。
+v1.0.0 是历史上一版；v1.1.1 / code3 只保留为历史 immutable staging/baseline，
+都不是当前 Direct 更新指针。
 
 ---
 
@@ -162,22 +173,22 @@ weibian.bdfz.net 热更新  ┘             daily_stats / gaokao_attempts
 2. **上游语料缺注**：雍也 6.7、6.26 两章正文有注释标记但上游 `dialogues.json` 缺对应注释条目。
    这两处标记按纯文本渲染，不给点了没反应的目标。
 3. **真题覆盖**：北京卷设《论语》大题的年份只有 6 年（其余年份考《红楼梦》），已全部收录，不是遗漏。
-4. **验收范围**：两台登记实体手机 LE2120 与 IN2020 都已安装 byte-identical
-   v1.1.1 / code 3 final APK `de47da19…8da67`，保留 package、first-install
-   identity 与 App 资料；“我”页重复 key 闪退已完成反复整页滚动回归。两机还
-   完成真实 A→B delta、故意拒绝 delta 后整包回落、重启 readback、稳定 A
-   恢复和单一 Weibian package 核对。它们仍只是 code 4 的 prior-version
-   baseline；physical feedback、code3→code4 原位更新、code4 离线／恢复、
-   rotation／multi-window 与本次获批的手机 expanded-layout 平板替代验收仍
-   必须在 final exact code 4 上完成。User Center v242 已 100% live；v240 是
-   精确反馈 rollback。
-5. **发布边界**：v1.1.1 的 immutable APK 与 `release.json` 已公开并逐字节
-   验证，但它已被当前 v1.1.2 / code 4 源码候选取代，不能再移动为 current。
-   公开 `latest.json` 仍指向 v1.0.0，但其 `appId` 已修正为 canonical
-   `net.bdfz.weibian.direct` 并由两台 code 3 App 显示“已是最新版本”。正确
-   code 4 的 immutable APK、`latest.json`、GitHub Release、落地页和实体
-   self-update 尚未发布／验收。差异内容 canary 已完成双机验收并撤流；ordinary
-   Worker 已恢复稳定 A 内容。
+4. **验收范围**：LE2120 与 IN2020 的 historical code3 baseline 都曾完成真实
+   A→B delta、故意拒绝 delta 后整包回落、重启 readback 与稳定 A 恢复。
+   本轮两机都从 code3 通过 App updater 原位升级到 byte-identical exact code4。
+   IN2020 另通过资料／Session、榜单、反馈、offline/recovery、Back、
+   rotation/multi-window、AI／注释、current-update、single-package 与补充
+   expanded-layout，且设置已恢复。LE2120 只完成登录、榜单与反馈后由 owner
+   叫停；临时 Wi-Fi proxy 是否已人工恢复为 None 未确认，未经重新授权不再
+   触碰。两机完整矩阵、独立实体平板及 active-corrupt → previous 仍未关闭。
+5. **发布边界**：v1.1.2 Direct immutable APK、同目录 `release.json`、
+   `latest.apk` 和 `latest.json` 已上线并逐字节读回，pointer 最后移动；当前
+   immutable URL 是
+   `https://img.bdfz.net/apps/weibian-android/releases/v1.1.2/956810c9/weibian-1.1.2.apk`。
+   GitHub v1.1.2 Release 的 APK 与 `release.json` digest 均一致；landing
+   source commit `4829b5b…` 的 CI 已绿，Worker candidate `1ce95b1a…` 只占
+   0%，普通流量仍指向 v1.0.0 下载页。硬门未闭环，所以仍为
+   `published-limited`；v1.0.0 与 v1.1.1 只属历史证据。
 6. **公开入口**：canonical portal 是 `https://i.rdfzer.com`，当前返回 200；
    `allinone.bdfz.net` 与 `portal.bdfz.net` 是非 canonical 别名，当前 522 不作为
    本 App 的发布入口。Companion disposition 为 `not-applicable`，不得新增

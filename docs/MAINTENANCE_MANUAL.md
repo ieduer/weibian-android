@@ -1,20 +1,21 @@
 # 韦编 · 论语译注 Android 运维手册
 
 Status: `published-limited`
-Public release: v1.0.0 / versionCode 1
-Historical staged candidate: v1.1.1 / versionCode 3（未成为 current／accepted）
-Next source candidate: v1.1.2 / versionCode 4（未构建、未签名、未验收）
-Verified release checkpoint: `e623e370a60bff33609e8bf5ad2748f559e20471`
-CI: GitHub Actions run `30466463323`, success
-Last production-candidate verification: 2026-07-29
+Current Direct R2 release: v1.1.2 / versionCode 4
+Historical evidence: v1.0.0 / code 1 public；v1.1.1 / code 3 immutable staging
+Verified release checkpoint: `e65dc572af19ed99cf520d52aa01de72508680a9`
+CI: GitHub Actions run `30516534134`, success
+Last production-candidate verification: 2026-07-30
 Source: `/Users/ylsuen/CF/lunyu-yizhu-android`
 
 这是本项目开发、发布、值守、故障处理和交接的项目级事实入口。
-“已公开发布”不等于 production-supported；本项目仍有实体离线／恢复、真实
-反馈、内容 previous/corrupt-active 恢复、v1.1.2 final exact install、已获批
-的单次手机 forced expanded-layout 平板替代验收，以及
-pointer/GitHub/landing 切换门未闭环。这个替代只适用于本次 Weibian release，
-必须恢复所有设备设置；不得泛化到舰队未来 release 的实体平板规则。
+“Direct R2 已发布”不等于 production-supported。IN2020 已完成 final code4
+updater 与资料／Session、榜单、反馈、offline/recovery、rotation/multi-window、
+AI／注释、current-update、single-package 与补充 expanded-layout，设备设置
+已恢复。LE2120 只完成原位更新、登录、榜单与反馈后由 owner 叫停，临时 Wi-Fi
+proxy 是否已人工恢复为 None 尚未确认。GitHub v1.1.2 已发布；新版 landing
+仅为 0% candidate。两机完整矩阵、独立实体平板和 physical
+active-corrupt → previous 都仍是硬门。
 
 ## 0. 必读顺序与状态用词
 
@@ -37,14 +38,12 @@ pointer/GitHub/landing 切换门未闭环。这个替代只适用于本次 Weibi
 
 允许的当前表述：
 
-- “v1.0.0 已公开发布”
-- “v1.1.1 / code 3 的 final APK 与 release.json 已 immutable staged，但尚未
-  移动公开更新指针、建立 GitHub Release 或成为 accepted release”
-- “当前源码下一候选为 v1.1.2 / code 4；Direct/Play 共用
-  `net.bdfz.weibian.direct`，尚未构建或验收”
+- “v1.1.2 / code 4 Direct R2 release 已按 pointer-last 上线”
+- “v1.0.0 是历史上一版；v1.1.1 / code 3 是 superseded immutable staging”
+- “Direct/Play 共用 `net.bdfz.weibian.direct` 与同一 signing lineage”
 - “Worker 排行榜、内容不可变路由和差量契约已上线”
-- “LE2120 与 IN2020 已安装 byte-identical final code 3 baseline，并通过
-  ‘我’页、差量／整包回落、重启和稳定内容恢复；不代表 code 4 已验收”
+- “GitHub v1.1.2 Release 与 R2 bytes 一致；production landing 新版仅 0%”
+- “IN2020 已通过 final code4 单机矩阵；LE2120 只有部分 code4 证据”
 - “User Center v242 已 100% live；v240 是 exact feedback rollback”
 - “canonical portal `i.rdfzer.com` 返回 200”
 - “Companion disposition 是 `not-applicable`，没有 Weibian WebView”
@@ -58,9 +57,11 @@ pointer/GitHub/landing 切换门未闭环。这个替代只适用于本次 Weibi
 - “五面登记的 source authority 全部 clean/reconciled”
 - “实体手机和平板都已验证”
 - “差异内容版本已完成线上导入与回滚”
-- “v1.1.1 已成为 current／accepted release”
-- “v1.1.2 已构建、签名、current 或 accepted”
-- “应用内自更新端到端已验证”
+- “v1.0.0 或 v1.1.1 仍是 current Direct pointer”
+- “两台手机均已通过 v1.1.2”
+- “production landing 已切到 v1.1.2”
+- “双机应用内自更新端到端已验证”
+- “手机 expanded-layout 可以替代实体平板”
 
 ## 1. App identity record
 
@@ -76,20 +77,21 @@ pointer/GitHub/landing 切换门未闭环。这个替代只适用于本次 Weibi
 | Kotlin namespace | `net.bdfz.weibian`（不是安装身份） |
 | Direct package | `net.bdfz.weibian.direct` |
 | Play package | `net.bdfz.weibian.direct`（与 Direct 同一安装身份／签名 lineage） |
-| Direct update | 客户端代码 enabled；公开 v1.0.0 `latest.json.appId` 已修正为 `.direct` 并逐 byte 读回；code4 两机原位更新未验收 |
+| Direct update | enabled；v1.1.2/code4 `latest.json` 已 pointer-last 上线；两机 updater 均完成，完整双机矩阵未完成 |
 | Play update | disabled；商店流程未验收 |
 | public host | `weibian.bdfz.net` |
 | Worker | `weibian-content` |
 | APK R2 prefix | `blog-images` / `apps/weibian-android/` |
 | content R2 prefix | `blog-images` / `apps/weibian-content/` |
 | update manifest | `https://img.bdfz.net/apps/weibian-android/latest.json` |
-| immutable APK | `https://img.bdfz.net/apps/weibian-android/releases/v1.0.0/21fddd9a/weibian-1.0.0.apk` |
-| APK SHA-256 | `21fddd9a82a6f486f5aa2e817716615fcd58b1d0d4f71ddff511eaaf8a1111ce` |
-| APK size | 2,737,821 bytes |
+| immutable APK | `https://img.bdfz.net/apps/weibian-android/releases/v1.1.2/956810c9/weibian-1.1.2.apk` |
+| Direct APK SHA-256 / size | `956810c903005680ba2e77a2c71964956cd2beac428e840862fc0a33724e15c3` / 2,819,959 bytes |
+| Play APK SHA-256 / size | `7bf92fcfc4fab561aee5f2e95a4ad80d67b9c7161778a667b8f7b33cc9427f7f` / 2,819,963 bytes |
+| Play AAB SHA-256 / size | `6a37903152ede8c5a9b4f9d547af99454cb75d501f19e3b96491969131b132a4` / 4,988,101 bytes |
 | signer certificate SHA-256 | `a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282` |
 | historical candidate source | v1.1.1 / code 3 release checkpoint `e623e370…59e20471` |
 | historical candidate APK | immutable staged；`…/v1.1.1/de47da19/weibian-1.1.1.apk`；SHA-256 `de47da19…8da67`；2,738,032 bytes；不得升格为 current／accepted |
-| next source candidate | v1.1.2 / code 4；Direct/Play canonical package 均为 `net.bdfz.weibian.direct`；尚无 release artifact |
+| current release source | v1.1.2 / code 4；`e65dc572af19ed99cf520d52aa01de72508680a9` |
 | signing authority | `/Users/ylsuen/.android/weibian-release.env` |
 | local data class | Room schema 2；按 owner binding 隔离的学习记录与终态隔离 outbox，不可再生 |
 | central data class | `student_owned`；User Center progress/feedback；榜单 Worker D1 保存假名化核验作答事件 |
@@ -104,17 +106,25 @@ pointer/GitHub/landing 切换门未闭环。这个替代只适用于本次 Weibi
 
 - Worker current version:
   `e16da332-cbb5-46fd-82c8-ae7a6d4c69c0`
+- Worker zero-percent landing candidate:
+  `1ce95b1a-e05c-4203-b082-324d6758aca5`
 - Previous Worker version:
   `32f8dd97-9d50-49e1-a0cf-9f1277dd0c92`
 - GitHub Release:
-  `https://github.com/ieduer/weibian-android/releases/tag/v1.0.0`
-- v1.1.1 release checkpoint / CI:
+  `https://github.com/ieduer/weibian-android/releases/tag/v1.1.2`；
+  target `e65dc572af19ed99cf520d52aa01de72508680a9`；APK SHA-256
+  `956810c9…e15c3`；`release.json` SHA-256 `0c8e317d…0b67e`
+- current code4 release checkpoint / CI:
+  `e65dc572af19ed99cf520d52aa01de72508680a9` /
+  `https://github.com/ieduer/weibian-android/actions/runs/30516534134`
+  （success）
+- historical v1.1.1 release checkpoint / CI:
   `e623e370a60bff33609e8bf5ad2748f559e20471` /
   `https://github.com/ieduer/weibian-android/actions/runs/30466463323`
   （success）
-- v1.1.1 immutable staging:
+- historical v1.1.1 immutable staging:
   `https://img.bdfz.net/apps/weibian-android/releases/v1.1.1/de47da19/weibian-1.1.1.apk`
-  与同目录 `release.json` 已公开逐字节验证；GitHub Release、landing 与
+  与同目录 `release.json` 已公开逐字节验证；当时 GitHub Release、landing 与
   `latest.json` 尚未切换。metadata 为 625 bytes，SHA-256
   `9cfdb82006787800cc1612d8232257191815b7c3d06b33537695ccd946df4275`
 - User Center registry:
@@ -127,9 +137,11 @@ pointer/GitHub/landing 切换门未闭环。这个替代只适用于本次 Weibi
 - Companion:
   `not-applicable`；无 Weibian WebView service
 
-公开 v1.0.0 `latest.json.appId` 已于 2026-07-30 修正为 Direct package
-`net.bdfz.weibian.direct`，并完成 cache-busted public byte readback。它仍只
-是 code1 当前指针，不是 code4 self-update acceptance evidence。
+公开 v1.1.2 `latest.json`、`latest.apk` 与 immutable APK 已按 pointer-last
+上线并完成 public byte readback；GitHub Release bytes 一致。landing commit
+`4829b5b…` 已通过 CI run `30524470369`，但新 Worker 版本只占 0%，ordinary
+production 仍显示 v1.0.0 下载链接。v1.0.0 pointer 修正与 v1.1.1 staging
+仅保留为 historical evidence。
 
 版本 ID 是回滚锚，不代表内容、客户端和数据门全部通过。操作前重新读取
 Wrangler/GitHub/R2；不得把本节旧值直接当作当前事实。
@@ -337,8 +349,8 @@ Weibian WebView service，而不是要求把它加入 Companion。
 ### 每季
 
 - 实体手机覆盖升级演练；
-- 实体平板 adaptive/accessibility；本次 Weibian release 例外按 owner 明确
-  批准，改由登记手机 reversible forced expanded-layout 验收并恢复设置；
+- 独立实体平板 adaptive/accessibility 与原位升级；手机 forced
+  expanded-layout 只能补充验证，不能替代；
 - Worker rollback sandbox/受控演练；
 - 内容 staged/previous restore；
 - lifecycle 是否仍为 `published-limited`。
@@ -376,10 +388,10 @@ Release build 只能在 identity release card 完整、项目专用 signing 输�
 prior signer/version 已核对后执行。唯一 authority 是
 `/Users/ylsuen/.android/weibian-release.env`；必须按 `docs/DEPLOYMENT.md`
 使用 `set -euo pipefail`、`--no-daemon`、clean build，并拒收
-`app-direct-release-unsigned.apk`。code 3 artifact 锁定在历史 release
-checkpoint `e623e370…59e20471`，不得覆盖。当前 App 代码已经变化，因此
-下一候选固定为 v1.1.2 / code 4，必须从新的 clean checkpoint 重建、重算
-hash/size，并重新走完整验收。
+`app-direct-release-unsigned.apk`。code3 artifact 锁定在历史 release
+checkpoint `e623e370…59e20471`，不得覆盖。current code4 artifact 来自
+clean checkpoint `e65dc572…08680a9`，其 hash/size 已固定；任何后续二进制
+变化必须使用同 signer、更高 versionCode 并重新走完整验收。
 
 ### 内容生成
 
@@ -416,10 +428,10 @@ clean clone 用 `node scripts/bootstrap_public_content.mjs` 恢复精确内容�
 - R2 immutable URL；
 - rollback 和未过门。
 
-`e623e370a60bff33609e8bf5ad2748f559e20471` 与 CI run `30466463323`
-是 v1.1.1 历史 artifact 的 release checkpoint；该 exact APK 已 immutable
-staged 但不得升格。当前下一候选为 v1.1.2 / code 4；任何后续二进制修复
-仍必须使用同 signer 和更高 versionCode。
+current release card 是 `e65dc572af19ed99cf520d52aa01de72508680a9`、
+CI run `30516534134` 与本手册记录的三个 exact artifact。
+`e623e370…59e20471` / run `30466463323` 仅是 v1.1.1 historical checkpoint。
+任何后续二进制修复仍必须使用同 signer 和更高 versionCode。
 
 ### 8.2 Worker/内容
 
@@ -462,10 +474,11 @@ npx wrangler deploy --dry-run
 v1.0.0 是第一个已接受 release，没有更低 production APK 可作为已安装客户端
 回滚。坏版已安装后只能用同 signer、更高 versionCode 修复。
 
-Landing page 必须链接到当前 accepted release 的内容寻址 APK，不能链接
-`latest.apk` 便利别名。v1.1.1 pointer 未移动前仍指向 immutable v1.0.0；
-其 `latest.json.appId` 历史错误已修正并公开逐 byte 读回；仍不能据此声称
-尚未发布的 code4 Direct 原位更新通过。
+Landing page 必须链接到 current Direct release 的内容寻址 APK，不能链接
+`latest.apk` 便利别名。R2 pointer 已是 v1.1.2/code4，但 production landing
+仍由 `e16da332…@100%` 提供 v1.0.0 下载链接；v1.1.2 candidate
+`1ce95b1a…@0%` 已通过 exact API、invalid-session 401、version-filtered Tail
+与真实浏览器验证。硬门关闭前不得提升流量。
 
 ## 9. 监控和验收
 
@@ -489,9 +502,8 @@ Landing page 必须链接到当前 accepted release 的内容寻址 APK，不能
   foreground/Back、核心流程、离线/恢复、本机资料/Session/outbox/content
   version 持久化、反馈、自更新与 scoped fatal/ANR；任一台不可达或任一门
   失败即 fail closed，模拟器不得替代；
-- 本次 Weibian release 用登记手机的 reversible forced expanded-layout
-  关闭 app-specific 大屏门，并逐项恢复 size/density/rotation/proxy/font/
-  keep-awake；未来 release 仍遵守舰队实体平板规则；
+- 两机门之外，还必须在独立实体平板上通过 adaptive-layout 与原位升级；
+  手机 reversible forced expanded-layout 只能作为补充，不能替代该门；
 - clean install；
 - v1.0.0 → 更高 code 覆盖升级；
 - cold/force-stop/foreground/back/rotation/multi-window/offline/recovery；
@@ -502,13 +514,14 @@ Landing page 必须链接到当前 accepted release 的内容寻址 APK，不能
 - scoped logcat 无 fatal/ANR；
 - direct/Play 渠道行为分离。
 
-截至当前，LE2120 与 IN2020 两台实体手机均已装回 final exact code3
-`de47da19…8da67`，并通过真实 delta/full fallback、内容 SHA 与重启持久化；
-IN2020 另通过“我”页闪退回归，既有 OnePlus 证据还覆盖 AI 路径与 session
-persistence。physical feedback、offline/recovery、rotation/multi-window、
-corrupt-active → previous、获批的手机 expanded-layout 平板替代、
-v1.1.2/code4 final build 与最终 release/self-update 仍是 open gate。User
-Center v242 已 live；v240 是 exact feedback rollback。
+截至当前，IN2020 已经由真实 App updater 从 historical code3 原位升级到
+exact code4 `956810c9…e15c3`，资料／Session、榜单、反馈、offline/recovery、
+rotation/multi-window、AI／注释、current-update、single-package 与补充
+expanded-layout 均通过并恢复基线。LE2120 已安装同一 code4，登录、榜单与
+反馈通过，随后由 owner 叫停；其 temporary Wi-Fi proxy 是否已人工恢复为 None
+尚未确认，未经重新授权不得再触碰。physical active-corrupt → previous 和
+独立实体平板仍是 open gate。User Center v242 已 live；v240 是 exact
+feedback rollback。
 
 ## 10. 故障排查
 
@@ -595,8 +608,8 @@ version 恢复与 health／manifest 读回。
 ### APK
 
 - `latest.json` 指错：先保存当前 pointer bytes/hash，再回指已验证 artifact。
-- 当前没有 code 0/更早 production release；v1.0.0 已安装坏版只能发同 signer、
-  更高 code 修复。
+- current code4 已安装坏版只能发同 signer、更高 code 修复；恢复 historical
+  v1.0.0 pointer 只能停止推广，不能把已安装 App 降级。
 - immutable APK 不覆盖、不删除。
 - GitHub Release 是审计面，不以删除 Release 代替客户端修复。
 
@@ -628,12 +641,10 @@ version 恢复与 health／manifest 读回。
 
 | 优先级 | 项目 | 关闭证据 |
 |---|---|---|
-| P1 | 本次 expanded-layout 替代尚未验收 | 按 owner 对本次 Weibian release 的唯一例外，在登记手机强制大屏布局通过 adaptive/accessibility，并逐项恢复 size/density/rotation/proxy/font/keep-awake；不得泛化到舰队 |
-| P1 | feedback 未做真实回执 | physical App → API → aggregate D1 → Telegram |
-| P1 | 实体 offline/recovery 矩阵未闭环 | 断网启动、读练、恢复联网、force-stop/rotation/multi-window 与 scoped logcat |
-| P1 | 内容 previous/corrupt-active 恢复尚未闭环 | 两台手机的 patch/full fallback、SHA 与重启已通过；仍须破坏 active 后证明 previous slot 恢复 |
-| P1 | v1.1.2 / code 4 尚无 final exact APK | 新 clean checkpoint 构建同 signer artifact，在两台登记手机完成升级、资料保留和 scoped log，并完成本次获批的 phone expanded-layout 替代 |
-| P1 | v1.1.2 release/self-update 未闭环 | 旧 v1.1.1 immutable staging 不可升格；须 code 4 immutable/GitHub/landing byte parity、正确 canonical `latest.json` pointer-last、两台实体手机读回 |
+| P1 | LE2120 final code4 完整矩阵未验收 | owner 重新授权并确认 Wi-Fi Proxy=None 后，用现有 exact `956810c9…e15c3` 完成资料/Session、offline/recovery、Back、rotation/multi-window、AI/注释、current-update、single-package 与 scoped log；保留既有登录/榜单/反馈证据 |
+| P1 | 独立实体平板未验收 | 在登记的实体平板完成 byte-identical 原位升级、adaptive/accessibility、核心流程与设置恢复；IN2020 forced expanded-layout 只作补充 |
+| P1 | 内容 previous/corrupt-active 恢复尚未闭环 | patch/full fallback、SHA 与重启已通过；physical 故意破坏 active 前先取得风险明示批准，再证明 previous slot 恢复 |
+| P1 | v1.1.2 release closeout 未闭环 | R2/GitHub byte parity 与 0% landing candidate 已通过；仍须 LE2120 完整矩阵、独立实体平板、active-corrupt 与 production landing promotion |
 | Shared-hub debt（非 App lifecycle 硬门） | User Center clean source 未对账 | 将已 live 的单一 registry object 归并到经审 clean Git source；在此之前禁止普通 hub deploy，并验证 production bundle parity |
 | P2 | 注册 UI 预留但服务关闭 | User Center 正式开放或明确永久不支持 |
 
@@ -642,16 +653,15 @@ version 恢复与 health／manifest 读回。
 任何新功能、共享 hub 改动、新 release、内容分发扩展或 production 状态提升
 都必须另开 task。优先顺序：
 
-1. 构建 v1.1.2 / code 4 final exact APK，并完成两台实体手机覆盖安装与
-   physical feedback 回执；
-2. 实体 offline/recovery、rotation/multi-window、内容 corrupt-active →
-   previous 恢复和本次获批的 phone expanded-layout 替代；恢复所有设备设置；
-3. 按 fail-closed 顺序发布正确 Direct `latest.json`，完成
-   R2/GitHub/`i.rdfzer.com` 字节一致性和实体自更新；
-4. 另开共享枢纽维护 task 对账 User Center clean source；保持 v242 current
+1. 取得 LE2120 重新授权并确认 Wi-Fi Proxy=None 后，用 exact code4 完成
+   剩余独立矩阵；
+2. 在独立实体平板完成 byte-identical 原位升级与 adaptive/accessibility；
+3. 取得风险明示批准后再做 physical active-corrupt → previous；
+4. 关闭上述硬门后才把 `1ce95b1a…` production landing candidate 提升流量；
+5. 另开共享枢纽维护 task 对账 User Center clean source；保持 v242 current
    与 v240 exact rollback；这项技术债不用于阻断已验证的 Weibian App
    lifecycle；
-5. Play store。
+6. Play store。
 
 ## 15. Closeout
 
