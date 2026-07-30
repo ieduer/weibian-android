@@ -43,7 +43,8 @@ active-corrupt → previous 都仍是硬门。
 - “Direct/Play 共用 `net.bdfz.weibian.direct` 与同一 signing lineage”
 - “Worker 排行榜、内容不可变路由和差量契约已上线”
 - “GitHub v1.1.2 Release 与 R2 bytes 一致；production landing 新版仅 0%”
-- “IN2020 已通过 final code4 单机矩阵；LE2120 只有部分 code4 证据”
+- “IN2020 已通过 final code4 已记录的原位升级验收子集；LE2120 只有部分
+  code4 证据”
 - “User Center v242 已 100% live；v240 是 exact feedback rollback”
 - “canonical portal `i.rdfzer.com` 返回 200”
 - “Companion disposition 是 `not-applicable`，没有 Weibian WebView”
@@ -517,11 +518,12 @@ Landing page 必须链接到 current Direct release 的内容寻址 APK，不能
 截至当前，IN2020 已经由真实 App updater 从 historical code3 原位升级到
 exact code4 `956810c9…e15c3`，资料／Session、榜单、反馈、offline/recovery、
 rotation/multi-window、AI／注释、current-update、single-package 与补充
-expanded-layout 均通过并恢复基线。LE2120 已安装同一 code4，登录、榜单与
-反馈通过，随后由 owner 叫停；其 temporary Wi-Fi proxy 是否已人工恢复为 None
-尚未确认，未经重新授权不得再触碰。physical active-corrupt → previous 和
-独立实体平板仍是 open gate。User Center v242 已 live；v240 是 exact
-feedback rollback。
+expanded-layout 均通过并恢复基线；clean install 与完整 canonical
+登录／同步／登出撤销／重启闭环未在 code4 重跑，不能称为完整单机矩阵。
+LE2120 已安装同一 code4，登录、榜单与反馈通过，随后由 owner 叫停；其
+temporary Wi-Fi proxy 是否已人工恢复为 None 尚未确认，未经重新授权不得再
+触碰。physical active-corrupt → previous 和独立实体平板仍是 open gate。
+User Center v242 已 live；v240 是 exact feedback rollback。
 
 ## 10. 故障排查
 
@@ -641,6 +643,7 @@ version 恢复与 health／manifest 读回。
 
 | 优先级 | 项目 | 关闭证据 |
 |---|---|---|
+| P1 | IN2020 lifecycle-only 门未闭环 | 在不违反“保留全部 App 资料”的前提下另获 clean-install 测试授权／设备，并重跑 canonical 登录、同步、登出或撤销、重启读回；现有 Session 持久化不代替该闭环 |
 | P1 | LE2120 final code4 完整矩阵未验收 | owner 重新授权并确认 Wi-Fi Proxy=None 后，用现有 exact `956810c9…e15c3` 完成资料/Session、offline/recovery、Back、rotation/multi-window、AI/注释、current-update、single-package 与 scoped log；保留既有登录/榜单/反馈证据 |
 | P1 | 独立实体平板未验收 | 在登记的实体平板完成 byte-identical 原位升级、adaptive/accessibility、核心流程与设置恢复；IN2020 forced expanded-layout 只作补充 |
 | P1 | 内容 previous/corrupt-active 恢复尚未闭环 | patch/full fallback、SHA 与重启已通过；physical 故意破坏 active 前先取得风险明示批准，再证明 previous slot 恢复 |
@@ -653,15 +656,17 @@ version 恢复与 health／manifest 读回。
 任何新功能、共享 hub 改动、新 release、内容分发扩展或 production 状态提升
 都必须另开 task。优先顺序：
 
-1. 取得 LE2120 重新授权并确认 Wi-Fi Proxy=None 后，用 exact code4 完成
+1. 另获不破坏既有资料的 clean-install 测试方案授权，并在 IN2020 重跑完整
+   canonical 登录／同步／登出撤销／重启闭环；
+2. 取得 LE2120 重新授权并确认 Wi-Fi Proxy=None 后，用 exact code4 完成
    剩余独立矩阵；
-2. 在独立实体平板完成 byte-identical 原位升级与 adaptive/accessibility；
-3. 取得风险明示批准后再做 physical active-corrupt → previous；
-4. 关闭上述硬门后才把 `1ce95b1a…` production landing candidate 提升流量；
-5. 另开共享枢纽维护 task 对账 User Center clean source；保持 v242 current
+3. 在独立实体平板完成 byte-identical 原位升级与 adaptive/accessibility；
+4. 取得风险明示批准后再做 physical active-corrupt → previous；
+5. 关闭上述硬门后才把 `1ce95b1a…` production landing candidate 提升流量；
+6. 另开共享枢纽维护 task 对账 User Center clean source；保持 v242 current
    与 v240 exact rollback；这项技术债不用于阻断已验证的 Weibian App
    lifecycle；
-6. Play store。
+7. Play store。
 
 ## 15. Closeout
 

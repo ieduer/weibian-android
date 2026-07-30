@@ -235,6 +235,10 @@ release，没有可供已安装客户端降级的更早 production APK。
 - [ ] **双机实体 offline/recovery 矩阵**：IN2020 的 final code4
       offline/recovery、rotation/multi-window 已通过；LE2120 由 owner 叫停，
       仍须重新授权并逐项独立复验。其 Wi-Fi proxy 人工恢复为 None 也须确认。
+- [ ] **clean install 与完整身份闭环**：当前任务必须保留两台主 App 资料，
+      所以没有卸载／清资料来冒充 clean install；code4 也尚未重跑 canonical
+      登录、同步、登出或撤销、重启读回的完整闭环。须另获不破坏资料的测试
+      方案与设备授权。
 - [ ] **两台实体手机的 final exact APK**：IN2020 已安装 exact
       `956810c9…e15c3` code4 并通过 updater、资料/Session、榜单、反馈、
       offline/recovery、rotation/multi-window、current-update 与 single-package。

@@ -133,9 +133,11 @@ Direct 与 Play 都必须解析为 canonical package `net.bdfz.weibian.direct`�
 
 immutable APK／`release.json`、`latest.apk` 与 `latest.json` 已按 fail-closed
 顺序上线，`latest.json` 最后移动。两台登记手机都经真实 App updater 从 code3
-原位升级到 byte-identical exact code4；IN2020 完成单机矩阵，LE2120 只完成
-登录、榜单与反馈后由 owner 叫停，且临时 Wi-Fi proxy 是否恢复为 None 未确认。
-这不是完整双机 release acceptance，也不改变 `published-limited` lifecycle。
+原位升级到 byte-identical exact code4；IN2020 完成已记录的原位升级验收子集，
+但未在保留资料约束下执行 clean install，也未重跑完整登录／同步／登出撤销
+闭环。LE2120 只完成登录、榜单与反馈后由 owner 叫停，且临时 Wi-Fi proxy
+是否恢复为 None 未确认。这不是完整双机 release acceptance，也不改变
+`published-limited` lifecycle。
 
 **历史证据：**截至 2026-07-29，v1.1.1 / versionCode 3 的 final candidate
 已从 clean checkpoint `e623e370a60bff33609e8bf5ad2748f559e20471`

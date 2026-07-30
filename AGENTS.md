@@ -67,7 +67,8 @@
   提升为 `production-supported`。模拟器不得替代任一手机；两机门之外还必须
   有独立实体平板完成 adaptive-layout 与原位升级，手机 forced
   expanded-layout 只能作为补充证据，不能替代实体平板。
-- 当前 IN2020 已完成 code4 单机矩阵与补充 expanded-layout 验证并恢复基线。
+- 当前 IN2020 已完成 code4 原位升级验收子集与补充 expanded-layout，并恢复
+  基线；clean install 和完整登录／同步／登出撤销闭环尚未重跑，不能称完整矩阵。
   LE2120 只完成 code4 原位更新、登录、榜单与反馈；owner 已叫停后续操作，
   且其临时 Wi-Fi proxy 是否已人工恢复为 None 尚未确认。未经重新授权不得
   触碰该机，也不得把部分证据扩写成双机通过。
