@@ -22,7 +22,7 @@
 | 身份与进度 | `my.bdfz.net`（`bdfz-user-center`，D1 `bdfz-user-center-db`）—— **本项目只是调用方** |
 | AI | `apis.bdfz.net` —— **本项目只是调用方，无密钥** |
 | APK 发布 | R2 `blog-images` → `img.bdfz.net/apps/weibian-android/` |
-| canonical Portal 下载项 | `/Users/ylsuen/CF/allinone-pages/public/index.html` + `scripts/verify.mjs#WEIBIAN_APK_URL` → `https://i.rdfzer.com` |
+| canonical Portal 下载项 | `/Users/ylsuen/CF/allinone-pages/public/index.html` + `scripts/verify.mjs#APK_DOWNLOADS` → 固定 `https://img.bdfz.net/apps/weibian-android/latest.apk` |
 | signing authority | `/Users/ylsuen/.android/weibian-release.env`（600，不入库、不打印） |
 
 **上游语料是只读的。** 本项目从不写 `CF/lunyu`、`CF/lunyu-battle`、`CF/gaokao`、`CF/gks`。
@@ -39,6 +39,18 @@ curl -s https://img.bdfz.net/apps/weibian-android/latest.json \
 # net.bdfz.weibian.direct、versionCode 严格递增、artifact bytes/hash/size/signer
 # 全部一致，并在实体 Direct App 完成升级。
 
+WEIBIAN_RELEASE_URL="$(curl -fsS https://img.bdfz.net/apps/weibian-android/latest.json | jq -er .apkUrl)"
+WEIBIAN_APK_TMP="$(mktemp -d)"
+curl -fsSL "$WEIBIAN_RELEASE_URL" -o "$WEIBIAN_APK_TMP/immutable.apk"
+curl -fsSL -H 'Cache-Control: no-cache' \
+  https://img.bdfz.net/apps/weibian-android/latest.apk \
+  -o "$WEIBIAN_APK_TMP/latest.apk"
+cmp -s "$WEIBIAN_APK_TMP/immutable.apk" "$WEIBIAN_APK_TMP/latest.apk"
+test "$(stat -f '%z' "$WEIBIAN_APK_TMP/latest.apk")" \
+  = "$(curl -fsS https://img.bdfz.net/apps/weibian-android/latest.json | jq -er .size)"
+test "$(sha256sum "$WEIBIAN_APK_TMP/latest.apk" | awk '{print $1}')" \
+  = "$(curl -fsS https://img.bdfz.net/apps/weibian-android/latest.json | jq -er .sha256)"
+
 curl -s https://my.bdfz.net/api/version | jq -r .version     # 依赖枢纽存活
 curl -s https://pulse.bdfz.net/api/meta \
   | jq '.. | objects | select((.host? // "") == "weibian.bdfz.net")'
@@ -48,6 +60,10 @@ curl -s -X POST https://apis.bdfz.net/ -H 'Content-Type: application/json' \
   -H 'Origin: https://weibian.bdfz.net' -H 'X-Project-Name: weibian' \
   -d '{"prompt":"用一句话解释「学而时习之」"}' | jq -r '.answer // .data.answer'
 ```
+
+Alias parity 必须使用 Portal 实际链接的不带 query URL并下载完整 body。
+cache-busted origin probe、HEAD 200 或按钮存在都不能替代 bytes/size/SHA-256
+一致；检查后删除 `$WEIBIAN_APK_TMP`。bare alias 仍旧时 release fail closed。
 
 ## 3. 契约核查
 
@@ -79,10 +95,12 @@ JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./gradlew \
 **两边必须同时改**。
 
 每个 Direct release 还必须让 `https://i.rdfzer.com` 的独立
-`韦编安卓版` 下载项与 immutable APK exact URL 同步。Portal 产品入口仍指向
-`https://weibian.bdfz.net`，不得用 APK URL 取代。同步流程、Preview／真实
-浏览器／Production／live verifier 门与回滚见 `docs/DEPLOYMENT.md`；任一项
-缺失即不得维持 `production-supported` 结论。
+`韦编安卓版` 永久指向固定
+`https://img.bdfz.net/apps/weibian-android/latest.apk`，并在移动
+`latest.json` 前证明该 bare alias 与 manifest 指向的 immutable APK 完全
+一致。Portal 产品入口仍指向 `https://weibian.bdfz.net`，不得用 APK URL
+取代。同步流程、真实浏览器／live verifier 门与回滚见
+`docs/DEPLOYMENT.md`；任一项缺失即不得维持 `production-supported` 结论。
 
 ## 4. 部署命令与禁止事项
 
@@ -213,13 +231,13 @@ release，没有可供已安装客户端降级的更早 production APK。
 | source / CI | clean source `e65dc572af19ed99cf520d52aa01de72508680a9`；GitHub Actions run `30516534134` success |
 | Direct APK | v1.1.2 / code4；2,819,959 bytes；SHA-256 `956810c903005680ba2e77a2c71964956cd2beac428e840862fc0a33724e15c3`；signer `a40f3956…41282` |
 | Play artifacts | APK 2,819,963 bytes／SHA-256 `7bf92fcfc4fab561aee5f2e95a4ad80d67b9c7161778a667b8f7b33cc9427f7f`；AAB 4,988,101 bytes／SHA-256 `6a37903152ede8c5a9b4f9d547af99454cb75d501f19e3b96491969131b132a4`；与 Direct 共用 canonical package/signing lineage |
-| R2 release | `…/v1.1.2/956810c9/weibian-1.1.2.apk` 与同目录 `release.json` 已 immutable 上线并公开精确读回；`latest.apk` 后写，`latest.json` 最后移动到 code4 |
+| R2 release | `…/v1.1.2/956810c9/weibian-1.1.2.apk` 与同目录 `release.json` 已 immutable 上线并公开精确读回；固定 `latest.apk` 为同一 2,819,959 bytes、SHA-256 `956810c9…e15c3`，`latest.json` 最后移动且 `apkUrl` 保持 immutable |
 | GitHub Release | [v1.1.2](https://github.com/ieduer/weibian-android/releases/tag/v1.1.2) target `e65dc572…`；APK 2,819,959 bytes / SHA-256 `956810c9…e15c3`；`release.json` 741 bytes / SHA-256 `0c8e317d…0b67e` |
 | IN2020 code4 | 当前选定门机；依 owner 对本次 legacy closeout 的明确指示，以已安装 byte-exact code3 作为实体验收基线，经真实 App updater 原位升级；code3 不因此成为 public accepted release，未来 release 必须从当前 public accepted code4 升级；资料／Session、榜单、反馈、offline/recovery、Back、rotation/multi-window、AI／注释、current-update、single-package 均通过；sw753dp／200% font expanded-layout 通过且设备基线恢复 |
 | LE2120 code4 | 历史补充证据；真实 App updater 原位升级到同一 APK，登录、榜单与反馈通过后 owner 叫停；临时 Wi-Fi proxy 是否恢复为 None 未确认，未经重新授权不得触碰，但它不再是本 release 的必要门 |
 | User Center | v242 `ec273922-1ec4-442b-8c84-9a5e2f7fcdf5` current；v240 `96b9db71-a595-4ae3-a557-288b49bffd2f` exact rollback |
 | Worker / landing | deployment `3f5d9c74…` 由 v1.1.2 `1ce95b1a…@100%` 承载；ordinary exact API、invalid-session 401、content/ranking、Pulse、immutable APK 与桌面／390 px 真实浏览器通过；rollback `e16da332…` |
-| canonical Portal | `i.rdfzer.com` production `986d02af-468c-41b2-a0a9-71fe99d183fa`；独立 `韦编安卓版` 44px 下载项精确指向 v1.1.2 immutable APK；桌面／390×844、0 overflow、0 console error/warning、stale-cache online bypass 与 offline fallback 均通过；immediate rollback `33290966-7ecc-41bb-936a-a0398820268c` |
+| canonical Portal | 固定 href contract 为 `https://img.bdfz.net/apps/weibian-android/latest.apk`，当前 bare alias 与 v1.1.2 immutable APK 同为 2,819,959 bytes／SHA-256 `956810c9…e15c3`；Preview `eb969e54-be14-45ad-b13d-03a183170ec9` 与 Production `ebb74beb-743b-4f8f-b32e-be345fd4a8cc`（source `b4afbe32862da697b288f4b7182b98e9565b34ab`）均通过四 App alias／manifest／immutable 完整下载校验；Production 桌面与 390×844 浏览器中四个下载项均为 44px、无横向溢出且 console 0 error／warning。立即回滚为 `986d02af-468c-41b2-a0a9-71fe99d183fa`；完整移除 Weibian 下载项的历史回滚为 `7be72ef0-c83a-46db-9f2f-b5187c51a1bf` |
 | IN2020 clean-profile | disposable Android user 映射同一 exact code4 package；0/512 clean state、游客分区、章句、译文／注释、手动 current-update 与 scoped log 通过；切回 owner 后临时 user 已删除，owner App 未卸载／未清资料 |
 | IN2020 canonical 身份 | 使用本机 env 凭据完成登录／同步／冷启读回／登出／未登录冷启／重新登录读回；非计分进度 canary 令 Pulse aggregate rows 7→8、users 保持 1；临时 helper package 与 credential-bearing 临时文件已移除；切回 owner 后 cold launch 204 ms，账号已连接、已读 3 章、无待同步，只有 user 0 与唯一 Weibian package；size 1080×2376、density 450、font 1.0、rotation 1/0、global/Wi-Fi proxy None、stay-awake 15、timeout 2147483647 均读回，近 15 分钟 scoped fatal/ANR 为 0；不冒称 server-side token revoke |
 | IN2020 active-corrupt → previous | disposable user 10 的 active/previous 初始同为 871,333 bytes、SHA `fc68413c…ffa75`；只改 active offset 0（123→122）后坏 SHA `f89eb7b1…35554`；exact code4 353 ms cold launch 恢复原 SHA，previous/staged/failed 均消失，512 章 UI 与 scoped fatal/ANR 通过；user/helper/device files/本机签名测试产物已全部删除，owner App 未卸载／未清资料 |
@@ -262,8 +280,9 @@ release，没有可供已安装客户端降级的更早 production APK。
 - [ ] **共享枢纽技术债（非本 App lifecycle 硬门）**：User Center v242
       registry/feedback 已 live，v240 是 exact rollback；dirty/stale source
       必须在未来任何普通 User Center deploy 前归并到经审 clean Git source。
-- [x] **v1.1.2 / code 4 release closeout**：R2 immutable、`latest.apk`、
-      `latest.json` pointer-last、GitHub Release、IN2020 单机／同机平板效果、
+- [x] **v1.1.2 / code 4 release closeout**：R2 immutable、固定
+      `latest.apk` bare URL 与 immutable APK bytes/size/SHA-256 parity、
+      `latest.json` immutable `apkUrl` pointer-last、GitHub Release、IN2020 单机／同机平板效果、
       clean-profile、canonical 身份和 active-corrupt → previous 均通过；
       landing deployment `3f5d9c74…` 已将 `1ce95b1a…` 提升至 100%，普通
       API/Pulse/desktop/390 px 浏览器读回通过。旧 v1.0.0 / v1.1.1 仅保留为

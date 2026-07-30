@@ -130,9 +130,14 @@ Direct 与 Play 都必须解析为 canonical package `net.bdfz.weibian.direct`�
   `a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282`
 - immutable Direct APK：
   `https://img.bdfz.net/apps/weibian-android/releases/v1.1.2/956810c9/weibian-1.1.2.apk`
+- Portal 固定最新版 APK：
+  `https://img.bdfz.net/apps/weibian-android/latest.apk`
 
 immutable APK／`release.json`、`latest.apk` 与 `latest.json` 已按 fail-closed
-顺序上线，`latest.json` 最后移动。两台登记手机历史上都经真实 App updater
+顺序上线，`latest.apk` 当前为同一 2,819,959 bytes，SHA-256
+`956810c903005680ba2e77a2c71964956cd2beac428e840862fc0a33724e15c3`；
+`latest.json` 最后移动且 `apkUrl` 仍指向上述 immutable APK。两台登记手机
+历史上都经真实 App updater
 从 code3 原位升级到 byte-identical exact code4。按 2026-07-30 新单机政策，
 IN2020 是选定门机；它完成已记录的原位升级验收子集与同机平板效果并恢复
 基线。2026-07-30 又以同机一次性 Android 次要使用者完成 data-safe
@@ -194,15 +199,24 @@ aapt2 dump badging "$WEIBIAN_APK_PATH" | head -1
 ```
 apps/weibian-android/releases/v<SEMVER>/<HASH8>/weibian-<SEMVER>.apk
 apps/weibian-android/releases/v<SEMVER>/<HASH8>/release.json
-apps/weibian-android/latest.apk        （可选便捷别名）
+apps/weibian-android/latest.apk        （Portal 固定最新版下载；mutable）
 apps/weibian-android/latest.json       （最后才写）
 ```
 
 1. 先传**已签名的内容寻址 APK**
 2. 再传不可变的 release.json
-3. 可选别名
-4. **最后**才更新 `latest.json` 指针
-5. 门户下载链接等公开读**逐字节回读通过**之后再放出
+3. 从 exact signed artifact 覆写 `latest.apk`
+4. 从不带 query 的 bare `latest.apk` 完整回读，确认 bytes、size、SHA-256
+   与 immutable APK 完全一致
+5. **最后**才更新 `latest.json` 指针
+6. Portal 固定链接与真实下载旅程通过后才算完整发布
+
+`latest.apk` 是用户便利入口，不是 manifest、审计或回滚 authority。
+`latest.json.apkUrl` 必须始终保持上述内容寻址 immutable URL。Cloudflare
+edge 可能继续缓存 bare alias；`Cache-Control: no-cache` 请求、HEAD 200 或
+带 query 的 origin probe 都不能关闭发布门。若 bare URL 仍旧，只能使用
+精确 URL purge 或等待刷新后重验；不得做全站 purge，也不得先移动
+`latest.json`。
 
 `latest.json` 必须符合 `bdfz-android-update-v1`。下列是占位模板；生成正式
 JSON 时，`versionCode` 与 `size` 必须写成正整数，不能带引号：
@@ -284,26 +298,30 @@ deployment `3f5d9c74-593a-422b-8cbb-94ec31126b20` 已把
 API、invalid-session 401、immutable APK、exact landing link、Pulse 和
 桌面／390 px 真实浏览器均通过。
 
-canonical portal 下载入口只更新 `https://i.rdfzer.com`。非 canonical 的
+canonical portal 下载入口只使用 `https://i.rdfzer.com`。非 canonical 的
 `allinone.bdfz.net`／`portal.bdfz.net` 522 不得被写成成功发布面。
 
 每个后续 Direct release 必须把 canonical portal 下载项当作同一发布事务的
 硬门，而不是发布后的可选补记：
 
 1. 公开回读 immutable APK 的 bytes/hash/size/signer；
-2. 保留 `https://weibian.bdfz.net` 产品入口，并把
+2. 从同一 exact signed artifact 更新
+   `https://img.bdfz.net/apps/weibian-android/latest.apk`，再从 bare URL
+   完整下载并核对 bytes/hash/size；
+3. 保持 `latest.json.apkUrl` 指向 immutable APK，最后才移动该 manifest；
+4. 保留 `https://weibian.bdfz.net` 产品入口，并让
    `/Users/ylsuen/CF/allinone-pages/public/index.html` 中独立的
-   `韦编安卓版` 下载项更新为该 exact content-addressed URL；
-3. 同步更新 `allinone-pages/scripts/verify.mjs` 的 `WEIBIAN_APK_URL` 与
-   `public/sw.js` 的 cache version，并保持导航请求 online network-first、
-   offline cache fallback；
-4. 通过 Portal source verifier、immutable Preview、桌面与 390×844
-   真实浏览器验收，再部署 Production；
-5. 从 `https://i.rdfzer.com` 运行 live verifier 并回读 exact href。
+   `韦编安卓版` 永久指向固定 `latest.apk`；不得每版改回 immutable href；
+5. `allinone-pages/scripts/verify.mjs` 必须锁定固定 alias。只有 Portal UI、
+   verifier 或 service worker 本身改变时才需递增 cache version、跑
+   immutable Preview 与重新部署 Production；
+6. 每次 App release 都从 `https://i.rdfzer.com` 运行 live verifier，确认
+   exact fixed href，并完成桌面／390×844 的真实下载旅程。
 
 缺一项即不得把该版本称为完整发布或 `production-supported`。Portal 回滚使用
-`allinone-pages/README.md` 记录的上一条 Production deployment；不得删除或
-覆盖 immutable APK。
+`allinone-pages/README.md` 记录的上一条 Production deployment。App release
+回滚须先把 `latest.apk` 恢复为上一 accepted immutable bytes 并读回，再恢复
+匹配的 `latest.json`；不得删除或覆盖 immutable APK。
 
 ---
 
@@ -312,7 +330,7 @@ canonical portal 下载入口只更新 `https://i.rdfzer.com`。非 canonical �
 | 故障 | 处理 |
 |---|---|
 | 内容包有错 | 回滚 Worker manifest；客户端可恢复 previous；保留 R2 对象作证据 |
-| `latest.json` 指错 | 把指针改回上一个已知良好版本 |
+| `latest.json`／`latest.apk` 指错 | 先从上一 accepted immutable APK 恢复 alias 并读回，再恢复匹配的 manifest |
 | 门户页面坏了 | 恢复上一个 Pages/Worker 部署 |
 | 坏 APK 已被安装 | 发**更高 versionCode** 的修复版；不要引导用户卸载重装 |
 | 哈希/体积对不上 | 立即撤下指针与门户链接，**保留证据**，不要覆盖内容寻址对象 |
