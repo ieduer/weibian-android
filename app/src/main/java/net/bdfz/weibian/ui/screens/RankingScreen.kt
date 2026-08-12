@@ -51,6 +51,9 @@ import net.bdfz.weibian.ui.components.PaperCard
 import net.bdfz.weibian.ui.components.SealTag
 import net.bdfz.weibian.ui.components.SectionHeader
 
+internal const val WEIBIAN_PROCESS_ONLY_NOTICE =
+    "韦编只提供过程性学习反馈；本机修为、段位和服务端核验学习榜均不计入用户中心六维 A—F 分数或 A+ 门槛。"
+
 @Composable
 fun RankingScreen(
     state: UiState,
@@ -88,6 +91,14 @@ fun RankingScreen(
         item {
             Text(
                 "只统计 215 道人工编写题中，每个账号、每道题被服务端首次记录并核验的作答；生成练习及此后的重复作答均不改变核验积分。今日榜按服务端北京时间接收日归档，公开名称为匿名代号。",
+                fontSize = 12.sp,
+                lineHeight = 19.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        item {
+            Text(
+                WEIBIAN_PROCESS_ONLY_NOTICE,
                 fontSize = 12.sp,
                 lineHeight = 19.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

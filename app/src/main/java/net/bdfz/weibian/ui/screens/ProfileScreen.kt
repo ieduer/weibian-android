@@ -225,6 +225,13 @@ fun ProfileScreen(
                             "真题",
                         )
                     }
+                    Spacer(Modifier.height(14.dp))
+                    Text(
+                        WEIBIAN_PROCESS_ONLY_NOTICE,
+                        fontSize = 12.sp,
+                        lineHeight = 19.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }

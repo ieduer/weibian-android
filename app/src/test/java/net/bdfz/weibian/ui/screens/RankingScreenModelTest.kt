@@ -14,6 +14,14 @@ import org.junit.Test
 
 class RankingScreenModelTest {
     @Test
+    fun `process only notice excludes local and leaderboard measures from growth scoring`() {
+        assertEquals(
+            "韦编只提供过程性学习反馈；本机修为、段位和服务端核验学习榜均不计入用户中心六维 A—F 分数或 A+ 门槛。",
+            WEIBIAN_PROCESS_ONLY_NOTICE,
+        )
+    }
+
+    @Test
     fun `daily and total tabs select the matching server lists and score`() {
         val daily = entry(position = 1, name = "学子·A1B2", total = 120, today = 20)
         val total = entry(position = 2, name = "学子·C3D4", total = 200, today = 5)
