@@ -1,0 +1,43 @@
+name: Weibian event-v2 source candidate
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  source-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: weibian-event-v2-candidate-${{ github.event.pull_request.number }}-${{ matrix.node }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - 22.21.1
+          - 24.18.0
+    steps:
+      - name: Check out exact pull-request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Select exact Node runtime
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node }}
+          check-latest: false
+      - name: Verify exact Node runtime
+        run: test "$(node --version)" = "v${{ matrix.node }}"
+      - name: Check candidate syntax
+        run: >-
+          node --check candidate/weibian-event-v2/adapter.mjs
+          && node --check candidate/weibian-event-v2/verify-source-scope.mjs
+      - name: Run hostile candidate tests
+        run: npm test
+      - name: Enforce source-only protected surfaces
+        run: npm run verify:candidate
