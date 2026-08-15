@@ -27,20 +27,34 @@ const RECEIPT_KEYS = new Set([
   'receivedAt',
   'beijingDay',
 ]);
+const FACTORY_DEPENDENCY_KEYS = new Set([
+  'identityRpc',
+  'sourceIdentity',
+  'verifiedAnswerLedger',
+  'clock',
+]);
+const PROJECT_INPUT_KEYS = new Set(['cookieHeader', 'serverReceipt']);
+const NAMED_IDENTITY_KEYS = new Set([
+  'authenticated',
+  'sourceSiteKey',
+  'userId',
+]);
+const SOURCE_IDENTITY_KEYS = new Set([
+  'authenticated',
+  'sourceSiteKey',
+  'ownerUserKey',
+]);
 
 export class WeibianEventV2CandidateError extends Error {
-  constructor(code, options = undefined) {
-    super(code, options);
+  constructor(code) {
+    super(code);
     this.name = 'WeibianEventV2CandidateError';
     this.code = code;
   }
 }
 
-function fail(code, cause = undefined) {
-  throw new WeibianEventV2CandidateError(
-    code,
-    cause === undefined ? undefined : { cause },
-  );
+function fail(code) {
+  throw new WeibianEventV2CandidateError(code);
 }
 
 function object(value, code) {
@@ -105,13 +119,24 @@ function boundedSessionCookie(cookieHeader) {
   if (
     typeof cookieHeader !== 'string'
     || cookieHeader.length < 1
-    || cookieHeader.length > MAX_COOKIE_HEADER_BYTES
-    || /[\r\n]/.test(cookieHeader)
-    || !/(?:^|;\s*)bdfz_uc_session=[^;\s]+/.test(cookieHeader)
+    || new TextEncoder().encode(cookieHeader).byteLength > MAX_COOKIE_HEADER_BYTES
+    || /[\x00-\x1f\x7f]/.test(cookieHeader)
   ) {
     fail('named_identity_cookie_invalid');
   }
-  return cookieHeader;
+  const sessionCookies = cookieHeader
+    .split(';')
+    .map((part) => part.trim())
+    .filter((part) => part.startsWith('bdfz_uc_session='));
+  if (
+    sessionCookies.length !== 1
+    || !/^bdfz_uc_session=[^;\s]+$/.test(sessionCookies[0])
+  ) {
+    fail('named_identity_cookie_invalid');
+  }
+  // Strip unrelated cookies so both authorities parse one identical,
+  // unambiguous request credential.
+  return sessionCookies[0];
 }
 
 function validateServerReceipt(raw) {
@@ -219,6 +244,12 @@ function validatePersistedFirstAnswer(raw, ownerUserKey, receipt, nowMs) {
 function validateNamedIdentity(raw) {
   const session = object(raw, 'named_identity_response_invalid');
   if (
+    Object.keys(session).length !== NAMED_IDENTITY_KEYS.size
+    || Object.keys(session).some((key) => !NAMED_IDENTITY_KEYS.has(key))
+  ) {
+    fail('named_identity_response_invalid');
+  }
+  if (
     session.authenticated !== true
     || session.sourceSiteKey !== SOURCE_SITE_KEY
     || typeof session.userId !== 'number'
@@ -234,8 +265,28 @@ function validateNamedIdentity(raw) {
   });
 }
 
-async function resolveNamedIdentity(identityRpc, cookieHeader) {
-  const cookie = boundedSessionCookie(cookieHeader);
+function validateSourceIdentity(raw) {
+  const sourceOwner = object(raw, 'source_identity_response_invalid');
+  if (
+    Object.keys(sourceOwner).length !== SOURCE_IDENTITY_KEYS.size
+    || Object.keys(sourceOwner).some((key) => !SOURCE_IDENTITY_KEYS.has(key))
+    || sourceOwner.authenticated !== true
+    || sourceOwner.sourceSiteKey !== SOURCE_SITE_KEY
+  ) {
+    fail('source_identity_response_invalid');
+  }
+  return Object.freeze({
+    authenticated: true,
+    sourceSiteKey: SOURCE_SITE_KEY,
+    ownerUserKey: exactString(
+      sourceOwner.ownerUserKey,
+      USER_KEY_RE,
+      'source_owner_key_invalid',
+    ),
+  });
+}
+
+async function resolveNamedIdentity(identityRpc, cookie) {
   let result;
   try {
     result = await identityRpc.resolveSession(cookie);
@@ -247,7 +298,19 @@ async function resolveNamedIdentity(identityRpc, cookieHeader) {
   return validateNamedIdentity(result);
 }
 
-export async function projectVerifiedFirstAnswerEventV2({
+async function resolveSourceIdentity(sourceIdentity, cookie) {
+  let result;
+  try {
+    result = await sourceIdentity.resolveOwner(cookie);
+  } catch {
+    // The source resolver is allowed to inspect the request credential. Never
+    // retain its error or attach it as a cause.
+    fail('source_identity_resolver_failed');
+  }
+  return validateSourceIdentity(result);
+}
+
+async function projectVerifiedFirstAnswerEventV2({
   persistedRow,
   ownerUserKey,
   serverReceipt,
@@ -332,34 +395,50 @@ export async function projectVerifiedFirstAnswerEventV2({
   });
 }
 
-export function createWeibianFirstAnswerEventV2Candidate({
-  identityRpc,
-  verifiedAnswerLedger,
-  clock = Date.now,
-}) {
+export function createWeibianFirstAnswerEventV2Candidate(rawDependencies) {
+  const dependencies = object(rawDependencies, 'candidate_dependencies_required');
+  if (Object.keys(dependencies).some((key) => !FACTORY_DEPENDENCY_KEYS.has(key))) {
+    fail('candidate_dependency_field_forbidden');
+  }
+  const {
+    identityRpc,
+    sourceIdentity,
+    verifiedAnswerLedger,
+    clock = Date.now,
+  } = dependencies;
   if (!identityRpc || typeof identityRpc.resolveSession !== 'function') {
     fail('named_identity_rpc_required');
+  }
+  if (!sourceIdentity || typeof sourceIdentity.resolveOwner !== 'function') {
+    fail('source_identity_resolver_required');
   }
   if (!verifiedAnswerLedger || typeof verifiedAnswerLedger.readByEventAndOwner !== 'function') {
     fail('verified_answer_ledger_required');
   }
   if (typeof clock !== 'function') fail('projection_clock_required');
   return Object.freeze({
-    async project({ cookieHeader, ownerUserKey, serverReceipt }) {
-      const receipt = validateServerReceipt(serverReceipt);
-      const legacyOwnerKey = exactString(
-        ownerUserKey,
-        USER_KEY_RE,
-        'authenticated_legacy_owner_key_invalid',
-      );
-      // Resolve the current request owner before any ledger lookup. A public
-      // /api/session-shaped object cannot satisfy this named RPC contract.
-      const identity = await resolveNamedIdentity(identityRpc, cookieHeader);
+    async project(rawInput) {
+      const input = object(rawInput, 'project_input_required');
+      if (
+        Object.keys(input).length !== PROJECT_INPUT_KEYS.size
+        || Object.keys(input).some((key) => !PROJECT_INPUT_KEYS.has(key))
+      ) {
+        fail('project_input_field_forbidden');
+      }
+      const receipt = validateServerReceipt(input.serverReceipt);
+      const cookie = boundedSessionCookie(input.cookieHeader);
+      // Both authorities receive the exact same bounded credential and finish
+      // before any owner-scoped ledger lookup. No request field can select the
+      // ledger owner.
+      const [identity, sourceOwner] = await Promise.all([
+        resolveNamedIdentity(identityRpc, cookie),
+        resolveSourceIdentity(sourceIdentity, cookie),
+      ]);
       let row;
       try {
         row = await verifiedAnswerLedger.readByEventAndOwner(Object.freeze({
           eventId: receipt.canonicalEventId,
-          ownerUserKey: legacyOwnerKey,
+          ownerUserKey: sourceOwner.ownerUserKey,
         }));
       } catch {
         // The ledger implementation may include a query value in its error;
@@ -369,7 +448,7 @@ export function createWeibianFirstAnswerEventV2Candidate({
       if (!row) fail('verified_first_answer_not_found');
       return projectVerifiedFirstAnswerEventV2({
         persistedRow: row,
-        ownerUserKey: legacyOwnerKey,
+        ownerUserKey: sourceOwner.ownerUserKey,
         serverReceipt: receipt,
         identity,
         nowMs: clock(),

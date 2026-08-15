@@ -57,9 +57,20 @@ for (const key of requiredFalse) {
 if (
   contract.identityAuthority?.publicApiSessionAccepted !== false
   || contract.identityAuthority?.currentIdentityRpcConnected !== false
+  || contract.identityAuthority?.currentSourceIdentityResolverConnected !== false
   || contract.identityAuthority?.currentWeibianNamedEntrypointExistsAtAuditedMain !== false
+  || contract.identityAuthority?.sameBoundedCookieRequired !== true
+  || contract.identityAuthority?.sourceOwnerResolvedBeforeLedger !== true
+  || contract.identityAuthority?.projectAcceptsOwnerUserKey !== false
+  || contract.identityAuthority?.callerSuppliedOwnerUserKeyAccepted !== false
 ) {
   fail('identity blockers must remain explicit');
+}
+if (
+  contract.identityAuthority?.requiredDependencies?.identityRpc?.method !== 'resolveSession'
+  || contract.identityAuthority?.requiredDependencies?.sourceIdentity?.method !== 'resolveOwner'
+) {
+  fail('dual identity dependency contract drifted');
 }
 
 const sourceMain = String(contract.sourceMain || '');
@@ -118,6 +129,20 @@ const packageJson = JSON.parse(await readFile(resolve(repoRoot, 'package.json'),
 if (packageJson.private !== true) fail('package must remain private');
 if (packageJson.dependencies || packageJson.devDependencies || packageJson.optionalDependencies) {
   fail('candidate must remain dependency-free');
+}
+
+const adapterSource = await readFile(
+  resolve(repoRoot, 'candidate/weibian-event-v2/adapter.mjs'),
+  'utf8',
+);
+if (/async\s+project\s*\(\s*\{[^}]*ownerUserKey/s.test(adapterSource)) {
+  fail('project must not accept caller-supplied ownerUserKey');
+}
+if (/export\s+(?:async\s+)?function\s+projectVerifiedFirstAnswerEventV2/.test(adapterSource)) {
+  fail('owner-key projection primitive must not be exported');
+}
+for (const requiredMethod of ['identityRpc.resolveSession(cookie)', 'sourceIdentity.resolveOwner(cookie)']) {
+  if (!adapterSource.includes(requiredMethod)) fail(`adapter dependency missing: ${requiredMethod}`);
 }
 if (packageJson.engines?.node !== '22.21.1 || 24.18.0') {
   fail('Node authority drifted');

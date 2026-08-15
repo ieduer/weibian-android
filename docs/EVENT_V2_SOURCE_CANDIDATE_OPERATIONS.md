@@ -22,11 +22,14 @@ delivery, scoring, or User Center change procedure.
 
 The existing authoritative path remains unchanged: Room
 `verified_answer_outbox` -> Worker exact content/answer recomputation -> D1
-`weibian_answer_events_v2`. The adapter may receive only a row loaded by exact
-canonical `event_id` and the already authenticated legacy `user_key`. It first
-resolves the same request through an injected named UC RPC and then rechecks row
-ownership, receipt identity, result consistency, semantic digest, and server
-time before projecting.
+`weibian_answer_events_v2`. The public projection method accepts exactly the
+bounded session header and the existing server receipt; it never accepts a
+`user_key` or other owner selector. The same bounded session header must first
+resolve through both injected dependencies: `identityRpc.resolveSession()` for
+the positive immutable numeric UC user id and `sourceIdentity.resolveOwner()`
+for the authenticated Weibian `ownerUserKey`. Both authorities complete before
+the owner-scoped ledger lookup. The adapter then rechecks row ownership, receipt
+identity, result consistency, semantic digest, and server time before projecting.
 
 The event intentionally carries no answer, correctness, points, score, slug,
 pseudonym, cookie, or free text. It is a non-scoring trace with null score fields
@@ -41,11 +44,22 @@ audited UC main `f8d086cb9a511bc5ff310ef867b276d889f6c1e3`, that response uses
 GrowthEvidence methods are named `WorkerEntrypoint` RPC topology, and no
 `WeibianGrowthEvidence` class exists there.
 
-The adapter therefore requires dependency injection of a named RPC object with
-`resolveSession(cookieHeader)`. Its response must be authenticated, bound to
-`sourceSiteKey=weibian`, and contain a positive safe-integer numeric `userId`.
-Public response shapes, `payload.user.id`, strings, zero/negative ids, slug, and
-the existing HMAC `user_key` all fail closed. Errors never include the cookie.
+The adapter therefore requires exact dependency injection of
+`identityRpc.resolveSession(cookieHeader)` and
+`sourceIdentity.resolveOwner(cookieHeader)`. The UC response must contain only
+authenticated `sourceSiteKey=weibian` plus a positive safe-integer numeric
+`userId`. The source response must contain only authenticated
+`sourceSiteKey=weibian` plus the validated 64-character lowercase hexadecimal
+`ownerUserKey`. Both receive the exact same bounded cookie. Public response
+shapes, `payload.user.id`, strings, zero/negative ids, slug, request-supplied
+owner keys, and cross-site responses all fail closed. Transport errors expose
+only stable codes, never the cookie or an upstream error cause.
+
+No candidate dependency is currently connected. The existing source Worker
+still owns its pseudonymous ranking identity, but this source-only PR neither
+imports that implementation nor claims that the public User Center helper can
+produce the numeric id. Runtime composition remains a separately reviewed
+blocked step.
 
 ## Verification
 
@@ -73,6 +87,8 @@ not modified by this candidate.
   binding;
 - using public `/api/session` or deriving the numeric user id from slug,
   pseudonym, request body, or client storage;
+- accepting `ownerUserKey` from the projection caller or selecting a ledger
+  owner before both identity dependencies resolve the same bounded cookie;
 - adding or applying a D1/Room migration;
 - sending an event to User Center or any other destination;
 - activating mapping, eligibility, scoring, A-F/A+ effects, or delivery;

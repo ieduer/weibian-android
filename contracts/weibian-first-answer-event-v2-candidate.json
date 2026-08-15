@@ -25,18 +25,34 @@
     "contentAuthority": "exact allowlisted contentVersion plus task semantic digest plus server answer key",
     "occurredAtAuthority": "server received_at_ms",
     "projectionRequiresPersistedRow": true,
-    "projectionAcceptsClientVerdict": false
+    "projectionAcceptsClientVerdict": false,
+    "projectionAcceptsClientOwnerKey": false
   },
   "identityAuthority": {
     "requiredTransport": "named_user_center_rpc",
     "requiredEntrypoint": "WeibianGrowthEvidence",
     "requiredMethod": "resolveSession",
+    "requiredDependencies": {
+      "identityRpc": {
+        "method": "resolveSession",
+        "authority": "positive_immutable_numeric_uc_user_id"
+      },
+      "sourceIdentity": {
+        "method": "resolveOwner",
+        "authority": "authenticated_weibian_owner_key"
+      }
+    },
+    "sameBoundedCookieRequired": true,
+    "sourceOwnerResolvedBeforeLedger": true,
+    "projectAcceptsOwnerUserKey": false,
+    "callerSuppliedOwnerUserKeyAccepted": false,
     "positiveImmutableNumericUserIdRequired": true,
     "publicApiSessionAccepted": false,
     "publicApiSessionIncludesNumericUserIdAtAuditedMain": false,
     "currentWeibianNamedEntrypointExistsAtAuditedMain": false,
     "currentWorkerIdentity": "public_session_slug_hmac_pseudonym",
-    "currentIdentityRpcConnected": false
+    "currentIdentityRpcConnected": false,
+    "currentSourceIdentityResolverConnected": false
   },
   "eventPolicy": {
     "eventSchema": "bdfz-learning-evidence-event-v2",
@@ -116,6 +132,7 @@
   "blockers": [
     "User Center audited main has no named WeibianGrowthEvidence entrypoint.",
     "The public/default /api/session response omits a positive immutable numeric user id and is not an identity authority for this candidate.",
+    "The candidate is not connected to a trusted sourceIdentity.resolveOwner implementation; a caller-supplied owner key is forbidden.",
     "No Weibian event-v2 source contract, mapping, import route, Queue, RPC delivery method, or central scoring policy is configured.",
     "No runtime import, binding change, migration application, delivery activation, scoring activation, or production deployment is authorized by this candidate."
   ]

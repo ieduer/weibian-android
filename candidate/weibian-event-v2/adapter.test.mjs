@@ -4,7 +4,6 @@ import test from 'node:test';
 
 import {
   createWeibianFirstAnswerEventV2Candidate,
-  projectVerifiedFirstAnswerEventV2,
   WEIBIAN_EVENT_V2_CANDIDATE_CONSTANTS,
   WeibianEventV2CandidateError,
 } from './adapter.mjs';
@@ -15,6 +14,7 @@ const EVENT_ID = 'weibian_answer_00000001';
 const RECEIVED_AT_MS = Date.parse('2026-08-15T10:00:00.000Z');
 const NOW_MS = Date.parse('2026-08-15T10:01:00.000Z');
 const COOKIE_A = 'bdfz_uc_session=test-only-session-a';
+const COOKIE_B = 'bdfz_uc_session=test-only-session-b';
 
 function row(overrides = {}) {
   return {
@@ -52,12 +52,19 @@ function identity(userId = 343) {
   return { authenticated: true, sourceSiteKey: 'weibian', userId };
 }
 
+function sourceOwner(ownerUserKey = OWNER_A) {
+  return { authenticated: true, sourceSiteKey: 'weibian', ownerUserKey };
+}
+
 function adapter({
   identityResult = identity(),
+  sourceIdentityResult = sourceOwner(),
   ledgerRow = row(),
   order = null,
   identityError = null,
+  sourceIdentityError = null,
   ledgerError = null,
+  nowMs = NOW_MS,
 } = {}) {
   return createWeibianFirstAnswerEventV2Candidate({
     identityRpc: {
@@ -67,6 +74,13 @@ function adapter({
         return identityResult;
       },
     },
+    sourceIdentity: {
+      async resolveOwner(cookieHeader) {
+        order?.push(['sourceIdentity', cookieHeader]);
+        if (sourceIdentityError) throw sourceIdentityError;
+        return sourceIdentityResult;
+      },
+    },
     verifiedAnswerLedger: {
       async readByEventAndOwner(query) {
         order?.push(['ledger', query]);
@@ -74,7 +88,7 @@ function adapter({
         return ledgerRow;
       },
     },
-    clock: () => NOW_MS,
+    clock: () => nowMs,
   });
 }
 
@@ -106,12 +120,19 @@ test('machine contract keeps every activation and delivery switch false', async 
   assert.equal(contract.eventPolicy.normalizedValue, null);
   assert.equal(contract.identityAuthority.publicApiSessionAccepted, false);
   assert.equal(contract.identityAuthority.currentIdentityRpcConnected, false);
+  assert.equal(contract.identityAuthority.currentSourceIdentityResolverConnected, false);
+  assert.equal(contract.identityAuthority.sameBoundedCookieRequired, true);
+  assert.equal(contract.identityAuthority.projectAcceptsOwnerUserKey, false);
+  assert.equal(contract.identityAuthority.callerSuppliedOwnerUserKeyAccepted, false);
+  assert.deepEqual(contract.identityAuthority.requiredDependencies, {
+    identityRpc: { method: 'resolveSession', authority: 'positive_immutable_numeric_uc_user_id' },
+    sourceIdentity: { method: 'resolveOwner', authority: 'authenticated_weibian_owner_key' },
+  });
 });
 
 test('projects only a server-persisted first answer as a non-scoring pending event', async () => {
   const projected = await adapter().project({
     cookieHeader: COOKIE_A,
-    ownerUserKey: OWNER_A,
     serverReceipt: receipt(),
   });
   assert.equal(projected.mappingDisposition, 'pending_mapping');
@@ -140,24 +161,36 @@ test('projects only a server-persisted first answer as a non-scoring pending eve
   }
 });
 
-test('resolving the numeric owner occurs before owner-scoped ledger lookup', async () => {
+test('both identity authorities receive the same bounded cookie before ledger lookup', async () => {
   const order = [];
   await adapter({ order }).project({
-    cookieHeader: COOKIE_A,
-    ownerUserKey: OWNER_A,
+    cookieHeader: `theme=dark; ${COOKIE_A}; unrelated=value`,
     serverReceipt: receipt(),
   });
   assert.deepEqual(order, [
     ['identity', COOKIE_A],
+    ['sourceIdentity', COOKIE_A],
     ['ledger', { eventId: EVENT_ID, ownerUserKey: OWNER_A }],
   ]);
+});
+
+test('hostile session-A owner-B request is rejected before either identity authority', async () => {
+  const order = [];
+  await expectCode(
+    adapter({ order }).project({
+      cookieHeader: COOKIE_A,
+      ownerUserKey: OWNER_B,
+      serverReceipt: receipt(),
+    }),
+    'project_input_field_forbidden',
+  );
+  assert.deepEqual(order, []);
 });
 
 test('same persisted first answer replay is deterministic', async () => {
   const candidate = adapter();
   const input = {
     cookieHeader: COOKIE_A,
-    ownerUserKey: OWNER_A,
     serverReceipt: receipt({ status: 'replayed' }),
   };
   const first = await candidate.project(input);
@@ -168,7 +201,6 @@ test('same persisted first answer replay is deterministic', async () => {
 test('already-recorded receipt projects the original canonical event id', async () => {
   const projected = await adapter().project({
     cookieHeader: COOKIE_A,
-    ownerUserKey: OWNER_A,
     serverReceipt: receipt({
       eventId: 'weibian_answer_00000002',
       canonicalEventId: EVENT_ID,
@@ -188,10 +220,9 @@ test('public session response shape cannot become numeric identity authority', a
       },
     }).project({
       cookieHeader: COOKIE_A,
-      ownerUserKey: OWNER_A,
       serverReceipt: receipt(),
     }),
-    'positive_immutable_uc_user_id_required',
+    'named_identity_response_invalid',
   );
 });
 
@@ -199,9 +230,30 @@ test('fetch-only public helper is rejected in favor of named RPC resolveSession'
   assert.throws(
     () => createWeibianFirstAnswerEventV2Candidate({
       identityRpc: { fetch: async () => new Response('{}') },
+      sourceIdentity: { resolveOwner: async () => sourceOwner() },
       verifiedAnswerLedger: { readByEventAndOwner: async () => row() },
     }),
     (error) => error.code === 'named_identity_rpc_required',
+  );
+});
+
+test('factory requires the exact dual-authority dependency names', () => {
+  assert.throws(
+    () => createWeibianFirstAnswerEventV2Candidate({
+      identityRpc: { resolveSession: async () => identity() },
+      sourceIdentity: { resolveSession: async () => sourceOwner() },
+      verifiedAnswerLedger: { readByEventAndOwner: async () => row() },
+    }),
+    (error) => error.code === 'source_identity_resolver_required',
+  );
+  assert.throws(
+    () => createWeibianFirstAnswerEventV2Candidate({
+      identityRpc: { resolveSession: async () => identity() },
+      sourceIdentity: { resolveOwner: async () => sourceOwner() },
+      verifiedAnswerLedger: { readByEventAndOwner: async () => row() },
+      ownerUserKey: OWNER_B,
+    }),
+    (error) => error.code === 'candidate_dependency_field_forbidden',
   );
 });
 
@@ -217,7 +269,6 @@ test('numeric identity must be a positive immutable number from the bound site',
     await expectCode(
       adapter({ identityResult }).project({
         cookieHeader: COOKIE_A,
-        ownerUserKey: OWNER_A,
         serverReceipt: receipt(),
       }),
       'positive_immutable_uc_user_id_required',
@@ -227,11 +278,11 @@ test('numeric identity must be a positive immutable number from the bound site',
 
 test('identity RPC failures are explicit and never echo the cookie', async () => {
   const secretLikeCookie = 'bdfz_uc_session=test-only-never-echo';
+  const order = [];
   let thrown;
   try {
-    await adapter({ identityError: new Error('upstream unavailable') }).project({
+    await adapter({ order, identityError: new Error('upstream unavailable') }).project({
       cookieHeader: secretLikeCookie,
-      ownerUserKey: OWNER_A,
       serverReceipt: receipt(),
     });
   } catch (error) {
@@ -239,18 +290,92 @@ test('identity RPC failures are explicit and never echo the cookie', async () =>
   }
   assert.equal(thrown.code, 'named_identity_rpc_failed');
   assert.equal(String(thrown).includes(secretLikeCookie), false);
+  assert.equal(thrown.cause, undefined);
+  assert.deepEqual(order, [
+    ['identity', secretLikeCookie],
+    ['sourceIdentity', secretLikeCookie],
+  ]);
+});
+
+test('source owner resolver failures are explicit, redacted, and cause-free', async () => {
+  const secretLikeCookie = 'bdfz_uc_session=test-only-source-never-echo';
+  const order = [];
+  let thrown;
+  try {
+    await adapter({
+      order,
+      sourceIdentityError: new Error(`source failed for ${secretLikeCookie}`),
+    }).project({
+      cookieHeader: secretLikeCookie,
+      serverReceipt: receipt(),
+    });
+  } catch (error) {
+    thrown = error;
+  }
+  assert.equal(thrown.code, 'source_identity_resolver_failed');
+  assert.equal(String(thrown).includes(secretLikeCookie), false);
+  assert.equal(thrown.cause, undefined);
+  assert.deepEqual(order, [
+    ['identity', secretLikeCookie],
+    ['sourceIdentity', secretLikeCookie],
+  ]);
+});
+
+test('ledger failures expose neither request identity nor upstream cause', async () => {
+  const secretLikeCookie = 'bdfz_uc_session=test-only-ledger-never-echo';
+  let thrown;
+  try {
+    await adapter({
+      ledgerError: new Error(`ledger failed for ${OWNER_A} ${secretLikeCookie}`),
+    }).project({
+      cookieHeader: secretLikeCookie,
+      serverReceipt: receipt(),
+    });
+  } catch (error) {
+    thrown = error;
+  }
+  assert.equal(thrown.code, 'verified_answer_ledger_read_failed');
+  assert.equal(String(thrown).includes(secretLikeCookie), false);
+  assert.equal(String(thrown).includes(OWNER_A), false);
+  assert.equal(thrown.cause, undefined);
+});
+
+test('source owner resolver response is exact, site-bound, and authenticated', async () => {
+  for (const [sourceIdentityResult, code] of [
+    [{ authenticated: true, sourceSiteKey: 'weibian', ownerUserKey: 'not-a-key' }, 'source_owner_key_invalid'],
+    [{ authenticated: true, sourceSiteKey: 'other-site', ownerUserKey: OWNER_A }, 'source_identity_response_invalid'],
+    [{ authenticated: false, sourceSiteKey: 'weibian', ownerUserKey: OWNER_A }, 'source_identity_response_invalid'],
+    [{ ...sourceOwner(), slug: 'unexpected' }, 'source_identity_response_invalid'],
+  ]) {
+    await expectCode(
+      adapter({ sourceIdentityResult }).project({
+        cookieHeader: COOKIE_A,
+        serverReceipt: receipt(),
+      }),
+      code,
+    );
+  }
 });
 
 test('invalid or oversized session headers fail before identity transport', async () => {
-  for (const cookieHeader of ['', 'unrelated=value', `bdfz_uc_session=${'x'.repeat(4097)}`, 'bdfz_uc_session=x\r\ny']) {
+  for (const cookieHeader of [
+    '',
+    'unrelated=value',
+    `bdfz_uc_session=${'x'.repeat(4097)}`,
+    `bdfz_uc_session=${'😀'.repeat(1100)}`,
+    'bdfz_uc_session=a; bdfz_uc_session=b',
+    'bdfz_uc_session=x\r\ny',
+    'bdfz_uc_session=x\u0000y',
+  ]) {
+    const order = [];
     await expectCode(
-      adapter().project({
+      adapter({ order }).project({
         cookieHeader,
-        ownerUserKey: OWNER_A,
         serverReceipt: receipt(),
       }),
       'named_identity_cookie_invalid',
     );
+    assert.deepEqual(order, []);
   }
 });
 
@@ -258,7 +383,6 @@ test('cross-user ledger rows fail closed after owner-scoped lookup', async () =>
   await expectCode(
     adapter({ ledgerRow: row({ user_key: OWNER_B }) }).project({
       cookieHeader: COOKIE_A,
-      ownerUserKey: OWNER_A,
       serverReceipt: receipt(),
     }),
     'verified_first_answer_owner_mismatch',
@@ -269,7 +393,6 @@ test('unrecorded, conflicting, or client-extended receipts are rejected', async 
   await expectCode(
     adapter().project({
       cookieHeader: COOKIE_A,
-      ownerUserKey: OWNER_A,
       serverReceipt: receipt({ status: 'conflict', recorded: false }),
     }),
     'server_receipt_not_recorded',
@@ -277,7 +400,6 @@ test('unrecorded, conflicting, or client-extended receipts are rejected', async 
   await expectCode(
     adapter().project({
       cookieHeader: COOKIE_A,
-      ownerUserKey: OWNER_A,
       serverReceipt: { ...receipt(), score: 100 },
     }),
     'server_receipt_field_forbidden',
@@ -295,7 +417,6 @@ test('source semantic, result, receipt, and Beijing-day drift fail closed', asyn
     await expectCode(
       adapter({ ledgerRow }).project({
         cookieHeader: COOKIE_A,
-        ownerUserKey: OWNER_A,
         serverReceipt,
       }),
       code,
@@ -306,25 +427,25 @@ test('source semantic, result, receipt, and Beijing-day drift fail closed', asyn
 test('academic year follows server receipt time at the Beijing September boundary', async () => {
   const beforeMs = Date.parse('2026-08-31T15:59:00.000Z');
   const afterMs = Date.parse('2026-08-31T16:00:00.000Z');
-  const before = await projectVerifiedFirstAnswerEventV2({
-    persistedRow: row({ received_at_ms: beforeMs, beijing_day: '2026-08-31' }),
-    ownerUserKey: OWNER_A,
+  const before = await adapter({
+    ledgerRow: row({ received_at_ms: beforeMs, beijing_day: '2026-08-31' }),
+    nowMs: afterMs + 60_000,
+  }).project({
+    cookieHeader: COOKIE_A,
     serverReceipt: receipt({
       receivedAt: new Date(beforeMs).toISOString(),
       beijingDay: '2026-08-31',
     }),
-    identity: identity(),
-    nowMs: afterMs + 60_000,
   });
-  const after = await projectVerifiedFirstAnswerEventV2({
-    persistedRow: row({ received_at_ms: afterMs, beijing_day: '2026-09-01' }),
-    ownerUserKey: OWNER_A,
+  const after = await adapter({
+    ledgerRow: row({ received_at_ms: afterMs, beijing_day: '2026-09-01' }),
+    nowMs: afterMs + 60_000,
+  }).project({
+    cookieHeader: COOKIE_A,
     serverReceipt: receipt({
       receivedAt: new Date(afterMs).toISOString(),
       beijingDay: '2026-09-01',
     }),
-    identity: identity(),
-    nowMs: afterMs + 60_000,
   });
   assert.equal(before.event.academicYear, '2025-2026');
   assert.equal(after.event.academicYear, '2026-2027');
@@ -337,6 +458,11 @@ test('concurrent requests retain no module-global user state', async () => {
         return identity(cookieHeader.includes('session-b') ? 9951 : 343);
       },
     },
+    sourceIdentity: {
+      async resolveOwner(cookieHeader) {
+        return sourceOwner(cookieHeader === COOKIE_B ? OWNER_B : OWNER_A);
+      },
+    },
     verifiedAnswerLedger: {
       async readByEventAndOwner({ eventId, ownerUserKey }) {
         return row({ event_id: eventId, user_key: ownerUserKey });
@@ -347,12 +473,10 @@ test('concurrent requests retain no module-global user state', async () => {
   const [a, b] = await Promise.all([
     candidate.project({
       cookieHeader: COOKIE_A,
-      ownerUserKey: OWNER_A,
       serverReceipt: receipt(),
     }),
     candidate.project({
-      cookieHeader: 'bdfz_uc_session=test-only-session-b',
-      ownerUserKey: OWNER_B,
+      cookieHeader: COOKIE_B,
       serverReceipt: receipt({
         eventId: 'weibian_answer_00000002',
         canonicalEventId: 'weibian_answer_00000002',

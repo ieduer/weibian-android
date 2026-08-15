@@ -30,9 +30,13 @@ It retains the existing source authority:
 - the existing `event_id` conflict and replay behavior remains authoritative;
 - projection time comes only from the persisted server receipt time.
 
-The candidate accepts no client verdict, score, time, user id, pseudonym, or
-payload row. A future caller would have to inject both an owner-scoped D1 row
-reader and a named User Center RPC `resolveSession` method.
+The candidate accepts no client verdict, score, time, user id, pseudonym,
+owner key, or payload row. Its projection input is exactly the bounded session
+header plus the existing server receipt. A future runtime composition would
+have to inject an owner-scoped D1 row reader, a named User Center
+`identityRpc.resolveSession` method, and a trusted Weibian source-auth
+`sourceIdentity.resolveOwner` method. Both identity dependencies must resolve
+the exact same bounded cookie before any ledger lookup.
 
 ## Hard blockers
 
@@ -45,19 +49,23 @@ reader and a named User Center RPC `resolveSession` method.
    binding calls the default Worker and resolves only slug plus an HMAC
    pseudonym. Therefore no positive immutable numeric UC `userId` can currently
    be produced for this candidate.
-3. No Weibian event-v2 source contract, mapping, importer, route, Queue/RPC
+3. No trusted `sourceIdentity.resolveOwner` dependency is connected to the
+   candidate. A caller-supplied `ownerUserKey` is rejected and cannot substitute
+   for same-cookie source authentication.
+4. No Weibian event-v2 source contract, mapping, importer, route, Queue/RPC
    delivery method, binding, or central policy has been reviewed or configured.
-4. Runtime import, route connection, binding configuration, migration apply,
+5. Runtime import, route connection, binding configuration, migration apply,
    delivery, scoring, activation, and production deployment all remain false
    and unauthorized.
 
 ## Next separately governed step
 
 Do not activate this branch. A later cross-repository change would require a
-reviewed source-specific UC named RPC entrypoint, an exact source contract and
-pending-mapping consumer path, a new synchronized-change receipt, protected
-surface review, rollback, and explicit production authorization. No UC or
-Cloudflare change is part of this pull request.
+reviewed source-specific UC named RPC entrypoint, a trusted same-cookie Weibian
+source-owner resolver, an exact source contract and pending-mapping consumer
+path, a new synchronized-change receipt, protected-surface review, rollback,
+and explicit production authorization. No UC or Cloudflare change is part of
+this pull request.
 
 Candidate operations and rollback are documented in
 `docs/EVENT_V2_SOURCE_CANDIDATE_OPERATIONS.md`.
