@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "bdfz-learning-source-candidate-v1",
+  "candidateId": "weibian-first-answer-event-v2-source-candidate-20260815",
+  "status": "blocked_inactive_source_only",
+  "sourceMain": "f17e5d54e10f34047fac70424e63e836dcf002ea",
+  "auditedUserCenterMain": "f8d086cb9a511bc5ff310ef867b276d889f6c1e3",
+  "sourceIdentity": {
+    "sourceSystem": "weibian-content",
+    "sourceSiteKey": "weibian",
+    "contractVersion": "weibian-first-answer-event-v2-candidate-v1",
+    "sourceReleaseId": "weibian-answer-events-v1:f17e5d54e10f34047fac70424e63e836dcf002ea",
+    "registryVersion": "weibian-authored-task-bank-v1",
+    "mappingVersion": "pending_mapping:weibian-first-answer-v1"
+  },
+  "sourceAuthority": {
+    "androidOutbox": "verified_answer_outbox",
+    "serverLedger": "weibian_answer_events_v2",
+    "clientPayloadSchema": "weibian-answer-events-v1",
+    "firstAnswerUniqueness": [
+      "user_key",
+      "canonical_task_id"
+    ],
+    "eventIdempotencyKey": "event_id",
+    "contentAuthority": "exact allowlisted contentVersion plus task semantic digest plus server answer key",
+    "occurredAtAuthority": "server received_at_ms",
+    "projectionRequiresPersistedRow": true,
+    "projectionAcceptsClientVerdict": false
+  },
+  "identityAuthority": {
+    "requiredTransport": "named_user_center_rpc",
+    "requiredEntrypoint": "WeibianGrowthEvidence",
+    "requiredMethod": "resolveSession",
+    "positiveImmutableNumericUserIdRequired": true,
+    "publicApiSessionAccepted": false,
+    "publicApiSessionIncludesNumericUserIdAtAuditedMain": false,
+    "currentWeibianNamedEntrypointExistsAtAuditedMain": false,
+    "currentWorkerIdentity": "public_session_slug_hmac_pseudonym",
+    "currentIdentityRpcConnected": false
+  },
+  "eventPolicy": {
+    "eventSchema": "bdfz-learning-evidence-event-v2",
+    "eventSchemaVersion": 2,
+    "dimensionKey": "practice",
+    "eventType": "authored_first_answer_verified",
+    "interactionKey": "authored_first_answer",
+    "assessmentKind": "trace",
+    "scoringRole": "none",
+    "eligibilityStatus": "non_scoring",
+    "verificationMethod": "server_recomputed_first_answer_v1",
+    "rawValue": null,
+    "maxValue": null,
+    "normalizedValue": null,
+    "mappingDisposition": "pending_mapping"
+  },
+  "activation": {
+    "runtimeImported": false,
+    "routeConnected": false,
+    "bindingConfigured": false,
+    "migrationApplied": false,
+    "deliveryEnabled": false,
+    "scoringActive": false,
+    "productionDeploymentAuthorized": false,
+    "activationAllowed": false
+  },
+  "runtime": {
+    "adapterKind": "dependency_injected_unbound_module",
+    "requestScopedGlobalState": false,
+    "secretsRequired": false,
+    "wranglerConfigChanged": false,
+    "migrationCandidateAdded": false,
+    "deliveryTransportConfigured": false
+  },
+  "node": {
+    "primary": "24.18.0",
+    "pullRequestMatrix": [
+      "22.21.1",
+      "24.18.0"
+    ]
+  },
+  "capabilityFit": {
+    "decision": "no-new-capability",
+    "reason": "This change adds only an unbound source adapter, a machine contract, tests, and PR-only verification. It configures no Cloudflare resource or runtime capability.",
+    "serviceBindingDirection": "A later separately approved integration must bind the existing Worker to a reviewed named User Center RPC entrypoint.",
+    "fallback": "Keep the candidate unimported and continue the existing non-scoring ranking flow unchanged.",
+    "rollback": "Close or revert the source-only pull request; no runtime, data, binding, migration, or deployment rollback exists."
+  },
+  "governance": {
+    "allowedChangedPaths": [
+      ".github/workflows/weibian-event-v2-candidate-pr.yml",
+      ".nvmrc",
+      "PROJECT_STATE.md",
+      "candidate/weibian-event-v2/adapter.mjs",
+      "candidate/weibian-event-v2/adapter.test.mjs",
+      "candidate/weibian-event-v2/verify-source-scope.mjs",
+      "contracts/weibian-first-answer-event-v2-candidate.json",
+      "docs/EVENT_V2_SOURCE_CANDIDATE_OPERATIONS.md",
+      "package.json"
+    ],
+    "protectedSurfaceDigests": [
+      { "path": ".github/workflows/verify.yml", "sha256": "7fddbce60e08c14f9d9db69a1fdb68a2d0c3afbaec1025fd28589ea7e980f724" },
+      { "path": "app/schemas/net.bdfz.weibian.data.LearningDatabase/2.json", "sha256": "dac6316708f521b79d0742df2449292d94be1c63e0b576902a35e75eec5c1d9d" },
+      { "path": "app/src/main/java/net/bdfz/weibian/data/Daos.kt", "sha256": "0991a40b0b6aeda9a3242cedb6bcd538440a759a231913ed3f83bcfe3a9edbc5" },
+      { "path": "app/src/main/java/net/bdfz/weibian/data/Entities.kt", "sha256": "a32390e9d85b122a3a740d65d2aef597e60b07ff81adb2adf00a353e7904b07f" },
+      { "path": "app/src/main/java/net/bdfz/weibian/data/LearningDatabase.kt", "sha256": "345fa0ada729f35e599dd27a3487cbef9d11ddc486174c57f6fb9df2241e2b2b" },
+      { "path": "app/src/main/java/net/bdfz/weibian/data/LearningRepository.kt", "sha256": "6d0da04429489e7da636919d53448b37889a95dc01a2f9e2657c0818e9567de4" },
+      { "path": "app/src/main/java/net/bdfz/weibian/network/ApiClient.kt", "sha256": "8f76c64e97bd363c2c795356f90031ba9fe1ae8ba21436c25ccd9b6aae40c89f" },
+      { "path": "app/src/main/java/net/bdfz/weibian/sync/ProgressSyncWorker.kt", "sha256": "5e9fded0be6d35287c89e94de0b9e3e37ac347c13f88bf60420bbfd4f332668f" },
+      { "path": "worker/migrations/0001_rankings.sql", "sha256": "23e3ccac066e1e9746bf55b6b32728be4f82ccd669df6f72fe1bdd10dc2fad45" },
+      { "path": "worker/migrations/0002_verified_answer_rankings.sql", "sha256": "70355104b83c1f885e6d224345f8cc8e01a654db63581a586bb032934e788d81" },
+      { "path": "worker/src/index.js", "sha256": "34faf0c520fc840eeda853633210c279551c176fe0b2ee6e5a95cb97b968c509" },
+      { "path": "worker/src/ranking.js", "sha256": "dda0ec6e95eaafe0fb46f0d79616eb6541f64d4b34a80374721485c98db72907" },
+      { "path": "worker/wrangler.toml", "sha256": "60c9d5600376c1a351f651c9f770dd596c6f398900e0844431939982b978e397" }
+    ]
+  },
+  "blockers": [
+    "User Center audited main has no named WeibianGrowthEvidence entrypoint.",
+    "The public/default /api/session response omits a positive immutable numeric user id and is not an identity authority for this candidate.",
+    "No Weibian event-v2 source contract, mapping, import route, Queue, RPC delivery method, or central scoring policy is configured.",
+    "No runtime import, binding change, migration application, delivery activation, scoring activation, or production deployment is authorized by this candidate."
+  ]
+}
