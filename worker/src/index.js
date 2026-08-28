@@ -11,12 +11,14 @@
  *   GET|POST /api/rankings      code 3 兼容榜读取（POST 不再接收客户端分数）
  *   GET /api/rankings/v2        服务端核验作答榜
  *   POST /api/ranking-events    当前已登录用户的原始人工题作答 outbox
+ *   POST /api/ai                新版 App 的 APIS 服务端代理
  *   GET /api/health             健康探针
  *
  * 刻意不做的事：
  *   · 不保存身份、Cookie、自由文本或 User Center 一般进度；
  *     排行 D1 只保存 HMAC 假名、稳定题号、所选 option、服务端判定与时间；
- *   · 不代理 AI —— 一律走 apis.bdfz.net 统一网关，本处不持有任何模型密钥。
+ *   · 不持有模型密钥；新版 App 的 AI 经 APIS Service Binding 与独立 caller
+ *     secret 代理，旧版 Origin-only 客户端只由 APIS 的有界 legacy lane 承接。
  *
  * 当前 manifest 与旧客户端兼容 bundle 跟随 Worker Assets；已审核版本的
  * 不可变完整包由 R2 永久保存，并经 content-releases.js exact allowlist 暴露。
@@ -47,6 +49,8 @@ const CACHE_MUTABLE = 'public, max-age=0, must-revalidate';
 const USER_CENTER_ORIGIN = 'https://my.bdfz.net';
 const RANKING_TABLE = 'weibian_answer_events_v2';
 const MAX_RANKING_LIMIT = 30;
+const MAX_AI_BODY_BYTES = 128 * 1024;
+const AI_TASK_TYPES = new Set(['generic', 'chat', 'feedback', 'analysis']);
 
 /** App 与站点都可能来取内容，内容本身是公开资料，允许跨源读取。 */
 const CORS = {
@@ -71,6 +75,45 @@ async function readAsset(env, path) {
   const response = await env.ASSETS.fetch(new URL(path, 'https://weibian.bdfz.net'));
   if (!response.ok) return null;
   return response;
+}
+
+async function handleAi(request, env) {
+  if (!env.APIS || typeof env.APIS.fetch !== 'function' || !env.APIS_CALLER_TOKEN) {
+    return json(
+      { ok: false, error: 'ai-gateway-unavailable', error_code: 'AI_GATEWAY_UNAVAILABLE' },
+      { status: 503, headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
+  const length = Number(request.headers.get('content-length') || 0);
+  if (length > MAX_AI_BODY_BYTES) {
+    return json({ ok: false, error: 'ai-request-too-large', error_code: 'INVALID_REQUEST' }, { status: 413 });
+  }
+  const taskType = String(request.headers.get('X-Task-Type') || 'generic').toLowerCase();
+  if (!AI_TASK_TYPES.has(taskType)) {
+    return json({ ok: false, error: 'ai-task-type-invalid', error_code: 'INVALID_REQUEST' }, { status: 400 });
+  }
+  const body = await request.arrayBuffer();
+  if (body.byteLength > MAX_AI_BODY_BYTES) {
+    return json({ ok: false, error: 'ai-request-too-large', error_code: 'INVALID_REQUEST' }, { status: 413 });
+  }
+  const response = await env.APIS.fetch('https://apis.bdfz.net/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Project-Name': 'weibian',
+      'X-Task-Type': taskType,
+      'X-Thinking-Level': taskType === 'feedback' ? 'medium' : 'low',
+      'X-Internal-Token': env.APIS_CALLER_TOKEN,
+    },
+    body,
+  });
+  const headers = new Headers({
+    'Content-Type': response.headers.get('content-type') || 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+  });
+  const retryAfter = response.headers.get('retry-after');
+  if (retryAfter) headers.set('Retry-After', retryAfter);
+  return new Response(response.body, { status: response.status, headers });
 }
 
 function sessionCookieHeader(request) {
@@ -663,7 +706,7 @@ export default {
       return new Response(null, { status: 204, headers: CORS });
     }
     const allowedPost = request.method === 'POST' &&
-      (url.pathname === '/api/rankings' || url.pathname === '/api/ranking-events');
+      (url.pathname === '/api/rankings' || url.pathname === '/api/ranking-events' || url.pathname === '/api/ai');
     if (request.method !== 'GET' && request.method !== 'HEAD' && !allowedPost) {
       return json({ ok: false, error: 'method-not-allowed' }, { status: 405 });
     }
@@ -680,8 +723,12 @@ export default {
           service: 'weibian-content',
           contentVersion: body.contentVersion,
           counts: body.counts,
+          aiProxyConfigured: Boolean(env.APIS && env.APIS_CALLER_TOKEN),
         });
       }
+
+      case '/api/ai':
+        return handleAi(request, env);
 
       case '/api/rankings/health':
         try {

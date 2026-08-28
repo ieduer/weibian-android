@@ -358,15 +358,12 @@ class ApiClient(
     }
 
     // -----------------------------------------------------------------------
-    // AI —— 统一走 apis.bdfz.net 网关，App 内不含任何模型密钥
+    // AI —— 走 weibian.bdfz.net 服务端代理；App 内不含 caller 或模型密钥
     // -----------------------------------------------------------------------
 
     fun ask(prompt: String, taskType: String = "generic"): String {
         val request = Request.Builder()
-            .url(aiGatewayUrl.trimEnd('/') + "/")
-            .header("Origin", "https://$siteKey.bdfz.net")
-            .header("Referer", "https://$siteKey.bdfz.net/")
-            .header("X-Project-Name", siteKey)
+            .url(aiGatewayUrl.trimEnd('/') + "/api/ai")
             .header("X-Task-Type", taskType)
             .post(JSONObject().put("prompt", prompt).toString().toRequestBody(JSON))
             .build()

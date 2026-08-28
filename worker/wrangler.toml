@@ -28,5 +28,9 @@ bucket_name = "blog-images"
 binding = "USER_CENTER"
 service = "bdfz-user-center"
 
+[[services]]
+binding = "APIS"
+service = "apis"
+
 [observability]
 enabled = true

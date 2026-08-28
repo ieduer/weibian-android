@@ -25,15 +25,15 @@ android {
         applicationId = "net.bdfz.weibian.direct"
         minSdk = 23
         targetSdk = 37
-        versionCode = 4
-        versionName = "1.1.2"
+        versionCode = 5
+        versionName = "1.1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
 
         buildConfigField("String", "USER_CENTER_URL", "\"https://my.bdfz.net\"")
         buildConfigField("String", "CONTENT_API_URL", "\"https://weibian.bdfz.net\"")
-        buildConfigField("String", "AI_GATEWAY_URL", "\"https://apis.bdfz.net\"")
+        buildConfigField("String", "AI_GATEWAY_URL", "\"https://weibian.bdfz.net\"")
         buildConfigField("String", "SITE_KEY", "\"weibian\"")
         buildConfigField(
             "String",
