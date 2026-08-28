@@ -78,6 +78,9 @@ async function readAsset(env, path) {
 }
 
 async function handleAi(request, env) {
+  if (request.method !== 'POST') {
+    return json({ ok: false, error: 'method-not-allowed' }, { status: 405 });
+  }
   if (!env.APIS || typeof env.APIS.fetch !== 'function' || !env.APIS_CALLER_TOKEN) {
     return json(
       { ok: false, error: 'ai-gateway-unavailable', error_code: 'AI_GATEWAY_UNAVAILABLE' },

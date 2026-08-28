@@ -16,6 +16,7 @@ test('native app calls only the same-product AI proxy', () => {
 });
 
 test('content Worker proxy is APIS binding-only and fail-closed', () => {
+  assert.match(worker, /request\.method !== 'POST'/);
   assert.match(worker, /env\.APIS\.fetch\('https:\/\/apis\.bdfz\.net\/'/);
   assert.match(worker, /env\.APIS_CALLER_TOKEN/);
   assert.match(worker, /'X-Project-Name': 'weibian'/);
