@@ -1,12 +1,44 @@
 # Project state
 
-Last updated: 2026-08-15
+Last updated: 2026-08-28
 
-## Production authority
+## 2026-08-28 APIS caller-auth migration
 
-The production-supported Direct release remains v1.1.2 / versionCode 4. Its
-accepted source, Worker, APK, signing, device, rollback, and live verification
-facts remain in `docs/MAINTENANCE_MANUAL.md` and are unchanged by this branch.
+The App source on `main` is now v1.1.3 / versionCode 5. Its AI path targets
+the same-origin `weibian.bdfz.net` Worker rather than calling
+`apis.bdfz.net` from the device. The Worker owns caller `weibian`, keeps the
+caller credential server-side, and reaches APIS through its Service Binding.
+
+Accepted source commits are `55e6bd3` and `c94a977`. Signed APK and AAB
+artifacts were built. The content Worker deployment
+`d77b30b9` runs version `9060729e` at 100 percent; immutable rollback is
+`1ce95b1a`. A real same-origin product request reached APIS as verified caller
+`weibian` and returned 200 with request ID
+`0c2c789c-7f33-4e73-a88a-d74ebeb7ecbb`.
+
+Installed v1.1.2 clients are protected during caller-auth enforcement by an
+exact-origin legacy lane for `https://weibian.bdfz.net`. The lane is already
+active, allows at most 50 provider attempts per Pacific quota day and one
+in-flight request, and has a hard expiry at `2026-11-26T13:04:40Z`. It is
+independent of the main verified-caller pool and is not a permanent exception.
+
+Physical installation acceptance and changing the public `latest.apk` remain
+an App release follow-up owned by suen. They do not block APIS caller-auth
+enforcement because both the new proxy path and bounded old-client lane are
+already live. The follow-up must complete before the hard expiry; if it does
+not, suen must explicitly review the release state before the lane expires.
+After expiry, unupgraded clients lose AI access. Do not extend the lane by
+default.
+
+This migration does not activate or alter the event-v2 source candidate below.
+
+## Event-v2 candidate baseline (2026-08-15 historical context)
+
+When this inactive candidate was authored, the production-supported Direct
+release was v1.1.2 / versionCode 4. Its then-current source, Worker, APK,
+signing, device, rollback, and live verification facts remain in
+`docs/MAINTENANCE_MANUAL.md`. The 2026-08-28 migration section above supersedes
+that runtime baseline without activating this candidate.
 
 This branch is based on exact `main`
 `f17e5d54e10f34047fac70424e63e836dcf002ea`. It adds only an inactive,
