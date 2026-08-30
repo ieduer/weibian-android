@@ -51,6 +51,9 @@ const RANKING_TABLE = 'weibian_answer_events_v2';
 const MAX_RANKING_LIMIT = 30;
 const MAX_AI_BODY_BYTES = 128 * 1024;
 const AI_TASK_TYPES = new Set(['generic', 'chat', 'feedback', 'analysis']);
+const CALLER_ID = 'weibian';
+const CALLER_IDENTITY_URL = 'https://apis.bdfz.net/caller-identity';
+const CALLER_CHECK_TIMEOUT_MS = 5000;
 
 /** App 与站点都可能来取内容，内容本身是公开资料，允许跨源读取。 */
 const CORS = {
@@ -117,6 +120,59 @@ async function handleAi(request, env) {
   const retryAfter = response.headers.get('retry-after');
   if (retryAfter) headers.set('Retry-After', retryAfter);
   return new Response(response.body, { status: response.status, headers });
+}
+
+async function handleCallerCheck(request, env) {
+  if (request.method !== 'GET') {
+    return json(
+      { ok: false, callerId: CALLER_ID, identityStatus: 'method_not_allowed', requestId: null },
+      { status: 405, headers: { Allow: 'GET', 'Cache-Control': 'no-store' } },
+    );
+  }
+
+  const callerToken = String(env.APIS_CALLER_TOKEN || '').trim();
+  if (!env.APIS || typeof env.APIS.fetch !== 'function' || !callerToken) {
+    return json(
+      { ok: false, callerId: CALLER_ID, identityStatus: 'configuration_unavailable', requestId: null },
+      { status: 503, headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), CALLER_CHECK_TIMEOUT_MS);
+  try {
+    const upstream = await env.APIS.fetch(CALLER_IDENTITY_URL, {
+      method: 'POST',
+      headers: {
+        'X-Project-Name': CALLER_ID,
+        'X-Internal-Token': callerToken,
+      },
+      signal: controller.signal,
+    });
+    const payload = await upstream.json().catch(() => ({}));
+    const callerId = typeof payload.callerId === 'string' ? payload.callerId : CALLER_ID;
+    const identityStatus = typeof payload.identityStatus === 'string'
+      ? payload.identityStatus
+      : 'unavailable';
+    const requestId = typeof payload.requestId === 'string' && payload.requestId
+      ? payload.requestId
+      : upstream.headers.get('x-request-id');
+    const ok = upstream.ok && callerId === CALLER_ID && identityStatus === 'verified';
+    return json(
+      { ok, callerId, identityStatus, requestId },
+      {
+        status: ok ? 200 : (upstream.ok ? 502 : (upstream.status || 502)),
+        headers: { 'Cache-Control': 'no-store' },
+      },
+    );
+  } catch {
+    return json(
+      { ok: false, callerId: CALLER_ID, identityStatus: 'unavailable', requestId: null },
+      { status: 503, headers: { 'Cache-Control': 'no-store' } },
+    );
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function sessionCookieHeader(request) {
@@ -715,6 +771,9 @@ export default {
     }
 
     switch (url.pathname) {
+      case '/__caller-check':
+        return handleCallerCheck(request, env);
+
       case '/api/health': {
         const manifest = await readAsset(env, '/manifest.json');
         if (!manifest) {
