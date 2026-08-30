@@ -1,21 +1,21 @@
 # lunyu-yizhu-android operations
 
-Last normalized: 2026-08-10 PDT
-Owner: review_required
-Lifecycle: unknown-candidate
-Data class: review_required
-Documentation status: generated from local source, Git/GitHub audit, project catalog, and live Cloudflare inventory; unresolved facts remain fail-closed.
+Last normalized: 2026-08-29 PDT
+Owner: suen
+Lifecycle: production-supported App and content Worker; inactive event-v2 source candidate remains separate
+Data class: student_owned; see `docs/MAINTENANCE_MANUAL.md` for the reviewed boundaries
+Documentation status: current APIS caller route, Worker deployment and rollback were read back live; App physical-release acceptance remains a separate owner task.
 
 ## Quick start
 
 - Canonical local path: `/Users/ylsuen/CF/apps/lunyu-yizhu-android`
 - Git authority: `ieduer/weibian-android`
-- Current local branch/HEAD: `main` / `78db450ff7243e668685dfa84a92e3747c84ca08`
-- Runtime config: `not detected; review_required`
+- Current Git branch/HEAD: `main` / `98db37e4658d122b3aa04a09400c239ffa42d3de`
+- Runtime config: `worker/wrangler.toml`; Worker `weibian-content`; custom domain `weibian.bdfz.net`
 - Current state: [PROJECT_STATE.md](../PROJECT_STATE.md)
 - Workspace resource routing: [project resource index](../../reports/operations/project_resource_index.md)
 - Documentation standard: [project operations standard](../../runbooks/project_operations_documentation_standard.md)
-- Production mutation is forbidden until exact owner, target, bindings, backup, verification, and rollback have fresh readback.
+- Production mutation still requires fresh target, binding, verification and rollback readback; the values below record the B5-3 release, not standing authorization for a later deploy.
 
 ## Existing project documentation relationship
 
@@ -29,35 +29,35 @@ historical handovers and ledgers are evidence, not current state.
 
 | Project ID | Runtime type | Resource | Domains |
 | --- | --- | --- | --- |
-| `review_required` | `review_required` | `review_required` | `review_required` |
+| `weibian` | Android App + Worker | `weibian-content` | `weibian.bdfz.net` |
 
 Live Cloudflare matching is metadata-only and does not prove application health:
 
 | Resource | Live type | Readback | Detail |
 | --- | --- | --- | --- |
-| `review_required` | unknown | review_required | no runtime resource was verified |
+| `weibian-content` | Worker + Static Assets | live | version `0b5f49e2-8ee3-4be3-98da-2d93ab0244ae` at 100%; deployment `301a8dcb-1f9a-4c67-b9ea-61d049f68441` |
 
 ## Authority and dependencies
 
-- Project names: lunyu-yizhu-android
-- Catalog owner: review_required
-- Data classes: review_required
-- Identity modes: review_required
-- User Center required: review_required
-- Pulse measurement: review_required
-- Runtime bindings: 0 names cataloged; names are intentionally omitted from this general handbook. Inspect the exact project config and live binding types under task-scoped authority.
+- Project names: `lunyu-yizhu-android`, Worker `weibian-content`, APIS caller `weibian`
+- Catalog owner: suen
+- Data classes: `student_owned`; no raw student content belongs in operational receipts
+- Identity modes: Worker validates User Center sessions for ranking paths; the AI proxy keeps the APIS caller credential server-side
+- User Center required: yes for authenticated ranking/data paths; `/__caller-check` deliberately does not enter User Center, D1, R2 or provider paths
+- Pulse measurement: `worker_analytics` for `weibian.bdfz.net`, per the maintenance manual
+- Runtime bindings: Static Assets `ASSETS`, D1 `DB`, R2 `CONTENT_R2`, Service Bindings `USER_CENTER` and `APIS`; secret names are inspected separately and values are never documented
 - Shared User Center, APIS, nav, image, Pulse, App, clone-family, and VPS effects must be checked through workspace topic runbooks; this file does not weaken those gates.
 
 ## Resource location and restore
 
 - Source authority: `/Users/ylsuen/CF/apps/lunyu-yizhu-android`; Git/GitHub authority above.
-- External/local build inputs, archived paths, receipts, retention, and hydrate commands not stated below are `review_required` and block deletion.
+- App release, content bundle, R2 and restore authorities remain in `docs/MAINTENANCE_MANUAL.md`. This B5-3 task created no archive, backup, source data or release payload and authorizes no deletion.
 
 Catalog backup evidence:
-- `review_required`
+- Immutable Worker versions and immutable R2 content objects are separate rollback authorities; D1/data rollback is not implied by Worker rollback.
 
 Catalog restore evidence:
-- `review_required`
+- Use the exact procedures in `docs/MAINTENANCE_MANUAL.md`; do not reconstruct content, clear D1, or overwrite immutable R2 objects as a code rollback.
 
 Before deleting any local resource, satisfy the workspace path-preserving archive, remote readback, isolated restore, receipt, handbook, and project-state gates.
 
@@ -72,36 +72,41 @@ Before deleting any local resource, satisfy the workspace path-preserving archiv
 
 ## Build, test, and local verification entrypoints
 
-Detected package entrypoints (presence is not proof they currently pass):
+Current B5-3 verification entrypoints:
 
-- Inspect the project toolchain and define exact commands before mutation: `review_required`.
+- Worker: exact Node 24.18.0, `node --test worker/test/*.test.mjs`, syntax check, content build check, strict Wrangler dry-run and exact-commit gitleaks.
+- App: `./gradlew :app:testDirectDebugUnitTest :app:testPlayDebugUnitTest :app:lintDirectDebug :app:lintPlayDebug :app:assembleDirectDebug :app:assemblePlayDebug`.
+- Source gate: `/Users/ylsuen/CF/scripts/git-deploy-gate.sh`; B5-3 did not use `BDFZ_DEPLOY_GATE_OVERRIDE`.
 
 Run only commands supported by the current project toolchain and verify expected outputs in the project before using them as release evidence.
 
 ## Health and business-path verification
 
 Catalog health probes:
-- `review_required`
+- `curl -sS https://weibian.bdfz.net/api/health | jq`
+- `curl -sS -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' "https://weibian.bdfz.net/__caller-check?verify=<UNIQUE>" | jq`
 
 Catalog contract checks:
-- `review_required`
+- `/__caller-check` must return HTTP 200 JSON with `ok=true`, caller `weibian`, `identityStatus=verified` and a nonempty request ID.
+- Run `/Users/ylsuen/CF/_meta/scripts/verify-apis-caller-identities.mjs` after each APIS/Worker percentage step; a deterministic route/configuration failure stops immediately, while an existing green 503/timeout follows D20 two-of-three confirmation.
 
 Also verify authentication boundaries, data read/write behavior, browser/device path, monitoring, clone-family and shared-hub regressions as applicable. HTTP 200 or a build alone is insufficient.
 
 ## Preview, deployment, and rollback
 
 Catalog deploy commands (not authorization; fresh preflight remains mandatory):
-- `review_required`
+- From `worker/`, upload an immutable version and use Wrangler version deployments for 0% / 1% / 5% / 100% with exact readback at every step.
 
 Rollback/failback authorities:
-- `review_required`
+- Immediate Worker predecessor: `9060729e-fdae-402c-843f-c04971e274a3`; restore it at 100% without clearing D1, changing R2, altering APIS, or extending the legacy lane.
+- Current production: deployment `301a8dcb-1f9a-4c67-b9ea-61d049f68441`, version `0b5f49e2-8ee3-4be3-98da-2d93ab0244ae` at 100%.
 
 For data-backed projects, immutable code rollback does not restore D1/KV/R2/DO/Queue state. Use backup/restore or backward-compatible forward-fix procedures verified for the exact resource.
 
 ## Monitoring, privacy, cost, and incidents
 
-- Monitoring coverage: review_required
-- Measurement: review_required
+- Monitoring coverage: Worker Observability plus Pulse `worker_analytics`
+- Measurement: health/readback and APIS caller identity; user-level payloads are excluded from receipts
 - Never record secret values, cookies, sessions, private keys, raw student content, or sensitive payloads.
 - Verify current logs, errors, cost/usage, limits, owner, stop condition, and incident runbook before representing runtime health.
 
@@ -114,7 +119,7 @@ For data-backed projects, immutable code rollback does not restore D1/KV/R2/DO/Q
 5. Dependency regression: matrix fan-out, shared hubs, clone family, App/VPS as applicable.
 6. Backup/restore: catalog evidence above; missing exact evidence is blocking for writes/deletion.
 7. Rollback/failback: catalog authority above, refreshed live before release.
-8. Last verified: review_required.
+8. Last verified: 2026-08-29 PDT. PR #3 hosted Verify succeeded; local Worker tests were 30/30 and the full Direct/Play unit, lint and assembly gate passed. The caller route returned verified JSON at 0%, 1%, 5% and 100%; final fleet table was 25/27. Physical App installation and the public `latest.apk` switch remain suen-owned before `2026-11-26T13:04:40Z`.
 
 ## Synchronized documentation and handoff
 

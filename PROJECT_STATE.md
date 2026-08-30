@@ -1,6 +1,6 @@
 # Project state
 
-Last updated: 2026-08-28
+Last updated: 2026-08-29 PDT
 
 ## 2026-08-28 APIS caller-auth migration
 
@@ -9,12 +9,23 @@ the same-origin `weibian.bdfz.net` Worker rather than calling
 `apis.bdfz.net` from the device. The Worker owns caller `weibian`, keeps the
 caller credential server-side, and reaches APIS through its Service Binding.
 
-Accepted source commits are `55e6bd3` and `c94a977`. Signed APK and AAB
-artifacts were built. The content Worker deployment
-`d77b30b9` runs version `9060729e` at 100 percent; immutable rollback is
-`1ce95b1a`. A real same-origin product request reached APIS as verified caller
+Accepted App source commits are `55e6bd3` and `c94a977`; the B5-3 caller-check
+source is merged on main `98db37e` through PR #3, after the two operations
+documents were separately accepted through PR #2. Signed APK and AAB artifacts
+were built for the App migration. The content Worker deployment
+`301a8dcb-1f9a-4c67-b9ea-61d049f68441` runs version
+`0b5f49e2-8ee3-4be3-98da-2d93ab0244ae` at 100 percent; immutable rollback is
+`9060729e-fdae-402c-843f-c04971e274a3`. A real same-origin product request reached APIS as verified caller
 `weibian` and returned 200 with request ID
 `0c2c789c-7f33-4e73-a88a-d74ebeb7ecbb`.
+
+The no-provider `/__caller-check` route uses the same APIS Service Binding,
+caller ID and server-only credential as the existing Worker AI path. Exact
+Node 24.18.0 Worker tests passed 30/30; both Android distribution channels
+passed unit tests, lint and assembly; strict Worker dry-run, exact-commit
+gitleaks, the clean-source deploy gate and hosted GitHub Verify all passed.
+Candidate `0b5f49e2-8ee3-4be3-98da-2d93ab0244ae` returned verified JSON at 0%,
+1%, 5% and 100%, and the final fleet table reached 25/27.
 
 Installed v1.1.2 clients are protected during caller-auth enforcement by an
 exact-origin legacy lane for `https://weibian.bdfz.net`. The lane is already
@@ -31,6 +42,8 @@ After expiry, unupgraded clients lose AI access. Do not extend the lane by
 default.
 
 This migration does not activate or alter the event-v2 source candidate below.
+Its older source-scope validator is not release authority for this accepted
+Worker-only route change.
 
 ## Event-v2 candidate baseline (2026-08-15 historical context)
 
