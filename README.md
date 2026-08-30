@@ -6,19 +6,27 @@
 一个**原生 Android 应用**（Kotlin + Jetpack Compose），不是 WebView 套壳。
 
 当前 Direct lifecycle 为 `production-supported`。Direct R2 当前版已按 pointer-last
-发布为 v1.1.2 / versionCode 4：clean source
-`e65dc572af19ed99cf520d52aa01de72508680a9` 与 GitHub Actions
-[run 30516534134](https://github.com/ieduer/weibian-android/actions/runs/30516534134)
-通过；Direct APK 为 2,819,959 bytes，SHA-256
-`956810c903005680ba2e77a2c71964956cd2beac428e840862fc0a33724e15c3`，
+发布为 v1.1.3 / versionCode 5：tag/source
+`abb140e23fa3eae5b532d03f86389e8d4992e2fd`；Direct APK 为
+2,819,955 bytes，SHA-256
+`9a1d67ef5ce0f43c9a8ed423c72c30cc8742f21123ebdca5399c5dd671ea2933`，
 signer certificate SHA-256 为
 `a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282`。
-同一安装身份的 Play APK 为 2,819,963 bytes／SHA-256
-`7bf92fcfc4fab561aee5f2e95a4ad80d67b9c7161778a667b8f7b33cc9427f7f`，
-Play AAB 为 4,988,101 bytes／SHA-256
-`6a37903152ede8c5a9b4f9d547af99454cb75d501f19e3b96491969131b132a4`。
+同一安装身份的 Play APK 为 2,819,954 bytes／SHA-256
+`fc3b5972c9aa214d41ae3df3227ddb80735456008436437416c1594e862af2d1`，
+Play AAB 为 4,984,827 bytes／SHA-256
+`745faf3df4bf2ec6663d07d0d8a7076d55ca181884773a2cbf22a53da6b2ca23`。
 
-IN2020 已从保留资料的 code3 App 通过真实应用内更新链原位升级到 exact code4，
+[GitHub v1.1.3 Release](https://github.com/ieduer/weibian-android/releases/tag/v1.1.3)
+与 R2 immutable、bare `latest.apk`、pointer-last `latest.json` 已逐 byte
+读回一致。owner 明确豁免本版本实体手机与 App acceptance；这表示允许直接
+发布，不表示实机门已经通过。本轮没有触碰任何手机或资料，LE2120 继续排除。
+landing deployment `52dc0a92-a906-4c67-a909-63da1992bed7` 由 Worker
+`8e4a53a2-a79f-4989-9f6e-287724553386@100%` 承载，立即回退为
+`0b5f49e2-8ee3-4be3-98da-2d93ab0244ae@100%`。
+
+以下 IN2020／LE2120 内容是 v1.1.2 / code4 的历史验收证据：IN2020 已从保留资料
+的 code3 App 通过真实应用内更新链原位升级到 exact code4，
 并通过资料／Session、榜单、反馈、offline/recovery、rotation/multi-window、
 AI／注释、当前版本自检、补充 expanded-layout 与单一 package 核对，设备设置
 已恢复。按 2026-07-30 新单机政策，IN2020 是本 release 的选定门机，
@@ -40,7 +48,9 @@ v1.0.0 是历史上一版；v1.1.1 / code3 只保留为历史 immutable staging/
 都不是当前 Direct 更新指针。
 本次 legacy closeout 依 owner 明确指示，以两台手机已安装的 byte-exact code3
 作为 code4 实体原位升级基线；code3 并未因此成为 public accepted release。
-未来 release 仍必须从当前 public accepted code4 在选定门机原位升级。
+这条 code3→code4 原位升级规则是 v1.1.2 的历史门。当前 public accepted
+baseline 是 code5；未来 release 默认从 code5 重跑发布标准，除非 owner 对该
+次 release 再作明确范围豁免。
 
 ---
 
@@ -158,7 +168,7 @@ weibian.bdfz.net 热更新  ┘             daily_stats / gaokao_attempts
 | [DEPLOYMENT.md](docs/DEPLOYMENT.md) | APK 签名发布、内容 Worker 部署、GitHub Release |
 | [MAINTENANCE_MANUAL.md](docs/MAINTENANCE_MANUAL.md) | 运维手册与故障排查（登录／同步／更新／迁移） |
 | [VERIFICATION_STANDARD.md](docs/VERIFICATION_STANDARD.md) | 八点核查标准（本机强制） |
-| [SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) | v1.1.2／code 4 source freeze 安全审查与剩余 release 门 |
+| [SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) | v1.1.3 发布安全补充与 v1.1.2／code 4 source-freeze 历史审查 |
 | [IDENTITY_ADR.md](docs/IDENTITY_ADR.md) | Direct 渠道身份流程决策 |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献流程与代码约定 |
 | [art/README.md](art/README.md) | 美术资产体系与授权 |
@@ -185,7 +195,9 @@ weibian.bdfz.net 热更新  ┘             daily_stats / gaokao_attempts
 2. **上游语料缺注**：雍也 6.7、6.26 两章正文有注释标记但上游 `dialogues.json` 缺对应注释条目。
    这两处标记按纯文本渲染，不给点了没反应的目标。
 3. **真题覆盖**：北京卷设《论语》大题的年份只有 6 年（其余年份考《红楼梦》），已全部收录，不是遗漏。
-4. **验收范围**：LE2120 与 IN2020 的 historical code3 baseline 都曾完成真实
+4. **验收范围**：v1.1.3 的实体安装、原位升级、资料／Session、反馈、更新、
+   layout 与 scoped-log 门由 owner 明确豁免，未执行；不得沿用下列 code4 证据
+   声称 code5 已通过。LE2120 与 IN2020 的 historical code3 baseline 都曾完成真实
    A→B delta、故意拒绝 delta 后整包回落、重启 readback 与稳定 A 恢复。
    本轮两机都从 code3 通过 App updater 原位升级到 byte-identical exact code4。
    这些双机结果是超过现行单机最低门的历史补充。当前选定门机 IN2020
@@ -202,15 +214,15 @@ weibian.bdfz.net 热更新  ┘             daily_stats / gaokao_attempts
    active byte 0 从 123 改为 122；code4 冷启 353 ms 后 previous 已恢复为
    active 原 SHA，previous/staged/failed 全部消失，512 章 UI 与 scoped
    fatal/ANR 均通过。user 10、helper、设备暂存与所有本机签名测试产物已删除。
-5. **发布边界**：v1.1.2 Direct immutable APK、同目录 `release.json`、
+5. **发布边界**：v1.1.3 Direct immutable APK、同目录 `release.json`、
    `latest.apk` 和 `latest.json` 已上线并逐字节读回，pointer 最后移动；当前
    immutable URL 是
-   `https://img.bdfz.net/apps/weibian-android/releases/v1.1.2/956810c9/weibian-1.1.2.apk`。
-   GitHub v1.1.2 Release 的 APK 与 `release.json` digest 均一致；landing
-   source commit `4829b5b…` 的 CI 已绿，Worker `1ce95b1a…` 已在 deployment
-   `3f5d9c74…` 承载 100% 普通流量并通过 health/content/rankings、Pulse 与
-   桌面／390 px 真实浏览器读回。当前 Direct lifecycle 为
-   `production-supported`；v1.0.0 与 v1.1.1 只属历史证据。
+   `https://img.bdfz.net/apps/weibian-android/releases/v1.1.3/9a1d67ef/weibian-1.1.3.apk`。
+   GitHub v1.1.3 Release 的 APK 与 `release.json` digest 均一致；landing
+   source commit `88a7abb…` 由 Worker `8e4a53a2…` 在 deployment
+   `52dc0a92…` 承载 100% 普通流量并通过 health 与 caller readback。当前
+   Direct lifecycle 为 `production-supported`；v1.1.2 及更早版本只属历史
+   release／rollback 证据。
 6. **公开入口**：canonical portal 是 `https://i.rdfzer.com`，当前返回 200；
    `allinone.bdfz.net` 与 `portal.bdfz.net` 是非 canonical 别名，当前 522 不作为
    本 App 的发布入口。Companion disposition 为 `not-applicable`，不得新增

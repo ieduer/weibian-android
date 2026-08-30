@@ -1,4 +1,26 @@
-# Security review — v1.1.2 / code 4 source freeze
+# Security review — v1.1.3 release addendum and v1.1.2 source freeze
+
+## 2026-08-30 v1.1.3 release addendum
+
+v1.1.3 / code5 preserves canonical package `net.bdfz.weibian.direct`, the
+existing signing certificate, the same-origin Worker AI proxy, and the
+server-held verified caller identity. It adds no direct APIS credential or new
+Cloudflare binding/capability. The accepted Direct APK is 2,819,955 bytes,
+SHA-256 `9a1d67ef5ce0f43c9a8ed423c72c30cc8742f21123ebdca5399c5dd671ea2933`;
+GitHub Release, immutable R2, `latest.apk` and pointer-last metadata were read
+back byte-identical. Worker deployment `52dc0a92-a906-4c67-a909-63da1992bed7`
+runs version `8e4a53a2-a79f-4989-9f6e-287724553386@100%`, with
+`0b5f49e2-8ee3-4be3-98da-2d93ab0244ae` as immediate rollback.
+
+The owner explicitly waived the remaining physical-device and App acceptance
+tests. No phone, installed package, owner data or device setting was touched;
+LE2120 remained excluded. This addendum therefore makes no code4→code5
+in-place-upgrade, data/session/outbox, recovery, layout, update-state or scoped
+log claim. The v1.1.2 findings below remain historical evidence only.
+
+---
+
+# Historical security review — v1.1.2 / code 4 source freeze
 
 Date: 2026-07-29; production closeout verified 2026-07-30
 Scope: Android Direct client, `weibian-content` Worker, D1 rankings, content and
