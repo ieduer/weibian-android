@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import worker from '../src/index.js';
 
-test('production landing download points to the immutable v1.1.2 APK', async () => {
+test('production landing download points to the immutable v1.1.3 APK', async () => {
   const response = await worker.fetch(
     new Request('https://weibian.bdfz.net/'),
     {
@@ -20,6 +20,6 @@ test('production landing download points to the immutable v1.1.2 APK', async () 
 
   assert.equal(
     downloadHref,
-    'https://img.bdfz.net/apps/weibian-android/releases/v1.1.2/956810c9/weibian-1.1.2.apk',
+    'https://img.bdfz.net/apps/weibian-android/releases/v1.1.3/9a1d67ef/weibian-1.1.3.apk',
   );
 });
