@@ -1,6 +1,33 @@
 # Project state
 
-Last updated: 2026-08-29 PDT
+Last updated: 2026-08-30 PDT
+
+## 2026-08-30 v1.1.3 maintenance-release attempt
+
+The public Direct release remains v1.1.2 / versionCode 4. A fresh clean build
+from exact `main` `4a9c6ed97ab4a40db3629a6f913515ad61c72b3f` produced a signed
+v1.1.3 / versionCode 5 Direct candidate and passed both-channel unit tests,
+lint, release assembly, the release metadata guard, package/signer continuity,
+and the current read-only Worker, User Center, Pulse, R2 and GitHub baselines.
+The Direct candidate was 2,819,956 bytes with SHA-256
+`80a8f38570883f2ca0a64d96684ca7c08491cd2680849f2f30fed3f2c1aa7c17`.
+This candidate was never uploaded or published and is not a retained release
+authority.
+
+The mandatory selected-phone gate could not start: ADB enumerated no attached
+or registered device, and the historical IN2020 wireless endpoint was no
+longer routable. No App was installed, no device or device setting was changed,
+and LE2120 was not contacted. Therefore no v1.1.2-to-v1.1.3 in-place upgrade,
+canonical identity lifecycle, feedback/update/data/outbox persistence,
+expanded-layout, scoped-log or baseline-restoration claim is made.
+
+Publication failed closed before any immutable v1.1.3 object, GitHub Release,
+mutable APK alias or `latest.json` pointer was changed. The landing and public
+update surfaces continue to resolve to accepted v1.1.2. The next release task
+must reconnect and identify IN2020 by hardware serial `6393cccf`, rebuild and
+re-run every non-device and physical gate, and move `latest.json` last. The
+bounded legacy AI lane still expires at `2026-11-26T13:04:40Z`; it must not be
+extended by default.
 
 ## 2026-08-28 APIS caller-auth migration
 

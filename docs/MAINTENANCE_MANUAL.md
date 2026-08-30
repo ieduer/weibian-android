@@ -1,5 +1,22 @@
 # 韦编 · 论语译注 Android 运维手册
 
+## 2026-08-30 v1.1.3 发布阻断
+
+本轮从 `main` `4a9c6ed97ab4a40db3629a6f913515ad61c72b3f` clean build 的
+v1.1.3 / code 5 签名候选通过双渠道 unit/lint/release build、包名、签名连续性、
+release metadata guard，以及 Worker、User Center、Pulse、R2、GitHub 的只读基线。
+Direct 候选为 2,819,956 bytes，SHA-256
+`80a8f38570883f2ca0a64d96684ca7c08491cd2680849f2f30fed3f2c1aa7c17`；它没有
+上传、发布或保留为 release authority。
+
+选定门机 IN2020 未出现在 ADB，历史无线端点也不可路由，因此没有安装 App、
+没有改变任何手机设置、没有触碰 LE2120，也没有形成 code4→code5 原位升级、
+canonical 身份、反馈／更新／资料／outbox、expanded-layout、scoped logs 或设置
+恢复证据。发布依 pointer-last fail closed：公开 v1.1.2、GitHub Release、R2
+immutable／alias、landing 和 `latest.json` 均未改变。下一轮须先以 hardware
+serial `6393cccf` 重新识别 IN2020，再重新 build 并完整重跑所有门；不得把本轮
+非装置结果或临时候选当成实机／发布验收。
+
 Status: `production-supported`
 Current Direct R2 release: v1.1.2 / versionCode 4
 Historical evidence: v1.0.0 / code 1 public；v1.1.1 / code 3 immutable staging
