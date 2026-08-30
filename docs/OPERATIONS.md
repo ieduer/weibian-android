@@ -4,31 +4,35 @@ Last normalized: 2026-08-30 PDT
 Owner: suen
 Lifecycle: production-supported App and content Worker; inactive event-v2 source candidate remains separate
 Data class: student_owned; see `docs/MAINTENANCE_MANUAL.md` for the reviewed boundaries
-Documentation status: current APIS caller route, Worker deployment and rollback were read back live; the 2026-08-30 App v1.1.3 attempt passed non-device gates but failed closed before publication because selected IN2020 was unavailable.
+Documentation status: v1.1.3 public artifacts, update pointers, landing, Worker deployment and rollback were read back live; physical-device acceptance was explicitly waived by the owner and remains unverified.
 
 ## Quick start
 
 - Canonical local path: `/Users/ylsuen/CF/apps/lunyu-yizhu-android`
 - Git authority: `ieduer/weibian-android`
-- Current Git branch/HEAD at the blocked release attempt: `main` / `4a9c6ed97ab4a40db3629a6f913515ad61c72b3f`
+- Functional release branch/HEAD: `main` / `88a7abbb7d47bd16951e0c73d011c6a391270fe2`; APK-embedded release revision and tag target: `abb140e23fa3eae5b532d03f86389e8d4992e2fd`
 - Runtime config: `worker/wrangler.toml`; Worker `weibian-content`; custom domain `weibian.bdfz.net`
 - Current state: [PROJECT_STATE.md](../PROJECT_STATE.md)
 - Workspace resource routing: [project resource index](../../reports/operations/project_resource_index.md)
 - Documentation standard: [project operations standard](../../runbooks/project_operations_documentation_standard.md)
-- Production mutation still requires fresh target, binding, verification and rollback readback; the values below record the B5-3 release, not standing authorization for a later deploy.
+- Production mutation still requires fresh target, binding, verification and rollback readback; the values below record the v1.1.3 release, not standing authorization for a later deploy.
 
-## Current Direct release gate
+## Current Direct release
 
-- Public authority remains v1.1.2 / versionCode 4; `latest.apk` and
-  `latest.json` were not changed on 2026-08-30.
-- A fresh signed v1.1.3 / versionCode 5 candidate passed local non-device
-  gates, but no candidate artifact was retained or published.
-- ADB returned an empty device list and the historical IN2020 wireless endpoint
-  was not routable. No phone, package, owner data or setting was mutated;
-  LE2120 remains explicitly out of scope.
-- Reconnect IN2020 and verify hardware serial `6393cccf` before any install.
-  Complete the full selected-phone matrix and only then publish immutable
-  objects, mutable APK alias and finally `latest.json`.
+- Public authority is v1.1.3 / versionCode 5. The Direct APK is 2,819,955
+  bytes, SHA-256 `9a1d67ef5ce0f43c9a8ed423c72c30cc8742f21123ebdca5399c5dd671ea2933`,
+  and uses the existing signer certificate SHA-256 `a40f3956…41282`.
+- Immutable APK:
+  `https://img.bdfz.net/apps/weibian-android/releases/v1.1.3/9a1d67ef/weibian-1.1.3.apk`.
+  GitHub Release `v1.1.3`, R2 immutable bytes, bare `latest.apk`, and
+  pointer-last `latest.json` were read back byte-identical.
+- The owner explicitly waived physical-device and App acceptance. This is a
+  release authorization and scope decision, not evidence that those gates
+  passed. No phone, package, owner data or setting was changed; LE2120 remained
+  out of scope.
+- `CAPABILITY_FIT=no-new-capability`: this release reused the existing Worker,
+  Static Assets, D1, R2 and Service Bindings. No runtime, binding, lifecycle,
+  compatibility date or shared-hub contract was added or changed.
 
 ## Existing project documentation relationship
 
@@ -48,7 +52,7 @@ Live Cloudflare matching is metadata-only and does not prove application health:
 
 | Resource | Live type | Readback | Detail |
 | --- | --- | --- | --- |
-| `weibian-content` | Worker + Static Assets | live | version `0b5f49e2-8ee3-4be3-98da-2d93ab0244ae` at 100%; deployment `301a8dcb-1f9a-4c67-b9ea-61d049f68441` |
+| `weibian-content` | Worker + Static Assets | live | version `8e4a53a2-a79f-4989-9f6e-287724553386` at 100%; deployment `52dc0a92-a906-4c67-a909-63da1992bed7` |
 
 ## Authority and dependencies
 
@@ -64,7 +68,7 @@ Live Cloudflare matching is metadata-only and does not prove application health:
 ## Resource location and restore
 
 - Source authority: `/Users/ylsuen/CF/apps/lunyu-yizhu-android`; Git/GitHub authority above.
-- App release, content bundle, R2 and restore authorities remain in `docs/MAINTENANCE_MANUAL.md`. This B5-3 task created no archive, backup, source data or release payload and authorizes no deletion.
+- App release, content bundle, R2 and restore authorities remain in `docs/MAINTENANCE_MANUAL.md`. This release created immutable public artifacts but no local archive or backup; build outputs and task staging are reproducible derivatives and are removed at closeout.
 
 Catalog backup evidence:
 - Immutable Worker versions and immutable R2 content objects are separate rollback authorities; D1/data rollback is not implied by Worker rollback.
@@ -111,8 +115,12 @@ Catalog deploy commands (not authorization; fresh preflight remains mandatory):
 - From `worker/`, upload an immutable version and use Wrangler version deployments for 0% / 1% / 5% / 100% with exact readback at every step.
 
 Rollback/failback authorities:
-- Immediate Worker predecessor: `9060729e-fdae-402c-843f-c04971e274a3`; restore it at 100% without clearing D1, changing R2, altering APIS, or extending the legacy lane.
-- Current production: deployment `301a8dcb-1f9a-4c67-b9ea-61d049f68441`, version `0b5f49e2-8ee3-4be3-98da-2d93ab0244ae` at 100%.
+- Immediate Worker predecessor: `0b5f49e2-8ee3-4be3-98da-2d93ab0244ae`; restore it at 100% without clearing D1, altering APIS/User Center, or extending the legacy lane.
+- Current production: deployment `52dc0a92-a906-4c67-a909-63da1992bed7`, version `8e4a53a2-a79f-4989-9f6e-287724553386` at 100%.
+- App pointer rollback is independent: restore the retained exact v1.1.2 APK to
+  `latest.apk`, purge only that URL and prove its public hash, then restore the
+  retained v1.1.2 `latest.json`, purge only that URL and prove it. Do not delete
+  immutable v1.1.3 objects or the GitHub Release.
 
 For data-backed projects, immutable code rollback does not restore D1/KV/R2/DO/Queue state. Use backup/restore or backward-compatible forward-fix procedures verified for the exact resource.
 
@@ -132,7 +140,12 @@ For data-backed projects, immutable code rollback does not restore D1/KV/R2/DO/Q
 5. Dependency regression: matrix fan-out, shared hubs, clone family, App/VPS as applicable.
 6. Backup/restore: catalog evidence above; missing exact evidence is blocking for writes/deletion.
 7. Rollback/failback: catalog authority above, refreshed live before release.
-8. Last verified: 2026-08-29 PDT. PR #3 hosted Verify succeeded; local Worker tests were 30/30 and the full Direct/Play unit, lint and assembly gate passed. The caller route returned verified JSON at 0%, 1%, 5% and 100%; final fleet table was 25/27. Physical App installation and the public `latest.apk` switch remain suen-owned before `2026-11-26T13:04:40Z`.
+8. Last verified: 2026-08-30 PDT. The signed v1.1.3 artifact passed package,
+   signer, metadata and byte-integrity gates; GitHub/R2/alias/pointer readbacks
+   matched. Landing PR #6 was deployed through 0% / 1% / 5% / 100%; production
+   health and verified caller identity passed. Physical-device acceptance was
+   owner-waived and is not claimed. The bounded old-client lane still expires
+   at `2026-11-26T13:04:40Z`.
 
 ## Synchronized documentation and handoff
 

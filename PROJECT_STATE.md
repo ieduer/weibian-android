@@ -2,7 +2,42 @@
 
 Last updated: 2026-08-30 PDT
 
-## 2026-08-30 v1.1.3 maintenance-release attempt
+## 2026-08-30 v1.1.3 owner-waived production release
+
+The public Direct release is now v1.1.3 / versionCode 5. The owner explicitly
+waived the remaining physical-device and App acceptance gates and instructed a
+direct release; those gates are **waived and unverified**, not passed. No phone,
+installed App, owner data or device setting was touched, and LE2120 remained out
+of scope.
+
+The accepted Direct APK is 2,819,955 bytes with SHA-256
+`9a1d67ef5ce0f43c9a8ed423c72c30cc8742f21123ebdca5399c5dd671ea2933`.
+It is package `net.bdfz.weibian.direct`, v1/v2 signed by the existing certificate
+SHA-256 `a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282`,
+and embeds Git revision `abb140e23fa3eae5b532d03f86389e8d4992e2fd`.
+Git tag and GitHub Release `v1.1.3` target that revision. R2 and GitHub serve
+byte-identical APK and 528-byte `release.json` objects; the metadata SHA-256 is
+`530ca9603627e529d9e70187cf1a14794012f759fa0e7679fbf847f62719f348`.
+
+R2 immutable authority is
+`https://img.bdfz.net/apps/weibian-android/releases/v1.1.3/9a1d67ef/weibian-1.1.3.apk`.
+After exact-URL edge-cache purges, the bare `latest.apk` was read back with the
+same bytes and `latest.json` was moved last and read back pointing to that
+immutable URL. The landing-only source change was merged in PR #6; functional
+main `88a7abbb7d47bd16951e0c73d011c6a391270fe2` is deployed as Worker version
+`8e4a53a2-a79f-4989-9f6e-287724553386` in deployment
+`52dc0a92-a906-4c67-a909-63da1992bed7` at 100%. Immediate Worker rollback is
+`0b5f49e2-8ee3-4be3-98da-2d93ab0244ae`; mutable App rollback is the retained
+v1.1.2 APK and metadata, restored APK-first with exact purge/readback and JSON
+last. Immutable v1.1.3 objects and the GitHub Release are not deleted on
+rollback.
+
+Live release readback returned the exact immutable v1.1.3 landing href,
+`/api/health` with 512 chapters and 1,045 annotations, and verified APIS caller
+identity `weibian`. Installed v1.1.2 clients remain supported by the bounded
+legacy AI lane only until `2026-11-26T13:04:40Z`; the lane was not extended.
+
+## 2026-08-30 v1.1.3 maintenance-release attempt (superseded history)
 
 The public Direct release remains v1.1.2 / versionCode 4. A fresh clean build
 from exact `main` `4a9c6ed97ab4a40db3629a6f913515ad61c72b3f` produced a signed

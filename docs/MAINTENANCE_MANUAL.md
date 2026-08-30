@@ -1,6 +1,32 @@
 # 韦编 · 论语译注 Android 运维手册
 
-## 2026-08-30 v1.1.3 发布阻断
+## 2026-08-30 v1.1.3 owner-waived 正式发布
+
+owner 明确指示不再执行实体装置测试并直接发布。v1.1.3 / code 5 已成为
+Direct public authority；此授权只豁免实机／App acceptance，不得表述为这些门
+已经通过。本轮没有连接、安装或修改任何手机，LE2120 继续排除。
+
+- tag/source：`v1.1.3` → `abb140e23fa3eae5b532d03f86389e8d4992e2fd`
+- Direct APK：2,819,955 bytes；SHA-256
+  `9a1d67ef5ce0f43c9a8ed423c72c30cc8742f21123ebdca5399c5dd671ea2933`
+- package/signer：`net.bdfz.weibian.direct`；certificate SHA-256
+  `a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282`
+- immutable：
+  `https://img.bdfz.net/apps/weibian-android/releases/v1.1.3/9a1d67ef/weibian-1.1.3.apk`
+- `release.json`：528 bytes；SHA-256
+  `530ca9603627e529d9e70187cf1a14794012f759fa0e7679fbf847f62719f348`
+- GitHub Release、R2 immutable、bare `latest.apk` 和 pointer-last
+  `latest.json` 均已按 bytes/hash/size 读回；两个 mutable URL 只做精确 URL
+  cache purge。
+- landing Worker：deployment `52dc0a92-a906-4c67-a909-63da1992bed7`，version
+  `8e4a53a2-a79f-4989-9f6e-287724553386@100%`；立即回退
+  `0b5f49e2-8ee3-4be3-98da-2d93ab0244ae@100%`。
+
+App pointer 回退必须先恢复 v1.1.2 `latest.apk`、精确 purge 并公开读回，再恢复
+v1.1.2 `latest.json`、精确 purge 并公开读回；immutable v1.1.3 与 GitHub
+Release 保留作审计证据。
+
+## 2026-08-30 v1.1.3 发布阻断（已由 owner 后续授权 supersede）
 
 本轮从 `main` `4a9c6ed97ab4a40db3629a6f913515ad61c72b3f` clean build 的
 v1.1.3 / code 5 签名候选通过双渠道 unit/lint/release build、包名、签名连续性、
@@ -18,15 +44,15 @@ serial `6393cccf` 重新识别 IN2020，再重新 build 并完整重跑所有门
 非装置结果或临时候选当成实机／发布验收。
 
 Status: `production-supported`
-Current Direct R2 release: v1.1.2 / versionCode 4
+Current Direct R2 release: v1.1.3 / versionCode 5
 Historical evidence: v1.0.0 / code 1 public；v1.1.1 / code 3 immutable staging
-Verified release checkpoint: `e65dc572af19ed99cf520d52aa01de72508680a9`
-CI: GitHub Actions run `30516534134`, success
-Last production-supported closeout verification: 2026-07-30
+Verified release checkpoint: `abb140e23fa3eae5b532d03f86389e8d4992e2fd`
+CI: v1.1.3 physical acceptance explicitly waived; existing source-scope jobs remain non-authoritative for this release
+Last production-supported closeout verification: 2026-08-30
 Source: `/Users/ylsuen/CF/lunyu-yizhu-android`
 
-这是本项目开发、发布、值守、故障处理和交接的项目级事实入口。
-IN2020 已完成 final code4
+这是本项目开发、发布、值守、故障处理和交接的项目级事实入口。以下到本节
+结束是 v1.1.2/code4 的历史实机 closeout，不是 v1.1.3 实体验收：IN2020 已完成 final code4
 updater 与资料／Session、榜单、反馈、offline/recovery、rotation/multi-window、
 AI／注释、current-update、single-package 与 sw753dp／200% font
 expanded-layout，设备设置已恢复。按 2026-07-30 新单机政策，IN2020 是
@@ -37,13 +63,14 @@ clean-profile，并用本机 env canonical 账号完成登录／同步／登出�
 另一个 disposable user 的 active 内容只损坏 byte 0 后，exact code4 冷启
 已把 previous 恢复为原 SHA，UI 与 scoped logs 通过。两次临时 user、测试
 package、设备暂存、credential-bearing 文件和正式签名测试产物均已移除。
-GitHub v1.1.2 与 R2 bytes 一致；production deployment `3f5d9c74…`
+GitHub v1.1.2 与 R2 bytes 一致；当时 production deployment `3f5d9c74…`
 现由 `1ce95b1a…@100%` 承载 v1.1.2 landing，`e16da332…` 是 exact rollback。
 当前 Direct lifecycle 为 `production-supported`。
 
 本次 legacy closeout 由 owner 明确指定已安装的 byte-exact code3 作为 code4
-实体原位升级基线；code3 从未因此成为 public accepted release。未来 release
-必须从当前 public accepted code4 在选定门机原位升级。另保留历史治理顺序
+实体原位升级基线；code3 从未因此成为 public accepted release。该规则是
+code4 当时的发布门；当前 baseline 已是 code5，未来 release 默认从 code5
+重跑发布标准，除非 owner 对该次 release 另作明确范围豁免。另保留历史治理顺序
 偏差：v1.1.2 mutable pointer／GitHub Release 早于当时全部实体门关闭，
 landing/lifecycle 直到 2026-07-30 全部硬门通过后才提升；未来不得照此顺序
 先移动 pointer。
@@ -69,13 +96,13 @@ landing/lifecycle 直到 2026-07-30 全部硬门通过后才提升；未来不�
 
 允许的当前表述：
 
-- “v1.1.2 / code 4 Direct R2 release 已按 pointer-last 上线”
-- “v1.0.0 是历史上一版；v1.1.1 / code 3 是 superseded immutable staging”
+- “v1.1.3 / code 5 Direct R2 release 已按 pointer-last 上线”
+- “v1.1.2 及更早版本是历史 release／rollback 证据”
 - “Direct/Play 共用 `net.bdfz.weibian.direct` 与同一 signing lineage”
 - “Worker 排行榜、内容不可变路由和差量契约已上线”
-- “GitHub v1.1.2 Release 与 R2 bytes 一致；production landing 新版已 100%”
-- “IN2020 是选定门机，已通过 final code4 已记录的原位升级验收子集与
-  同机平板效果；LE2120 只有历史部分证据且不再是必要门”
+- “GitHub v1.1.3 Release、R2、bare alias 與 pointer bytes 一致；production landing 已 100%”
+- “v1.1.3 的 physical-device／App acceptance 由 owner 豁免且未验证；
+  IN2020／LE2120 只保留 v1.1.2 的历史证据”
 - “IN2020 的 disposable-user clean-profile 与本机 env canonical
   登录／同步／登出／重启读回已通过；User Center 无 token denylist，
   此证据不称为 server-side revoke”
@@ -84,6 +111,7 @@ landing/lifecycle 直到 2026-07-30 全部硬门通过后才提升；未来不�
 - “Companion disposition 是 `not-applicable`，没有 Weibian WebView”
 - “physical active-corrupt → previous 已在 IN2020 disposable user 通过并清理”
 - “当前 Direct lifecycle 为 `production-supported`”
+- “legacy old-client AI lane 仍在原期限结束，没有因发布延长”
 
 禁止的当前表述：
 
@@ -93,6 +121,7 @@ landing/lifecycle 直到 2026-07-30 全部硬门通过后才提升；未来不�
 - “差异内容版本已完成线上导入与回滚”
 - “v1.0.0 或 v1.1.1 仍是 current Direct pointer”
 - “全部应用内自更新状态已验证”
+- “v1.1.3 实机门已通过”
 
 ## 1. App identity record
 
@@ -108,16 +137,16 @@ landing/lifecycle 直到 2026-07-30 全部硬门通过后才提升；未来不�
 | Kotlin namespace | `net.bdfz.weibian`（不是安装身份） |
 | Direct package | `net.bdfz.weibian.direct` |
 | Play package | `net.bdfz.weibian.direct`（与 Direct 同一安装身份／签名 lineage） |
-| Direct update | enabled；v1.1.2/code4 `latest.json` 已 pointer-last 上线；选定门机 IN2020 的 updater、current-state、clean-profile 与 active-corrupt → previous 均完成 |
+| Direct update | enabled；v1.1.3/code5 `latest.json` 已 pointer-last 上线；本 release 的实体 updater／current-state 验收由 owner 明确豁免，未执行 |
 | Play update | disabled；商店流程未验收 |
 | public host | `weibian.bdfz.net` |
 | Worker | `weibian-content` |
 | APK R2 prefix | `blog-images` / `apps/weibian-android/` |
 | content R2 prefix | `blog-images` / `apps/weibian-content/` |
 | update manifest | `https://img.bdfz.net/apps/weibian-android/latest.json` |
-| immutable APK | `https://img.bdfz.net/apps/weibian-android/releases/v1.1.2/956810c9/weibian-1.1.2.apk` |
-| Direct APK SHA-256 / size | `956810c903005680ba2e77a2c71964956cd2beac428e840862fc0a33724e15c3` / 2,819,959 bytes |
-| Play APK SHA-256 / size | `7bf92fcfc4fab561aee5f2e95a4ad80d67b9c7161778a667b8f7b33cc9427f7f` / 2,819,963 bytes |
+| immutable APK | `https://img.bdfz.net/apps/weibian-android/releases/v1.1.3/9a1d67ef/weibian-1.1.3.apk` |
+| Direct APK SHA-256 / size | `9a1d67ef5ce0f43c9a8ed423c72c30cc8742f21123ebdca5399c5dd671ea2933` / 2,819,955 bytes |
+| Play APK SHA-256 / size | `fc3b5972c9aa214d41ae3df3227ddb80735456008436437416c1594e862af2d1` / 2,819,954 bytes |
 | Play AAB SHA-256 / size | `6a37903152ede8c5a9b4f9d547af99454cb75d501f19e3b96491969131b132a4` / 4,988,101 bytes |
 | signer certificate SHA-256 | `a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282` |
 | historical candidate source | v1.1.1 / code 3 release checkpoint `e623e370…59e20471` |

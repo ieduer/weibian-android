@@ -8,6 +8,21 @@
 `docs/MAINTENANCE_MANUAL.md`；任何后续 release 必须重新执行本文件，不能
 沿用本次收据自动提升。
 
+**2026-08-30 v1.1.3 / code 5 当前发布证据：**
+
+| 项 | 证据 |
+|---|---|
+| owner gate | owner 明确指示不再测试、直接发布；physical-device／App acceptance 是 `waived_unverified`，不是通过 |
+| source / tag | `v1.1.3` → `abb140e23fa3eae5b532d03f86389e8d4992e2fd`；landing PR #6 functional main `88a7abbb7d47bd16951e0c73d011c6a391270fe2` |
+| Direct APK | 2,819,955 bytes；SHA-256 `9a1d67ef5ce0f43c9a8ed423c72c30cc8742f21123ebdca5399c5dd671ea2933`；package `.direct`；v1/v2 signer continuity `a40f3956…41282` |
+| GitHub / R2 | GitHub Release、immutable R2、bare `latest.apk` bytes 一致；528-byte `release.json` SHA-256 `530ca960…f348`；`latest.json` pointer-last 且 exact-URL purge/readback 完成 |
+| immutable URL | `https://img.bdfz.net/apps/weibian-android/releases/v1.1.3/9a1d67ef/weibian-1.1.3.apk` |
+| Worker | deployment `52dc0a92-a906-4c67-a909-63da1992bed7`，version `8e4a53a2-a79f-4989-9f6e-287724553386@100%`；rollback `0b5f49e2-8ee3-4be3-98da-2d93ab0244ae`；root、health、caller identity live readback 通过 |
+| rollback | App 恢复 v1.1.2 APK-first → exact purge/readback → v1.1.2 JSON-last；Worker 单独恢复 predecessor；不删除 immutable v1.1.3/GitHub Release |
+
+下方 v1.1.2/code4 表格保留为历史 device/recovery evidence，不可冒充
+v1.1.3 的实体验收。
+
 ---
 
 ## 1. 事实来源（Source of Truth）
@@ -225,7 +240,7 @@ release，没有可供已安装客户端降级的更早 production APK。
 | signing authority | 唯一 authority 为 `/Users/ylsuen/.android/weibian-release.env`；final `de47da19…8da67` 以 `set -e`、`--no-daemon` 构建，unsigned 输出被拒收 |
 | portal / Companion | canonical portal `i.rdfzer.com` 200；两个 bdfz alias 522 为非 canonical；Companion disposition `not-applicable`、无 Weibian WebView |
 
-**2026-07-30 v1.1.2 / code 4 当前发布证据：**
+**2026-07-30 v1.1.2 / code 4 历史发布证据：**
 
 | 项 | 证据 |
 |---|---|
@@ -234,7 +249,7 @@ release，没有可供已安装客户端降级的更早 production APK。
 | Play artifacts | APK 2,819,963 bytes／SHA-256 `7bf92fcfc4fab561aee5f2e95a4ad80d67b9c7161778a667b8f7b33cc9427f7f`；AAB 4,988,101 bytes／SHA-256 `6a37903152ede8c5a9b4f9d547af99454cb75d501f19e3b96491969131b132a4`；与 Direct 共用 canonical package/signing lineage |
 | R2 release | `…/v1.1.2/956810c9/weibian-1.1.2.apk` 与同目录 `release.json` 已 immutable 上线并公开精确读回；固定 `latest.apk` 为同一 2,819,959 bytes、SHA-256 `956810c9…e15c3`，`latest.json` 最后移动且 `apkUrl` 保持 immutable |
 | GitHub Release | [v1.1.2](https://github.com/ieduer/weibian-android/releases/tag/v1.1.2) target `e65dc572…`；APK 2,819,959 bytes / SHA-256 `956810c9…e15c3`；`release.json` 741 bytes / SHA-256 `0c8e317d…0b67e` |
-| IN2020 code4 | 当前选定门机；依 owner 对本次 legacy closeout 的明确指示，以已安装 byte-exact code3 作为实体验收基线，经真实 App updater 原位升级；code3 不因此成为 public accepted release，未来 release 必须从当前 public accepted code4 升级；资料／Session、榜单、反馈、offline/recovery、Back、rotation/multi-window、AI／注释、current-update、single-package 均通过；sw753dp／200% font expanded-layout 通过且设备基线恢复 |
+| IN2020 code4 | 当时选定门机；依 owner 对该次 legacy closeout 的明确指示，以已安装 byte-exact code3 作为实体验收基线，经真实 App updater 原位升级；code3 不因此成为 public accepted release；资料／Session、榜单、反馈、offline/recovery、Back、rotation/multi-window、AI／注释、current-update、single-package 均通过；sw753dp／200% font expanded-layout 通过且设备基线恢复。这些结果不可代替 v1.1.3 实机验收 |
 | LE2120 code4 | 历史补充证据；真实 App updater 原位升级到同一 APK，登录、榜单与反馈通过后 owner 叫停；临时 Wi-Fi proxy 是否恢复为 None 未确认，未经重新授权不得触碰，但它不再是本 release 的必要门 |
 | User Center | v242 `ec273922-1ec4-442b-8c84-9a5e2f7fcdf5` current；v240 `96b9db71-a595-4ae3-a557-288b49bffd2f` exact rollback |
 | Worker / landing | deployment `3f5d9c74…` 由 v1.1.2 `1ce95b1a…@100%` 承载；ordinary exact API、invalid-session 401、content/ranking、Pulse、immutable APK 与桌面／390 px 真实浏览器通过；rollback `e16da332…` |

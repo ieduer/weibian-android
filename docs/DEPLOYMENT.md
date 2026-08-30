@@ -114,30 +114,31 @@ v1/v2 签名验证、signer continuity 不符或不是上述 authority 生成的
 Direct 与 Play 都必须解析为 canonical package `net.bdfz.weibian.direct`，
 并由同一 app-signing lineage 签名；渠道只分离更新传输，不得形成两个安装项。
 
-当前 Direct R2 release 是 v1.1.2 / versionCode 4：
+当前 Direct R2 release 是 v1.1.3 / versionCode 5：
 
-- clean source：
-  `e65dc572af19ed99cf520d52aa01de72508680a9`
-- CI：[run 30516534134](https://github.com/ieduer/weibian-android/actions/runs/30516534134)
-  （success）
-- Direct APK：2,819,959 bytes；SHA-256
-  `956810c903005680ba2e77a2c71964956cd2beac428e840862fc0a33724e15c3`
-- Play APK：2,819,963 bytes；SHA-256
-  `7bf92fcfc4fab561aee5f2e95a4ad80d67b9c7161778a667b8f7b33cc9427f7f`
-- Play AAB：4,988,101 bytes；SHA-256
-  `6a37903152ede8c5a9b4f9d547af99454cb75d501f19e3b96491969131b132a4`
+- clean source/tag target：
+  `abb140e23fa3eae5b532d03f86389e8d4992e2fd`
+- Direct APK：2,819,955 bytes；SHA-256
+  `9a1d67ef5ce0f43c9a8ed423c72c30cc8742f21123ebdca5399c5dd671ea2933`
+- Play APK：2,819,954 bytes；SHA-256
+  `fc3b5972c9aa214d41ae3df3227ddb80735456008436437416c1594e862af2d1`
+- Play AAB：4,984,827 bytes；SHA-256
+  `745faf3df4bf2ec6663d07d0d8a7076d55ca181884773a2cbf22a53da6b2ca23`
 - signer certificate SHA-256：
   `a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282`
 - immutable Direct APK：
-  `https://img.bdfz.net/apps/weibian-android/releases/v1.1.2/956810c9/weibian-1.1.2.apk`
+  `https://img.bdfz.net/apps/weibian-android/releases/v1.1.3/9a1d67ef/weibian-1.1.3.apk`
 - Portal 固定最新版 APK：
   `https://img.bdfz.net/apps/weibian-android/latest.apk`
 
 immutable APK／`release.json`、`latest.apk` 与 `latest.json` 已按 fail-closed
-顺序上线，`latest.apk` 当前为同一 2,819,959 bytes，SHA-256
-`956810c903005680ba2e77a2c71964956cd2beac428e840862fc0a33724e15c3`；
-`latest.json` 最后移动且 `apkUrl` 仍指向上述 immutable APK。两台登记手机
-历史上都经真实 App updater
+顺序上线，`latest.apk` 当前为同一 2,819,955 bytes，SHA-256
+`9a1d67ef5ce0f43c9a8ed423c72c30cc8742f21123ebdca5399c5dd671ea2933`；
+`latest.json` 最后移动且 `apkUrl` 仍指向上述 immutable APK。两个 mutable
+URL 均只做 exact-URL edge purge。owner 明确豁免 v1.1.3 的实体装置与 App
+acceptance；这些门未执行、不得称为通过。本轮没有触碰任何手机或资料。
+
+以下是 v1.1.2 / code4 的历史实机证据：两台登记手机都经真实 App updater
 从 code3 原位升级到 byte-identical exact code4。按 2026-07-30 新单机政策，
 IN2020 是选定门机；它完成已记录的原位升级验收子集与同机平板效果并恢复
 基线。2026-07-30 又以同机一次性 Android 次要使用者完成 data-safe
@@ -151,7 +152,8 @@ lifecycle 为 `production-supported`。
 
 本次是 legacy closeout 的明确例外：owner 指定两台手机已安装的 byte-exact
 code3 作为 code4 实体原位升级基线。它不把 code3 重分类为 public accepted
-release；未来版本必须从当前 public accepted code4 在选定门机原位升级。
+release；v1.1.3 的 owner waiver supersede 了当次必须实机升级的执行要求，
+但没有把未执行的 code4→code5 路径重分类为已验证。
 另需保留治理顺序偏差：v1.1.2 mutable pointer 与 GitHub Release 早于当时
 全部实体门完成，landing/lifecycle 始终保持未提升，直到 2026-07-30 硬门
 关闭后才 promotion。此顺序不得成为未来先移动 pointer 的先例。
@@ -242,10 +244,10 @@ JSON 时，`versionCode` 与 `size` 必须写成正整数，不能带引号：
 sha256 格式非法、size ≤ 0、清单体积超限。这些校验都在
 `update/AppUpdateManager.kt` 里，改契约要两边一起改。
 
-当前公开 `latest.json` 已按 pointer-last 指向 v1.1.2 / versionCode 4，包名
+当前公开 `latest.json` 已按 pointer-last 指向 v1.1.3 / versionCode 5，包名
 为 `net.bdfz.weibian.direct`，并与 immutable Direct APK 的 bytes/hash/size
-逐项读回一致。选定门机 IN2020 的真实 App updater code3 → code4 已通过；
-LE2120 的历史附加证据不再构成必要门，未经重新授权也不得触碰。
+逐项读回一致。owner 豁免本版本实体 updater/App acceptance；未连接装置，
+LE2120 未经重新授权不得触碰。code3→code4 仅属 v1.1.2 历史证据。
 
 正式上传前，必须让仓库内 release guard 同时核对 APK、metadata、签名和
 内容寻址 URL；不能靠人工目测 JSON：
@@ -263,9 +265,9 @@ node scripts/verify_android_release.mjs \
   --apksigner "$WEIBIAN_BUILD_TOOLS/apksigner" \
   --expected-signer a40f3956296d09ca2c6d8c3ec23f4f1d5470cb8ca6a5d4a69a9f19eb39941282 \
   --expected-app-id net.bdfz.weibian.direct \
-  --expected-version 1.1.2 \
-  --expected-version-code 4 \
-  --previous-version-code 3
+  --expected-version 1.1.3 \
+  --expected-version-code 5 \
+  --previous-version-code 4
 ```
 
 guard 任一项非零退出即停止；不得上传 APK、`release.json` 或移动 pointer。
@@ -280,29 +282,30 @@ CI 以 `node --test scripts/test/*.test.mjs` 锁定这条防线。
 - 写明构建与安装方法
 - 写明当前 lifecycle、production Worker、exact rollback 与任何仍开放门
 
-v1.1.2 GitHub Release 已建立：
+v1.1.3 GitHub Release 已建立：
 
-- tag/source：`v1.1.2` →
-  `e65dc572af19ed99cf520d52aa01de72508680a9`
-- APK：2,819,959 bytes；SHA-256
-  `956810c903005680ba2e77a2c71964956cd2beac428e840862fc0a33724e15c3`
-- `release.json`：741 bytes；SHA-256
-  `0c8e317d1941c9b17f06f7d6b899a254b4f1f71da7ad78d05425cadf8330b67e`
+- tag/source：`v1.1.3` →
+  `abb140e23fa3eae5b532d03f86389e8d4992e2fd`
+- APK：2,819,955 bytes；SHA-256
+  `9a1d67ef5ce0f43c9a8ed423c72c30cc8742f21123ebdca5399c5dd671ea2933`
+- `release.json`：528 bytes；SHA-256
+  `530ca9603627e529d9e70187cf1a14794012f759fa0e7679fbf847f62719f348`
 
-landing source commit `4829b5bddf1bf3b18f01f8787f33082a96e5aaf7` 的 CI
-run `30524470369` 已通过。IN2020 clean-profile、canonical 身份闭环和
-physical active-corrupt → previous 已在 2026-07-30 关闭。production
-deployment `3f5d9c74-593a-422b-8cbb-94ec31126b20` 已把
-`1ce95b1a-e05c-4203-b082-324d6758aca5` 提升到 100%，
-`e16da332-cbb5-46fd-82c8-ae7a6d4c69c0` 保留为 exact rollback。普通流量的
-API、invalid-session 401、immutable APK、exact landing link、Pulse 和
-桌面／390 px 真实浏览器均通过。
+landing functional source `88a7abbb7d47bd16951e0c73d011c6a391270fe2` 的
+focused href contract、syntax 和 diff check 通过；production deployment
+`52dc0a92-a906-4c67-a909-63da1992bed7` 已把
+`8e4a53a2-a79f-4989-9f6e-287724553386` 提升到 100%，
+`0b5f49e2-8ee3-4be3-98da-2d93ab0244ae` 保留为 exact rollback。普通流量的
+exact landing link、health 与 verified caller identity 通过。physical App
+acceptance 是 owner-waived/unverified，不能用 v1.1.2 的历史证据代替。
 
 canonical portal 下载入口只使用 `https://i.rdfzer.com`。非 canonical 的
 `allinone.bdfz.net`／`portal.bdfz.net` 522 不得被写成成功发布面。
 
-每个后续 Direct release 必须把 canonical portal 下载项当作同一发布事务的
-硬门，而不是发布后的可选补记：
+canonical portal 的产品项固定指向 `https://weibian.bdfz.net`；App-owned
+landing 再指向 exact immutable APK。每个后续 Direct release 必须验证 portal
+产品链接仍到 landing，并验证 landing 的 immutable href，而不是把 portal 改成
+Direct APK 按钮：
 
 1. 公开回读 immutable APK 的 bytes/hash/size/signer；
 2. 从同一 exact signed artifact 更新
