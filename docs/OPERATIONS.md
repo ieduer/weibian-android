@@ -1,21 +1,34 @@
 # lunyu-yizhu-android operations
 
-Last normalized: 2026-08-29 PDT
+Last normalized: 2026-08-30 PDT
 Owner: suen
 Lifecycle: production-supported App and content Worker; inactive event-v2 source candidate remains separate
 Data class: student_owned; see `docs/MAINTENANCE_MANUAL.md` for the reviewed boundaries
-Documentation status: current APIS caller route, Worker deployment and rollback were read back live; App physical-release acceptance remains a separate owner task.
+Documentation status: current APIS caller route, Worker deployment and rollback were read back live; the 2026-08-30 App v1.1.3 attempt passed non-device gates but failed closed before publication because selected IN2020 was unavailable.
 
 ## Quick start
 
 - Canonical local path: `/Users/ylsuen/CF/apps/lunyu-yizhu-android`
 - Git authority: `ieduer/weibian-android`
-- Current Git branch/HEAD: `main` / `98db37e4658d122b3aa04a09400c239ffa42d3de`
+- Current Git branch/HEAD at the blocked release attempt: `main` / `4a9c6ed97ab4a40db3629a6f913515ad61c72b3f`
 - Runtime config: `worker/wrangler.toml`; Worker `weibian-content`; custom domain `weibian.bdfz.net`
 - Current state: [PROJECT_STATE.md](../PROJECT_STATE.md)
 - Workspace resource routing: [project resource index](../../reports/operations/project_resource_index.md)
 - Documentation standard: [project operations standard](../../runbooks/project_operations_documentation_standard.md)
 - Production mutation still requires fresh target, binding, verification and rollback readback; the values below record the B5-3 release, not standing authorization for a later deploy.
+
+## Current Direct release gate
+
+- Public authority remains v1.1.2 / versionCode 4; `latest.apk` and
+  `latest.json` were not changed on 2026-08-30.
+- A fresh signed v1.1.3 / versionCode 5 candidate passed local non-device
+  gates, but no candidate artifact was retained or published.
+- ADB returned an empty device list and the historical IN2020 wireless endpoint
+  was not routable. No phone, package, owner data or setting was mutated;
+  LE2120 remains explicitly out of scope.
+- Reconnect IN2020 and verify hardware serial `6393cccf` before any install.
+  Complete the full selected-phone matrix and only then publish immutable
+  objects, mutable APK alias and finally `latest.json`.
 
 ## Existing project documentation relationship
 
