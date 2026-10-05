@@ -1,0 +1,193 @@
+{
+  "schema": "weibian-history-contract-v1",
+  "baselineBundleSha256": "fc68413c7b70da0e1f14e36bb2229c4d9ae64fb8f26d75251f87d7457f8ffa75",
+  "orderedIds": {
+    "chapters": "2a89f73fde970e7b9a4702960bf938f43991c1d8164c8279d2e7d2a496bfed9f",
+    "concepts": "a469e938f7b7ec7e6d871d3832a76b0df8897ca22036d27741ee7a6ab630e611",
+    "figures": "0dbd203720200e32c21e8ea9326d1abebae991cc123dc9a736bd14e97b00669a",
+    "bank": "2e1e171c38e65f88b4dc5be3f00626c39b254dbc43e14c858dd8779f685edfec"
+  },
+  "aliases": {
+    "268": 265,
+    "269": 266,
+    "270": 267,
+    "297": 271,
+    "298": 272,
+    "299": 273,
+    "300": 274,
+    "301": 275,
+    "302": 276,
+    "303": 277,
+    "304": 278,
+    "305": 279,
+    "306": 280,
+    "307": 281,
+    "308": 282,
+    "309": 283,
+    "310": 284,
+    "311": 285,
+    "312": 286,
+    "313": 287,
+    "314": 288,
+    "315": 289,
+    "316": 290,
+    "317": 291,
+    "318": 292,
+    "319": 293,
+    "320": 294,
+    "321": 295,
+    "322": 296
+  },
+  "gaokao": [
+    {
+      "id": "gk-2015-lunyu",
+      "questions": [
+        {
+          "id": "q1",
+          "score": 1,
+          "promptSha256": "27689bd69428d3dcc321110232d91d8ddb55b425ec1b9ec921b0d774aeafad6d"
+        },
+        {
+          "id": "q2",
+          "score": 5,
+          "promptSha256": "da2fac24f96ebcdf31b07a7f70d1afd6990d5ae09e00e199c247f5ed9534f80f"
+        },
+        {
+          "id": "q15",
+          "score": 1,
+          "promptSha256": "27689bd69428d3dcc321110232d91d8ddb55b425ec1b9ec921b0d774aeafad6d"
+        },
+        {
+          "id": "q16",
+          "score": 5,
+          "promptSha256": "da2fac24f96ebcdf31b07a7f70d1afd6990d5ae09e00e199c247f5ed9534f80f"
+        }
+      ]
+    },
+    {
+      "id": "gk-2018-lunyu",
+      "questions": [
+        {
+          "id": "q1",
+          "score": null,
+          "promptSha256": "decf0e8080ca11acaa3aefca9ce7be63e0e1f00a3b519c9bb505d03f7e80cb34"
+        },
+        {
+          "id": "q15",
+          "score": null,
+          "promptSha256": "decf0e8080ca11acaa3aefca9ce7be63e0e1f00a3b519c9bb505d03f7e80cb34"
+        }
+      ]
+    },
+    {
+      "id": "gk-2018-weixiezuo-lunyu",
+      "questions": [
+        {
+          "id": "q3",
+          "score": null,
+          "promptSha256": "8a05d4558e9cda529b79f9d241733fe2f3301e6e12edfbf929838a5c1d0d309c"
+        }
+      ]
+    },
+    {
+      "id": "gk-2019-lunyu",
+      "questions": [
+        {
+          "id": "q1",
+          "score": null,
+          "promptSha256": "c443b7bb42b3ca741eeb98c84fdc5b20a99ce584ec7783d64af9a3052eca9fe9"
+        },
+        {
+          "id": "q2",
+          "score": null,
+          "promptSha256": "2299e52f4338bc4ae32b14a722ac849163523c4bab5d338a0f0f0a9e812affad"
+        },
+        {
+          "id": "q15",
+          "score": null,
+          "promptSha256": "c443b7bb42b3ca741eeb98c84fdc5b20a99ce584ec7783d64af9a3052eca9fe9"
+        },
+        {
+          "id": "q16",
+          "score": null,
+          "promptSha256": "2299e52f4338bc4ae32b14a722ac849163523c4bab5d338a0f0f0a9e812affad"
+        }
+      ]
+    },
+    {
+      "id": "gk-2020-lunyu",
+      "questions": [
+        {
+          "id": "q1",
+          "score": 2,
+          "promptSha256": "cc4620fb294e089e79405f97882bcfc48adc3140b874a505270bffa2175be6f0"
+        },
+        {
+          "id": "q2",
+          "score": 4,
+          "promptSha256": "d9380ccad886889bfbfae384ab61ee7d91848aa0d0008ce608c2f7c69ce7b885"
+        },
+        {
+          "id": "q16",
+          "score": 2,
+          "promptSha256": "d7d9e2f886066a15af17367fed0b78c3d9da687b329fdb62b4076cca03104601"
+        },
+        {
+          "id": "q17",
+          "score": 4,
+          "promptSha256": "960992a7983e1384d88ab6431a708b3fdd9fa30808887ed70f1dc878b2e4d18a"
+        }
+      ]
+    },
+    {
+      "id": "gk-2021-lunyu",
+      "questions": [
+        {
+          "id": "q1",
+          "score": null,
+          "promptSha256": "a6ccaaedb7e0345363e025506fe15f6a8c904ab7fa324a46a5afb2391b1bd486"
+        },
+        {
+          "id": "q17",
+          "score": null,
+          "promptSha256": "a6ccaaedb7e0345363e025506fe15f6a8c904ab7fa324a46a5afb2391b1bd486"
+        }
+      ]
+    },
+    {
+      "id": "gk-2023-lunyu",
+      "questions": [
+        {
+          "id": "q1",
+          "score": 2,
+          "promptSha256": "a9473725a23374f4dc6927c672a95f587d027d395655d47c29e29b49f93962b8"
+        },
+        {
+          "id": "q2",
+          "score": 2,
+          "promptSha256": "3947f54ec25f7a69bfe8e92943cb17cfc2ef07e0578ad8032b5b5da56c2016c5"
+        },
+        {
+          "id": "q3",
+          "score": 6,
+          "promptSha256": "f278862ce4a2d2dca3e523b1235eea1739a57fad02c7094978c27781bef8213b"
+        },
+        {
+          "id": "q15",
+          "score": 2,
+          "promptSha256": "a9473725a23374f4dc6927c672a95f587d027d395655d47c29e29b49f93962b8"
+        },
+        {
+          "id": "q16",
+          "score": 2,
+          "promptSha256": "3c7ff8737e12553c678c810f61d2ff176874e290392eaa1d5e6d442825a4e16c"
+        },
+        {
+          "id": "q17",
+          "score": 6,
+          "promptSha256": "1d6a1af1d89abba7817cff048f08cfd5721a8f530d0c8d2c9ff5001df0a576af"
+        }
+      ]
+    }
+  ]
+}

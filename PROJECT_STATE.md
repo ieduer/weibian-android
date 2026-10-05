@@ -1,3 +1,7 @@
+## 2026-10-05 — Fixed-source content candidate, not published
+
+The content builder now reads 67 exact accepted upstream Git blobs, restores all 23 historical exam IDs from legacy numbered fields, validates a published-history contract, and correctly maps 17 concepts / 15 figures. Candidate2b6ffd83aff1a564 changes only concept/figure collections; the original corpus, bank, aliases and all exam bytes remain exact. Seven source/history tests and all six native gates pass against the actual candidate assets. See `docs/CONTENT_SOURCE_PIPELINE.md` for evidence, generation, known exam uncertainties, pending Web/App release acceptance and rollback. Public content remainsfc68413c7b70da0e; no device, production or student data changed.
+
 # Project state
 
 Last updated: 2026-08-30 PDT
