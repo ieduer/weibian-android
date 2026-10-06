@@ -1,0 +1,431 @@
+{
+  "schema": "weibian-exam-review-test-fixture-v1",
+  "sourceBundleSha256": "0b3170748035504b44f947017855ec14893884d6c18acd996b6b76cfe454a2c9",
+  "scope": "Test-only source review projection; never an application content source.",
+  "groups": [
+    {
+      "id": "gk-2015-lunyu",
+      "sourceReview": {
+        "material": "15.《论语·侍坐》篇，子路、曾皙、冉有、公西华分别讲述了自己的志向，孔子\n对子路的话不以为然。篇末是曾皙与孔子师生二人的对话，这一对话存在两种不同的标点，其中一种标点如下。\n\n曰：“夫子何哂由也？”\n\n曰：“为国以礼，其言不让，是故哂之。唯求则非邦也与？安见方六七十，如五六十而非邦也者？唯赤则非邦也与？宗庙会同，非诸侯而何？赤也为之小，孰能为之大？”\n\n另一种标点如下。\n\n曰：“夫子何哂由也？”\n\n曰：“为国以礼，其言不让，是故哂之。”\n\n（ ）“唯求则非邦也与？”\n\n（ ）“安见方六七十，如五六十而非邦也者？”\n\n（ ）“唯赤则非邦也与？”\n\n（ ）“宗庙会同，非诸侯而何？赤也为之小，孰能为之大？”",
+        "note": "依据中国教育在线当年转载题面和答案影像核对；不是考试院直接发布件。",
+        "officialSource": false,
+        "reviewedAt": "2026-10-06T00:10:58.145Z",
+        "schema": "weibian-exam-review-v1",
+        "sourceRecordId": "2015-lunyu",
+        "sources": [
+          {
+            "bytes": 63656,
+            "kind": "contemporaneous_question_image",
+            "page": "question 15",
+            "sha256": "8cfb4f71fcff413cdb9ec13c06db9f4a09cb415cb26d4136e487dd4621ff28bc",
+            "url": "https://img.eol.cn/html/g/2015gkst/bj/yw7.jpg"
+          },
+          {
+            "bytes": 201955,
+            "kind": "contemporaneous_answer_scan",
+            "page": "printed page 12",
+            "sha256": "837a6e6e3c1920f9319dd1b2418307c9898124fd0be40e9c3e1869cf883cd531",
+            "url": "https://img.eol.cn/html/g/2015gkst/bj/ywtda2.jpg"
+          }
+        ],
+        "topic": "（二）根据要求，完成第15题。（共6分）"
+      },
+      "questions": [
+        {
+          "id": "q1",
+          "sourceReview": {
+            "answer": "依次为：曾皙、孔子、曾皙、孔子。第二种标点把两个“唯……非邦也与”读作曾皙的追问，其后的反问则是孔子的答复。",
+            "printedScore": 1,
+            "questionSha256": "6f83ccf0c47763557693abd887ae12ca10c44d94d59a8ddc4fd34cb852e9d0db",
+            "sourceQIndex": 1
+          }
+        },
+        {
+          "id": "q2",
+          "sourceReview": {
+            "answer": "不同之处：第一种读法是曾皙一问、孔子集中作答；第二种是师生连续三次问答。第二种还显出两人的关注点不同：孔子重在是否谦让、是否合礼；曾皙追问的则是，冉有、公西华既然同样谈治国，为何没有受到与子路相同的评价。\n可以赞成任一种，但须说明理由。赞成第一种，可从孔子集中阐明“为国以礼”、以反问作比较的连贯性立论；赞成第二种，可从师生问答逐层展开、表现善问与善教立论。不能仅以选择哪一种判断正误。\n转载答案给出的分配是：解读差异3分，选择及理由2分。此处用于订正学习参考，不自动重评历史作答。",
+            "printedScore": 5,
+            "questionSha256": "d84210b98544f361d2ae50ccc2f53a6c9809cdba3430ca27e3d4c4f5c872e172",
+            "sourceQIndex": 2
+          }
+        },
+        {
+          "id": "q15",
+          "sourceReview": {
+            "answer": "依次为：曾皙、孔子、曾皙、孔子。第二种标点把两个“唯……非邦也与”读作曾皙的追问，其后的反问则是孔子的答复。",
+            "printedScore": 1,
+            "questionSha256": "6f83ccf0c47763557693abd887ae12ca10c44d94d59a8ddc4fd34cb852e9d0db",
+            "sourceQIndex": 1
+          }
+        },
+        {
+          "id": "q16",
+          "sourceReview": {
+            "answer": "不同之处：第一种读法是曾皙一问、孔子集中作答；第二种是师生连续三次问答。第二种还显出两人的关注点不同：孔子重在是否谦让、是否合礼；曾皙追问的则是，冉有、公西华既然同样谈治国，为何没有受到与子路相同的评价。\n可以赞成任一种，但须说明理由。赞成第一种，可从孔子集中阐明“为国以礼”、以反问作比较的连贯性立论；赞成第二种，可从师生问答逐层展开、表现善问与善教立论。不能仅以选择哪一种判断正误。\n转载答案给出的分配是：解读差异3分，选择及理由2分。此处用于订正学习参考，不自动重评历史作答。",
+            "printedScore": 5,
+            "questionSha256": "d84210b98544f361d2ae50ccc2f53a6c9809cdba3430ca27e3d4c4f5c872e172",
+            "sourceQIndex": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "gk-2018-lunyu",
+      "sourceReview": {
+        "material": "13．《论语》记录了孔子与弟子间的许多对话，如《先进》篇：\n\n子路问：“闻斯【1】行诸？”子曰：“有父兄在，如之何其闻斯行之？”\n\n冉有问：“闻斯行诸？”子曰：“闻斯行之。”\n\n公西华曰：“由也问闻斯行诸，子曰，‘有父兄在’；求也问闻斯行诸，子曰，‘闻斯行之’。赤也惑，敢问。”子曰：“求也退，故进之；由也兼人【2】，故退之。”",
+        "note": "依据中国教育在线转载题面及参考答案核对；不是考试院直接发布件。",
+        "officialSource": false,
+        "reviewedAt": "2026-10-06T00:24:25.667Z",
+        "schema": "weibian-exam-review-v1",
+        "sourceRecordId": "2018-lunyu",
+        "sources": [
+          {
+            "bytes": 159999,
+            "kind": "question_image",
+            "page": "page4;Q13 begins",
+            "sha256": "a5408eec43cdcc095b0d2faaa9137e74ddc1b643e0f57bdd01312a7d83b47d06",
+            "url": "https://gaokao.eol.cn/bei_jing/dongtai/201806/W020200706532908239909.jpg"
+          },
+          {
+            "bytes": 226842,
+            "kind": "question_image",
+            "page": "page5;Q13 continued",
+            "sha256": "1dcc328a8fe1799aeaab71335df178c2a5a5f20d6ee9fd24316a73b16bb6c7bc",
+            "url": "https://gaokao.eol.cn/bei_jing/dongtai/201806/W020200706532908243571.jpg"
+          },
+          {
+            "bytes": 180712,
+            "kind": "publisher_answer_text",
+            "page": "answer13",
+            "sha256": "9717c8d6f98e57968c80933853a4455771994d2bdbda6ce155a978be4a5a7a69",
+            "url": "https://gaokao.eol.cn/bei_jing/dongtai/201806/t20180607_1606171.shtml"
+          }
+        ],
+        "topic": "（二）根据要求，完成第13题。（共5分）"
+      },
+      "questions": [
+        {
+          "id": "q1",
+          "sourceReview": {
+            "answer": "孔子先告诫子路，有父兄在，不可听到道理便擅自行动；随后鼓励冉有听到后便行动；最后向公西华解释，冉有退缩，须鼓励，子路勇于作为，须让他懂得退让。同一问题有不同回答，体现依据学生特点进行教育、因材施教。",
+            "printedScore": 5,
+            "questionSha256": "98dfa69d7d69d876a6ff1e34071726e5c3334b861e3f7e65a7e445127a11108d",
+            "sourceQIndex": 1
+          }
+        },
+        {
+          "id": "q15",
+          "sourceReview": {
+            "answer": "孔子先告诫子路，有父兄在，不可听到道理便擅自行动；随后鼓励冉有听到后便行动；最后向公西华解释，冉有退缩，须鼓励，子路勇于作为，须让他懂得退让。同一问题有不同回答，体现依据学生特点进行教育、因材施教。",
+            "printedScore": 5,
+            "questionSha256": "98dfa69d7d69d876a6ff1e34071726e5c3334b861e3f7e65a7e445127a11108d",
+            "sourceQIndex": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "gk-2018-weixiezuo-lunyu",
+      "sourceReview": {
+        "material": "",
+        "note": "依据中国教育在线题面图版核对写作要求；开放题没有唯一范文。",
+        "officialSource": false,
+        "reviewedAt": "2026-10-06T00:24:25.668Z",
+        "schema": "weibian-exam-review-v1",
+        "sourceRecordId": "2018-weixiezuo",
+        "sources": [
+          {
+            "bytes": 116274,
+            "kind": "question_image",
+            "page": "page8;Q23 option3",
+            "sha256": "dc77f4ab372afd35a1e380a0395f27dee816f0e654163883669126ac6cd992c4",
+            "url": "https://gaokao.eol.cn/bei_jing/dongtai/201806/W020200706532908287651.jpg"
+          }
+        ],
+        "topic": "五．本大题共2小题，共60分。\n23．微写作（10分）\n从下面三个题目中任选一题，按要求作答。"
+      },
+      "questions": [
+        {
+          "id": "q3",
+          "sourceReview": {
+            "answer": "这是微写作的第三个备选题，三个题目任选一个作答。选择孔子的一位弟子，写150—200字的评语，关键是评价具体、符合《论语》中的人物特征。例如评价颜回，应把好学或安贫乐道落实到相关言行；评价曾参，可联系反省与责任。人物选择开放，不能把某一篇范文当作唯一答案，也不能把三个选题重复计分。",
+            "printedScore": 10,
+            "questionSha256": "1cc9f7b8cd02da2ae8ffa0a203b8485a86953467dc0a8f29b9e712237d9847cb",
+            "sourceQIndex": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "gk-2019-lunyu",
+      "sourceReview": {
+        "material": "12．阅读下面《论语》的文字，回答问题。\n\n子曰：“富与贵，是人之所欲也；不以其道得之，不处【1】也。贫与贱，是人之所恶也；不以其道得之，不去也。君子去仁，恶乎成名？君子无终食之间违仁，造次【2】必于是，颠沛必于是。”\n\n（《论语・里仁》）",
+        "note": "依据中国教育在线转载题面及参考答案核对；不是考试院直接发布件。 题面图版总分为7分，旧题库标题写5分；各小问未标分，不能据总分猜测分配。历史成绩及原有分数字段保留。",
+        "officialSource": false,
+        "reviewedAt": "2026-10-06T00:24:25.668Z",
+        "schema": "weibian-exam-review-v1",
+        "sourceRecordId": "2019-lunyu",
+        "sources": [
+          {
+            "bytes": 187742,
+            "kind": "question_image",
+            "page": "printed page5;Q12",
+            "sha256": "dac578c777125bd9b7d2fd8dd79c9477c22b263ae7f219c02b10700efbb18da0",
+            "url": "https://img.eol.cn/e_images/gk/2019shiti/bj/bjyw5.jpg"
+          },
+          {
+            "bytes": 233421,
+            "kind": "publisher_annotated_answer",
+            "page": "page9;answer12",
+            "sha256": "a2a054d5909922bbd30a48be7eb3a03fb4b65063dec51ea57e7827d4dd1036b7",
+            "url": "https://img.eol.cn/e_images/gk/2019shiti/bj/ywd9.JPG"
+          }
+        ],
+        "topic": "（二）根据要求，完成第12题。（共7分）"
+      },
+      "questions": [
+        {
+          "id": "q1",
+          "sourceReview": {
+            "answer": "“其道”指仁道。全段强调，君子不应为取得富贵或摆脱贫贱而违背仁，即使处境仓促、困顿，也应坚持仁德。",
+            "printedScore": null,
+            "questionSha256": "4cda9d75a0f573f063e00d5a35e458375e9cf276cf5f6fbcb8e2c1d970a641e6",
+            "sourceQIndex": 1
+          }
+        },
+        {
+          "id": "q2",
+          "sourceReview": {
+            "answer": "改“得之”为“去之”：若不能按仁道摆脱贫贱，就不摆脱贫贱。删去“不”字：若因遵守仁道而陷入贫贱，就安于这种贫贱，不以背弃仁道求脱身。两种解释都守仁，但后者讲的是因守仁而处于贫贱；旧模型把它再次解释为用不正当手段摆脱贫贱，颠倒了这处条件。",
+            "printedScore": null,
+            "questionSha256": "3e0763a7e2af6c2659c8fca08dd3073d96e3ce3278be9666e40b59f294e61448",
+            "sourceQIndex": 2
+          }
+        },
+        {
+          "id": "q15",
+          "sourceReview": {
+            "answer": "“其道”指仁道。全段强调，君子不应为取得富贵或摆脱贫贱而违背仁，即使处境仓促、困顿，也应坚持仁德。",
+            "printedScore": null,
+            "questionSha256": "4cda9d75a0f573f063e00d5a35e458375e9cf276cf5f6fbcb8e2c1d970a641e6",
+            "sourceQIndex": 1
+          }
+        },
+        {
+          "id": "q16",
+          "sourceReview": {
+            "answer": "改“得之”为“去之”：若不能按仁道摆脱贫贱，就不摆脱贫贱。删去“不”字：若因遵守仁道而陷入贫贱，就安于这种贫贱，不以背弃仁道求脱身。两种解释都守仁，但后者讲的是因守仁而处于贫贱；旧模型把它再次解释为用不正当手段摆脱贫贱，颠倒了这处条件。",
+            "printedScore": null,
+            "questionSha256": "3e0763a7e2af6c2659c8fca08dd3073d96e3ce3278be9666e40b59f294e61448",
+            "sourceQIndex": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "gk-2020-lunyu",
+      "sourceReview": {
+        "material": "12.阅读下面《论语》中的文字，回答问题。\n\n子曰：“我非生而知之者，好古，敏以求之者也。”(《述而》)\n\n子曰：“盖有不知而作之者，我无是也。多闻，择其善者而从之，多见而识之，知之次也。”(《述而》)\n\n太宰问于子贡曰：“夫子圣者与？何其多能也？”子贡曰：“固天纵之将圣，又多能也。”\n\n子闻之，曰：“太宰知我乎！吾少也贱，故多能鄙事。君子多乎哉？不多也。”(《子罕》)",
+        "note": "依据中国教育在线转载题面及参考答案核对；不是考试院直接发布件。",
+        "officialSource": false,
+        "reviewedAt": "2026-10-06T00:24:25.668Z",
+        "schema": "weibian-exam-review-v1",
+        "sourceRecordId": "2020-lunyu",
+        "sources": [
+          {
+            "bytes": 120787,
+            "kind": "question_image",
+            "page": "page5;Q12",
+            "sha256": "080ef4122695deb11404a8f161ffd33296be0950ea273a7aa6125202812f7262",
+            "url": "https://gaokao.eol.cn/shiti/zhenti/202102/W020210222533345985699.jpg"
+          },
+          {
+            "bytes": 92055,
+            "kind": "publisher_answer_image",
+            "page": "page11;answer12",
+            "sha256": "a6386980e036394b3faf169f886cf8f27a5198b4e7d6ade0a26ac0fbb50e346d",
+            "url": "https://gaokao.eol.cn/shiti/zhenti/202102/W020210222533346055189.jpg"
+          }
+        ],
+        "topic": "(二)根据要求，完成第12题。(共6分)"
+      },
+      "questions": [
+        {
+          "id": "q1",
+          "sourceReview": {
+            "answer": "“生而知之者”是生来就具有知识的人；“不知而作之者”是自己不明白却凭空行事、创作的人。孔子说自己不是前者，也不会做后者。原文只是否认自己生而知之，不能推成“孔子认为这样的人不存在”；旧模型的这一附加断言应删去。",
+            "printedScore": 2,
+            "questionSha256": "8b31c3feed7f17ac4d9eff398fb3b5c58f3995399080ffeb338d836555e36c2b",
+            "sourceQIndex": 1
+          }
+        },
+        {
+          "id": "q2",
+          "sourceReview": {
+            "answer": "获取知识的途径包括：钻研古代文化，勤于求知；广泛听闻和观察，选择可取之处学习并记住；在实际生活劳动中学习技能。启示须联系其中一点展开。例如面对信息，既要广泛阅读，也要核查来源、比较证据，辨别后再吸收。不能只列途径而遗漏自己的启示。",
+            "printedScore": 4,
+            "questionSha256": "49e61acb47ccd570869613b1f07d8010ddbecaab2a09082a84f2d34ff7394dcf",
+            "sourceQIndex": 2
+          }
+        },
+        {
+          "id": "q16",
+          "sourceReview": {
+            "answer": "“生而知之者”是生来就具有知识的人；“不知而作之者”是自己不明白却凭空行事、创作的人。孔子说自己不是前者，也不会做后者。原文只是否认自己生而知之，不能推成“孔子认为这样的人不存在”；旧模型的这一附加断言应删去。",
+            "printedScore": 2,
+            "questionSha256": "8b31c3feed7f17ac4d9eff398fb3b5c58f3995399080ffeb338d836555e36c2b",
+            "sourceQIndex": 1
+          }
+        },
+        {
+          "id": "q17",
+          "sourceReview": {
+            "answer": "获取知识的途径包括：钻研古代文化，勤于求知；广泛听闻和观察，选择可取之处学习并记住；在实际生活劳动中学习技能。启示须联系其中一点展开。例如面对信息，既要广泛阅读，也要核查来源、比较证据，辨别后再吸收。不能只列途径而遗漏自己的启示。",
+            "printedScore": 4,
+            "questionSha256": "49e61acb47ccd570869613b1f07d8010ddbecaab2a09082a84f2d34ff7394dcf",
+            "sourceQIndex": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "gk-2021-lunyu",
+      "sourceReview": {
+        "material": "子曰：“由也！女闻六言【注】六蔽矣乎？”对曰：“未也。”\n\n“居！吾语女。好仁不好学，其蔽也愚；好知不好学，其蔽也荡；好信不好学，其蔽也贼；好直不好学，其蔽也绞；好勇不好学，其蔽也乱；好刚不好学，其蔽也狂。”\n\n（《阳货》）",
+        "note": "依据中国教育在线转载题面及参考答案核对；不是考试院直接发布件。",
+        "officialSource": false,
+        "reviewedAt": "2026-10-06T00:24:25.668Z",
+        "schema": "weibian-exam-review-v1",
+        "sourceRecordId": "2021-lunyu",
+        "sources": [
+          {
+            "bytes": 651521,
+            "kind": "question_image",
+            "page": "printed page4;Q11",
+            "sha256": "2ee03f8f3c73c697a036915fb3dd743ad28c5c1a8d9ac0284201f1d042b90fb2",
+            "url": "https://img.eol.cn/e_images/gk/2020/2021sj/bj/yw04.png"
+          },
+          {
+            "bytes": 544413,
+            "kind": "publisher_answer_image",
+            "page": "printed page9;answer11",
+            "sha256": "c6a25d7863903fb3362a5165d6eda1c0f942033f05d8c416d82e8b5f459cbb76",
+            "url": "https://img.eol.cn/e_images/gk/2020/2021sj/bj/ywd01.png"
+          }
+        ],
+        "topic": "11. 阅读下面《论语》中的文字，回答问题。"
+      },
+      "questions": [
+        {
+          "id": "q1",
+          "sourceReview": {
+            "answer": "学习能帮助人辨明行为的分寸，使好的品质不致因片面发展而成为弊病。例如，爱好仁德而不学习辨别，容易愚昧受骗；勇敢而不学习判断、约束行动，容易好斗作乱。也可以选择其余四项中的任意两项解释，但须把所好之德与不学习造成的弊病联系起来，不要求固定选“仁”和“勇”。",
+            "printedScore": 6,
+            "questionSha256": "3868f83ad29f519a20188b306171829c8d07534c31af5e8e809217f4ba7f4345",
+            "sourceQIndex": 1
+          }
+        },
+        {
+          "id": "q17",
+          "sourceReview": {
+            "answer": "学习能帮助人辨明行为的分寸，使好的品质不致因片面发展而成为弊病。例如，爱好仁德而不学习辨别，容易愚昧受骗；勇敢而不学习判断、约束行动，容易好斗作乱。也可以选择其余四项中的任意两项解释，但须把所好之德与不学习造成的弊病联系起来，不要求固定选“仁”和“勇”。",
+            "printedScore": 6,
+            "questionSha256": "3868f83ad29f519a20188b306171829c8d07534c31af5e8e809217f4ba7f4345",
+            "sourceQIndex": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "gk-2023-lunyu",
+      "sourceReview": {
+        "material": "①子曰：“君子疾没世而名不称焉。”（《论语·卫灵公》）\n\n②子曰：“君子病无能焉，不病人之不己知也。”（《论语·卫灵公》）\n\n③子曰：“君子病没世而名不称焉。吾道不行矣，吾何以自见于后世哉？”（《史记·孔子世家》）\n\n④先生（王阳明）曰：“为学大病在好名。……'疾没世而名不称’，'称’字去声①读，亦‘声闻过情，君子耻之’②之意。”（《传习录》）",
+        "note": "已核对中国教育在线题面图版、参考答案及北京高考在线解析；均为转载件，正式分项评分细则仍待核。 题面图版确认总分10分，未显示逐项配分；现有2/2/6分配暂不据此认定为原卷配分。",
+        "officialSource": false,
+        "reviewedAt": "2026-10-06T00:24:25.668Z",
+        "schema": "weibian-exam-review-v1",
+        "sourceRecordId": "2023-lunyu",
+        "sources": [
+          {
+            "bytes": 509169,
+            "kind": "question_image",
+            "page": "printed page5;Q11",
+            "sha256": "695c36388729ffa706feed30052fb20e677f4ca67c9323551777243e500364ff",
+            "url": "https://img.eol.cn/e_images/gk/2023/2023st/bj/yw05.png"
+          },
+          {
+            "bytes": 406022,
+            "kind": "publisher_answer_image",
+            "page": "printed page10;answer11",
+            "sha256": "8166d6f381c8106661e7e59197af4570011fea6c31318fcdb9c88d44ea99a672",
+            "url": "https://img.eol.cn/e_images/gk/2023/2023st/bj/yw10.png"
+          },
+          {
+            "bytes": 2837601,
+            "kind": "annotated_reference_pdf",
+            "page": "PDF page 12",
+            "sha256": "151b64ebe781415aa8e0f7676518d67fd7902cd43be981bd84c8f58620b6f19c",
+            "url": "https://cdn.gaokzx.com/zixunzhan/202403/d0e840b8-8603-4cee-81aa-5e1f1482a091.pdf"
+          }
+        ],
+        "topic": "（二）根据要求，完成第11题。（共10分）"
+      },
+      "questions": [
+        {
+          "id": "q1",
+          "sourceReview": {
+            "answer": "杨伯峻将“称”读作 chēng，解释为称述、称道；王阳明将“称”读作 chèn，解释为相称、符合，即名声与实际德行相称。旧参考答案把后一义写成“名词，名声”，应予订正。题目要求辨析读音和词义，无须另加词性作为评分条件。",
+            "printedScore": null,
+            "questionSha256": "adc83f8948db48c3069bc77ac64f5df26e9180f81cd236e9f95b320030e9359a",
+            "sourceQIndex": 1
+          }
+        },
+        {
+          "id": "q2",
+          "sourceReview": {
+            "answer": "君子担忧的是，到生命结束时，自己的德行与所享有的名声仍不相称，名声超出实际。这种解读强调充实德行，避免徒有其名，而不是为自己没有知名度而忧虑。",
+            "printedScore": null,
+            "questionSha256": "1cf887d41e52c40d156b2dd6f3e080456613075c3d7bb3968590df67b459b3f4",
+            "sourceQIndex": 2
+          }
+        },
+        {
+          "id": "q3",
+          "sourceReview": {
+            "answer": "任选一种，并把依据与解释连起来。选择杨伯峻，可用材料③中孔子担忧自己的道不能推行、不能为后世所知，说明他重视有实际内容的身后之名。选择王阳明，可用材料②中君子担忧自己无能而不担忧别人不了解自己，说明君子应重实德、实能，警惕名声超过实际。观点相反不等于其中一种必错，关键在材料支持和解释是否成立。",
+            "printedScore": null,
+            "questionSha256": "3da9a029671ba48543e93252325217850cfcfe8d35ab2bf295e6270a64069ad0",
+            "sourceQIndex": 3
+          }
+        },
+        {
+          "id": "q15",
+          "sourceReview": {
+            "answer": "杨伯峻将“称”读作 chēng，解释为称述、称道；王阳明将“称”读作 chèn，解释为相称、符合，即名声与实际德行相称。旧参考答案把后一义写成“名词，名声”，应予订正。题目要求辨析读音和词义，无须另加词性作为评分条件。",
+            "printedScore": null,
+            "questionSha256": "adc83f8948db48c3069bc77ac64f5df26e9180f81cd236e9f95b320030e9359a",
+            "sourceQIndex": 1
+          }
+        },
+        {
+          "id": "q16",
+          "sourceReview": {
+            "answer": "君子担忧的是，到生命结束时，自己的德行与所享有的名声仍不相称，名声超出实际。这种解读强调充实德行，避免徒有其名，而不是为自己没有知名度而忧虑。",
+            "printedScore": null,
+            "questionSha256": "1cf887d41e52c40d156b2dd6f3e080456613075c3d7bb3968590df67b459b3f4",
+            "sourceQIndex": 2
+          }
+        },
+        {
+          "id": "q17",
+          "sourceReview": {
+            "answer": "任选一种，并把依据与解释连起来。选择杨伯峻，可用材料③中孔子担忧自己的道不能推行、不能为后世所知，说明他重视有实际内容的身后之名。选择王阳明，可用材料②中君子担忧自己无能而不担忧别人不了解自己，说明君子应重实德、实能，警惕名声超过实际。观点相反不等于其中一种必错，关键在材料支持和解释是否成立。",
+            "printedScore": null,
+            "questionSha256": "3da9a029671ba48543e93252325217850cfcfe8d35ab2bf295e6270a64069ad0",
+            "sourceQIndex": 3
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -30,6 +30,8 @@ import net.bdfz.weibian.domain.LearningEngine
 import net.bdfz.weibian.domain.LearningTask
 import net.bdfz.weibian.domain.Merit
 import net.bdfz.weibian.domain.OverallProgress
+import net.bdfz.weibian.domain.gaokaoFeedbackPrompt
+import net.bdfz.weibian.domain.gaokaoFeedbackScore
 import net.bdfz.weibian.network.ApiClient
 import net.bdfz.weibian.network.ApiException
 import net.bdfz.weibian.network.RankingSnapshot
@@ -658,34 +660,17 @@ class WeibianViewModel(app: Application) : AndroidViewModel(app) {
             )
             awardAchievements(ownerToken)
 
-            val reference = question.answer.ifBlank { item.referenceAnswer.ifBlank { item.modelAnswer } }
-            val prompt = buildString {
-                appendLine("你是北京高考语文阅卷老师，正在批改《论语》经典阅读题。")
-                appendLine("请按以下结构给出批改，使用简体中文，纯文本输出，不要使用 Markdown 记号：")
-                appendLine("1. 得分（给出 X/${question.score ?: 6} 分）")
-                appendLine("2. 踩中的得分点")
-                appendLine("3. 遗漏的知识点")
-                appendLine("4. 表达质量与改进建议")
-                appendLine()
-                appendLine("【材料】")
-                appendLine(item.material.take(1500))
-                appendLine()
-                appendLine("【题目】${question.prompt}")
-                if (reference.isNotBlank()) {
-                    appendLine("【参考答案】${reference.take(1200)}")
-                }
-                appendLine("【学生作答】$answer")
-            }
+            val prompt = gaokaoFeedbackPrompt(item, question, answer)
             val feedback = withContext(Dispatchers.IO) {
                 runCatching { api.ask(prompt, taskType = "grading") }
                     .getOrElse { "批改暂不可用：${it.message ?: "网络异常"}。你的作答已保存，可稍后再试。" }
             }
-            val score = Regex("(\\d+)\\s*/\\s*(\\d+)").find(feedback)?.groupValues?.get(1)?.toIntOrNull()
+            val score = gaokaoFeedbackScore(feedback, question.feedbackMaxScore)
             repository.gradeGaokaoAttempt(
                 ownerToken.ownerBinding,
                 attemptId,
                 score,
-                question.score,
+                question.feedbackMaxScore,
                 feedback,
             )
         }

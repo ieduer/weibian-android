@@ -2,8 +2,8 @@
 """
 韦编《论语译注》— 内容构建管线 (content build pipeline)
 
-从本机既有的 Cloudflare 项目源数据构建一份可版本化、可增量下发的内容包。
-数据来源全部为本地既有资产，不手工重建正文：
+从 source-input-lock.json 固定的上游 Git blobs 构建可版本化的内容包。
+读取本机既有 repository 的精确版本，不读取其可变工作文件，不手工重建正文：
 
   1. /Users/ylsuen/CF/lunyu/data/dialogues.json
      杨伯峻《论语译注》全文（原文 + 译文 + 注释），541 行 → 去重 512 章。
@@ -34,6 +34,8 @@ from collections import Counter, OrderedDict
 from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from pathlib import Path
+from source_inputs import SourceInputs
+from exam_reviews import apply_exam_reviews
 
 try:
     from zhconv import convert as _zh_convert
@@ -49,6 +51,7 @@ SRC_DIALOGUES = CF / "lunyu" / "data" / "dialogues.json"
 SRC_BATTLE = CF / "lunyu-battle" / "src"
 SRC_GK_ALL = CF / "gaokao" / "data" / "all.json"
 SRC_GKS_PAPERS = CF / "gks" / "data" / "papers"
+INPUTS = SourceInputs(HERE / "source-input-lock.json", CF)
 
 SCHEMA_VERSION = 1
 CONTENT_ID = "lunyu-yizhu"
@@ -177,7 +180,7 @@ def text_key(text: str) -> str:
 
 
 def build_chapters() -> tuple[list[dict], dict[int, int]]:
-    raw = json.loads(SRC_DIALOGUES.read_text(encoding="utf-8"))
+    raw = json.loads(INPUTS.read(SRC_DIALOGUES))
 
     entries = []
     for item in raw:
@@ -251,7 +254,7 @@ def build_chapters() -> tuple[list[dict], dict[int, int]]:
 
 def extract_ts_array(path: Path, export_name: str) -> str:
     """从 TS 源里取出 `export const NAME: T[] = [ ... ];` 的数组字面量。"""
-    src = path.read_text(encoding="utf-8")
+    src = INPUTS.read(path)
     anchor = re.search(rf"export const {re.escape(export_name)}[^=]*=\s*\[", src)
     if not anchor:
         raise ValueError(f"{path.name} 中找不到 export {export_name}")
@@ -348,34 +351,34 @@ def ts_literal_to_json(literal: str):
     return json.loads(text)
 
 
-def build_concepts() -> list[dict]:
+def build_concepts(alias_map: dict[int, int]) -> list[dict]:
     path = SRC_BATTLE / "data" / "concepts.ts"
     items = ts_literal_to_json(extract_ts_array(path, "CONCEPTS"))
     out = []
     for c in items:
         out.append({
             "id": c["id"],
-            "name": to_simplified(c.get("name", "")),
-            "pinyin": c.get("pinyin", ""),
-            "gloss": to_simplified(c.get("gloss", "")),
-            "detail": to_simplified(c.get("detail", "")) if c.get("detail") else "",
-            "refs": c.get("refs", []),
+            "name": to_simplified(c["label"]),
+            "pinyin": "",  # Upstream supplies no pronunciation; do not invent one.
+            "gloss": to_simplified(c["gist"]),
+            "detail": to_simplified(f"思考：{c['question']}\n易混点：{c['pitfall']}"),
+            "refs": list(dict.fromkeys(alias_map.get(r, r) for r in c["keyPassages"])),
         })
     return out
 
 
-def build_figures() -> list[dict]:
+def build_figures(alias_map: dict[int, int]) -> list[dict]:
     path = SRC_BATTLE / "data" / "figures.ts"
     items = ts_literal_to_json(extract_ts_array(path, "FIGURES"))
     out = []
     for f in items:
         out.append({
             "id": f["id"],
-            "name": to_simplified(f.get("name", "")),
-            "style": to_simplified(f.get("style", "")) if f.get("style") else "",
-            "role": to_simplified(f.get("role", "")) if f.get("role") else "",
-            "gloss": to_simplified(f.get("gloss", "")),
-            "refs": f.get("refs", []),
+            "name": to_simplified(f["name"]),
+            "style": to_simplified(f["aka"]),
+            "role": {"master": "孔子", "disciple": "弟子", "historical": "历史人物"}[f["kind"]],
+            "gloss": to_simplified(f"{f['trait']}\n{f['note']}"),
+            "refs": list(dict.fromkeys(alias_map.get(r, r) for r in f["keyPassages"])),
         })
     return out
 
@@ -468,13 +471,35 @@ def map_passages(material: str, chapters: list[dict], limit: int = 6) -> list[in
     return [cid for _, cid in hits[:limit]]
 
 
+def gk_questions(item: dict) -> list[dict]:
+    """Normalize the source's legacy numbered fields without losing their IDs."""
+    structured = item.get("questions")
+    if structured is not None and not isinstance(structured, list):
+        raise ValueError("invalid structured GK questions collection")
+    if structured:
+        if not isinstance(structured, list) or any(not isinstance(q, dict) or not isinstance(q.get("text"), str) or not q["text"].strip() for q in structured):
+            raise ValueError("invalid structured GK question")
+        return structured
+    out = []
+    indices = sorted(int(m.group(1)) for key in item if (m := re.fullmatch(r"question(\d+)", key)))
+    for index in indices:
+        text = item[f"question{index}"]
+        if text is None or text == "":
+            continue
+        if not isinstance(text, str) or not text.strip():
+            raise ValueError("invalid legacy GK question")
+        score_match = re.search(r"[（(]\s*(\d+)\s*分\s*[)）]", text)
+        out.append({"id": f"q{index}", "qIndex": index, "text": text, "score": int(score_match[1]) if score_match else None})
+    return out
+
+
 def build_gaokao(chapters: list[dict]) -> list[dict]:
     out: list[dict] = []
     seen: set[str] = set()
 
     # 3a. gk.bdfz.net 题库（gaokao/data/all.json），key == 'lunyu'
-    if SRC_GK_ALL.exists():
-        bank = json.loads(SRC_GK_ALL.read_text(encoding="utf-8"))
+    if INPUTS.require(SRC_GK_ALL):
+        bank = json.loads(INPUTS.read(SRC_GK_ALL))
         for item in bank:
             if item.get("key") != "lunyu":
                 continue
@@ -483,7 +508,7 @@ def build_gaokao(chapters: list[dict]) -> list[dict]:
                 materials = [item.get(f"material{i}") or "" for i in range(1, 4)]
             material = "\n\n".join(t for t in materials if t)
             questions = []
-            for q in (item.get("questions") or []):
+            for q in gk_questions(item):
                 if not q.get("text"):
                     continue
                 questions.append({
@@ -524,13 +549,13 @@ def build_gaokao(chapters: list[dict]) -> list[dict]:
 
     # 3a-bis. 微写作里以《论语》命题的年份（如 2018 为孔门弟子写评语）。
     # 这类题不在「经典阅读」大题下，但确是《论语》考点，纳入才算收全。
-    if SRC_GK_ALL.exists():
-        bank = json.loads(SRC_GK_ALL.read_text(encoding="utf-8"))
+    if INPUTS.require(SRC_GK_ALL):
+        bank = json.loads(INPUTS.read(SRC_GK_ALL))
         for item in bank:
             if item.get("key") != "weixiezuo":
                 continue
             prompts = []
-            for q in (item.get("questions") or []):
+            for q in gk_questions(item):
                 text = q.get("text") or ""
                 if "论语" in text:
                     prompts.append({
@@ -560,13 +585,10 @@ def build_gaokao(chapters: list[dict]) -> list[dict]:
             })
 
     # 3b. gks 试卷（section == '《论语》经典阅读'），按年份聚合成一组
-    if SRC_GKS_PAPERS.exists():
+    if INPUTS.files(SRC_GKS_PAPERS, "*chinese*.json"):
         by_paper: "OrderedDict[str, dict]" = OrderedDict()
-        for path in sorted(SRC_GKS_PAPERS.glob("*chinese*.json")):
-            try:
-                paper = json.loads(path.read_text(encoding="utf-8"))
-            except (json.JSONDecodeError, OSError):
-                continue
+        for path in INPUTS.files(SRC_GKS_PAPERS, "*chinese*.json"):
+            paper = json.loads(INPUTS.read(path))
             for q in paper.get("questions", []):
                 if q.get("section") != "《论语》经典阅读":
                     continue
@@ -622,6 +644,8 @@ def build_gaokao(chapters: list[dict]) -> list[dict]:
             bucket["passages"] = map_passages(bucket["material"], chapters)
             out.append(bucket)
 
+    apply_exam_reviews(out, json.loads(INPUTS.read(SRC_GK_ALL)),
+                       json.loads((HERE / "exam-review-map.json").read_text(encoding="utf-8")), to_simplified)
     out.sort(key=lambda e: (e["year"] or 0))
     return out
 
@@ -660,6 +684,13 @@ def validate(chapters, bank, concepts, figures, gaokao) -> list[str]:
                 problems.append(f"题 {q['id']} 的错项 {o['id']} 缺少 why 诊断")
 
     concept_ids = {c["id"] for c in concepts}
+    for label, entries, required in [("概念", concepts, ("name", "gloss", "detail")), ("人物", figures, ("name", "style", "role", "gloss"))]:
+        for item in entries:
+            for field in required:
+                if not isinstance(item.get(field), str) or not item[field].strip():
+                    problems.append(f"{label} {item['id']} 缺少 {field}")
+            if not item.get("refs") or any(ref not in ids for ref in item["refs"]):
+                problems.append(f"{label} {item['id']} 章句引用无效")
     for q in bank:
         for c in q["concepts"]:
             if c not in concept_ids:
@@ -678,18 +709,35 @@ def validate(chapters, bank, concepts, figures, gaokao) -> list[str]:
     return problems
 
 
+def history_problems(chapters, bank, concepts, figures, gaokao, alias_map) -> list[str]:
+    contract = json.loads((HERE / "history-contract.json").read_text(encoding="utf-8"))
+    if contract.get("schema") != "weibian-history-contract-v1":
+        raise ValueError("unknown history contract")
+    problems = []
+    for key, rows in [("chapters", chapters), ("bank", bank), ("concepts", concepts), ("figures", figures)]:
+        if sha256_of(canonical_json([row["id"] for row in rows])) != contract["orderedIds"][key]:
+            problems.append(f"历史 {key} ID/顺序改变，需明确审核")
+    if {str(k): v for k, v in alias_map.items()} != contract["aliases"]:
+        problems.append("历史章句别名改变，需明确审核")
+    exams = [{"id": group["id"], "questions": [{"id": q["id"], "score": q.get("score"), "promptSha256": sha256_of(canonical_json(q["prompt"]))} for q in group["questions"]]} for group in gaokao]
+    if exams != contract["gaokao"]:
+        problems.append("历史高考组/题目ID/题面/分值改变，需原卷及历史记录审核")
+    return problems
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true", help="只校验不写文件")
     args = parser.parse_args()
 
     chapters, alias_map = build_chapters()
-    concepts = build_concepts()
-    figures = build_figures()
+    concepts = build_concepts(alias_map)
+    figures = build_figures(alias_map)
     bank = build_bank(alias_map)
     gaokao = build_gaokao(chapters)
 
     problems = validate(chapters, bank, concepts, figures, gaokao)
+    problems += history_problems(chapters, bank, concepts, figures, gaokao, alias_map)
     if problems:
         print(f"校验失败（{len(problems)} 项）:", file=sys.stderr)
         for p in problems[:40]:
@@ -734,6 +782,7 @@ def main() -> int:
         "size": len(content_bytes),
         "deltas": [],
         "builtAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "sourceInputLockSha256": INPUTS.sha256,
         "counts": {
             "chapters": len(chapters),
             "books": len(books),

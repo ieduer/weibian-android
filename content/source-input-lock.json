@@ -1,0 +1,366 @@
+{
+  "schema": "weibian-source-inputs-v1",
+  "sources": {
+    "kz": {
+      "repository": "ieduer/lunyu",
+      "directory": "sites/chinese/lunyu",
+      "commit": "69674ff161ff2272ab97f3aa3fda97a8c10a8fb4",
+      "authority": "release-authority accepted source snapshot on 2026-10-05"
+    },
+    "ly": {
+      "repository": "ieduer/lunyu-battle",
+      "directory": "sites/reading/lunyu-battle",
+      "commit": "8cd43eef0a24b07a4240e69fadb582f21531fd7a",
+      "authority": "release-authority accepted source snapshot on 2026-10-05"
+    },
+    "gk": {
+      "repository": "ieduer/gaokao",
+      "directory": "sites/exam/gaokao",
+      "commit": "e0dcee540ad340901ec48112292e8c6cd19d5e21",
+      "authority": "Serial7 source-reviewed local candidate; not published. Parent source and every prior data field preserved; see gk-seven-group-validation.json"
+    },
+    "gks": {
+      "repository": "ieduer/gks",
+      "directory": "sites/exam/gks",
+      "commit": "0017209752278bbbad0f7bbba8ee770cda4c3d8c",
+      "authority": "release-authority accepted source snapshot on 2026-10-05"
+    }
+  },
+  "files": {
+    "lunyu/data/dialogues.json": {
+      "source": "kz",
+      "path": "data/dialogues.json",
+      "sha256": "8c9ebc18d6c6f0c156cad89aaab89f6a413cab0f9b2fa2fa7b65ac2b0d4400b1"
+    },
+    "lunyu-battle/src/data/concepts.ts": {
+      "source": "ly",
+      "path": "src/data/concepts.ts",
+      "sha256": "c516bd05b03e436f9b85c29db0837553b91285001e36ffd63b5044c7df6ee82d"
+    },
+    "lunyu-battle/src/data/figures.ts": {
+      "source": "ly",
+      "path": "src/data/figures.ts",
+      "sha256": "88ba7d9c49fff129394f2ce402e20bbcfe67c5d1535f1e1e5778f63b736a8f8f"
+    },
+    "lunyu-battle/src/data/bank/comprehension.ts": {
+      "source": "ly",
+      "path": "src/data/bank/comprehension.ts",
+      "sha256": "21ef125e496a34d1d066d3d8e7ad1836795e34240cd8e17af6bf2ac09836f90c"
+    },
+    "lunyu-battle/src/data/bank/interpretation.ts": {
+      "source": "ly",
+      "path": "src/data/bank/interpretation.ts",
+      "sha256": "b7b3fa6ec95d9f10115723ea3752399eb2bc2b71fbdef030ee90018f6c7a1f19"
+    },
+    "lunyu-battle/src/data/bank/concept.ts": {
+      "source": "ly",
+      "path": "src/data/bank/concept.ts",
+      "sha256": "671098b6aadc8f0e17a9b6de41ff2a9a0eacb6b974dfa31aa0360154f54e22c4"
+    },
+    "lunyu-battle/src/data/bank/linkage.ts": {
+      "source": "ly",
+      "path": "src/data/bank/linkage.ts",
+      "sha256": "f7e46fe6c01292eeca6da0acb9ef690cfd2045f3561e9c29e237592f0e40dd93"
+    },
+    "lunyu-battle/src/data/bank/conflict.ts": {
+      "source": "ly",
+      "path": "src/data/bank/conflict.ts",
+      "sha256": "a4da3cad33cc570b4b548a9d45e9eb2ea610f58e22c4c6570090475d2e1f5d4f"
+    },
+    "lunyu-battle/src/data/bank/figure.ts": {
+      "source": "ly",
+      "path": "src/data/bank/figure.ts",
+      "sha256": "d736a6916460e685b471e18618f79e565e0d514556b3e88ce5538ced7e7203c0"
+    },
+    "lunyu-battle/src/data/bank/application.ts": {
+      "source": "ly",
+      "path": "src/data/bank/application.ts",
+      "sha256": "0a1d4cd010eda842c12d7a5bb617090d030d8572130093f0995b2608b50f4c0e"
+    },
+    "lunyu-battle/src/data/bank/misread.ts": {
+      "source": "ly",
+      "path": "src/data/bank/misread.ts",
+      "sha256": "a91664cb63df1dceaf017d060aeb95b35945fa24400f6cce421dbcaa6329dc6b"
+    },
+    "gaokao/data/all.json": {
+      "source": "gk",
+      "path": "data/all.json",
+      "sha256": "cf924f2691e95543d86405f26eb4efa7dc1ea59d67e462858053c93c3534a0aa"
+    },
+    "gks/data/papers/2002-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2002-chinese.json",
+      "sha256": "d7c16200adb7346f95b681d2c6b4e130808ac549936ce6e383e52ddc20530cac"
+    },
+    "gks/data/papers/2003-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2003-chinese.json",
+      "sha256": "0974d29d7224a348895ded6206022973a507ba4db2d7ff409c2454f1159a83a2"
+    },
+    "gks/data/papers/2004-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2004-chinese.json",
+      "sha256": "b9e2bbc6f1efd232880c6de8e6f4d004ac1e626262977de20401c0265a3f335e"
+    },
+    "gks/data/papers/2005-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2005-chinese.json",
+      "sha256": "7e6b5292f12c9433deb202f1aa1e89cddf1dbbf2296ef0b833212fcecccf634b"
+    },
+    "gks/data/papers/2006-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2006-chinese.json",
+      "sha256": "eaeb1ffad16aa6794ae4313e3da027d3814c2e324b902e0dbc0c30805e7cc917"
+    },
+    "gks/data/papers/2007-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2007-chinese.json",
+      "sha256": "0cdf8987bc3c238d84c97c629586129ac0800d408a1778646f47069554045043"
+    },
+    "gks/data/papers/2008-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2008-chinese.json",
+      "sha256": "9561e1b819c9ce62ba3429cfa588ac7edf4ca182c42e13aade0ebf4b220cff9d"
+    },
+    "gks/data/papers/2009-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2009-chinese.json",
+      "sha256": "baaa533e6a3a7e58f7f2a7ec28edae82edb99bc320e30918285c1ea901f63b7c"
+    },
+    "gks/data/papers/2010-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2010-chinese.json",
+      "sha256": "0f7d1ba5629b4dc80cccf963f8130b6a2e78f500039d922b93da4695c2d5b8d6"
+    },
+    "gks/data/papers/2011-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2011-chinese.json",
+      "sha256": "f93e35e619d40242a4c84144b6b0818fa435b59e72284bed8b068cdb6bf9bd29"
+    },
+    "gks/data/papers/2012-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2012-chinese.json",
+      "sha256": "f9ee7357088a32963da6caf5e2d463a57270909147df403b0e559bb5d96cd6b6"
+    },
+    "gks/data/papers/2013-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2013-chinese.json",
+      "sha256": "dab7ce593883269a7164e9300b6fc837cef022c23191c2c6a5c3f7d732a75629"
+    },
+    "gks/data/papers/2014-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2014-chinese.json",
+      "sha256": "f00dbaebb701df8e94d7eeeb674c1b51e9d2ac292854e5473fc072766c679e72"
+    },
+    "gks/data/papers/2015-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2015-chinese.json",
+      "sha256": "3a2e524e8bfd17e9fd63868dc5cc4f9a22bdc964d29b34c6025d9d2678915200"
+    },
+    "gks/data/papers/2016-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2016-chinese.json",
+      "sha256": "06f16ffdd287f2d7c52ad5b67e484317e28c14d579e4daec6f516b437c2b74f4"
+    },
+    "gks/data/papers/2017-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2017-chinese.json",
+      "sha256": "f271e7f03454538042ff324ed786de271ab4aa8f1ec2d388886df07f77b44bf3"
+    },
+    "gks/data/papers/2018-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2018-chinese.json",
+      "sha256": "e549f1d29ebeb7c8157c2303592b72851580bed4cd323204f22f5e5c5f8ad90f"
+    },
+    "gks/data/papers/2019-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2019-chinese.json",
+      "sha256": "c522bb05399c5d4dd18334c4ccb60c04b97e64a150b14971ded1e22ab130e16c"
+    },
+    "gks/data/papers/2020-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2020-chinese.json",
+      "sha256": "3bd15842b789be699e3c4bc5e5dccc0873cdbc09e3a377b9598caadb9e8e5547"
+    },
+    "gks/data/papers/2021-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2021-chinese.json",
+      "sha256": "56110bf5a33750f277d6853af2c073276b20c864b380fd48f91803e9abc4ae25"
+    },
+    "gks/data/papers/2022-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2022-chinese.json",
+      "sha256": "654e5ecd02cb1b6973063c4c1ae9ed07f1c9f43e33da524786534be99a539a12"
+    },
+    "gks/data/papers/2023-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2023-chinese.json",
+      "sha256": "1db1d9cc34909ff4509fe924c44e61dadd06638531562c4105e493d288cb8b92"
+    },
+    "gks/data/papers/2024-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2024-chinese.json",
+      "sha256": "4dac11b44ba0fb34cae5f4ad200a973acc46bc069aca8c268da3d6c62abd19a6"
+    },
+    "gks/data/papers/2025-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2025-chinese.json",
+      "sha256": "52fcdaa0e71f49dbc641a24a6f2bcedfaebe37abfbd1d9f899b9a767e6accf53"
+    },
+    "gks/data/papers/2026-beijing-chinese.json": {
+      "source": "gks",
+      "path": "data/papers/2026-beijing-chinese.json",
+      "sha256": "bc0e1c98eeb40863503f76d914c0db5b4c0b892e2b9cfe05081587f63df997b5"
+    },
+    "gks/data/papers/gaokaomm-chinese-2017-3304ac8488.json": {
+      "source": "gks",
+      "path": "data/papers/gaokaomm-chinese-2017-3304ac8488.json",
+      "sha256": "e6fe48a883618b115bd53e33d0bcc30c81517e530c3abd37ad505cba71888f52"
+    },
+    "gks/data/papers/gaokaomm-chinese-2017-9f4b92b24c.json": {
+      "source": "gks",
+      "path": "data/papers/gaokaomm-chinese-2017-9f4b92b24c.json",
+      "sha256": "f77c0bc5abffd0320f62e66e582974dd91d5ad6384fb8f63a9ba67eff381effd"
+    },
+    "gks/data/papers/gaokaomm-chinese-2017-e516893265.json": {
+      "source": "gks",
+      "path": "data/papers/gaokaomm-chinese-2017-e516893265.json",
+      "sha256": "0aabef1ddfdda5ce8bfd965b5979f5a9d037427fc9751aab0875339bfec8abd0"
+    },
+    "gks/data/papers/gaokaomm-chinese-2018-45eec56900.json": {
+      "source": "gks",
+      "path": "data/papers/gaokaomm-chinese-2018-45eec56900.json",
+      "sha256": "b03d4c768ddbea56796b747a0c94dc3e32e2b55b324b7ac95ef35d267f7d7690"
+    },
+    "gks/data/papers/gaokaomm-chinese-2018-cef075f664.json": {
+      "source": "gks",
+      "path": "data/papers/gaokaomm-chinese-2018-cef075f664.json",
+      "sha256": "4c6d0fce75d5edfa65f69b1bb9429bde9634a4cf027742012810b2dab8e87996"
+    },
+    "gks/data/papers/gaokaomm-chinese-2019-bc25c063c0.json": {
+      "source": "gks",
+      "path": "data/papers/gaokaomm-chinese-2019-bc25c063c0.json",
+      "sha256": "09f4ff878f700107cf22430d1a36a4f785e27bc4e25e7839162919fccaf662c2"
+    },
+    "gks/data/papers/gaokaomm-chinese-2021-e409e33247.json": {
+      "source": "gks",
+      "path": "data/papers/gaokaomm-chinese-2021-e409e33247.json",
+      "sha256": "39b24451ae32e152e419c3c0f69038e79d9fea899568aca32bb7f41e6ab00e80"
+    },
+    "gks/data/papers/gaokaomm-chinese-2022-2482fb1968.json": {
+      "source": "gks",
+      "path": "data/papers/gaokaomm-chinese-2022-2482fb1968.json",
+      "sha256": "3bcb656c3b4c59be1a000740e38c0c914c82bad4689a6083ce048c8afd5a0bbf"
+    },
+    "gks/data/papers/gaokaomm-chinese-2022-c32133e70a.json": {
+      "source": "gks",
+      "path": "data/papers/gaokaomm-chinese-2022-c32133e70a.json",
+      "sha256": "a3ca0d8cc237fb3521afec7a4dac616130d81e1d54b365b341239cc6671fe744"
+    },
+    "gks/data/papers/rainewhk-chinese-2010-40a4002c6e.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2010-40a4002c6e.json",
+      "sha256": "ed89ea4431857d80845c9c2d9171f00c3f443b8e8c2cd26ddc792b9d61f250ce"
+    },
+    "gks/data/papers/rainewhk-chinese-2011-19ea451454.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2011-19ea451454.json",
+      "sha256": "135bfe23e4a18b54f7cc0717d0d850c1663c0abbc6e386cbf5dbb3ec9384262b"
+    },
+    "gks/data/papers/rainewhk-chinese-2012-d2c0a77ef8.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2012-d2c0a77ef8.json",
+      "sha256": "16dc67b13f90e37eddfbfb110c3cf6eb1b854b20f295e9733b7a078bf2db833c"
+    },
+    "gks/data/papers/rainewhk-chinese-2013-b8da954674.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2013-b8da954674.json",
+      "sha256": "1162d7d2b2e34ff709b406cb01e12ce302f795382ea1717ec328377d26998393"
+    },
+    "gks/data/papers/rainewhk-chinese-2014-eef7bd7141.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2014-eef7bd7141.json",
+      "sha256": "c56b6704774e97870ae066ebb7a05cc1ed73a45d98b5bb20974722180d56f247"
+    },
+    "gks/data/papers/rainewhk-chinese-2015-2578c87f0a.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2015-2578c87f0a.json",
+      "sha256": "8a8310031e0d8be032cd47dec28f3b89795641dcc0f2cf95c429a42602c4a5eb"
+    },
+    "gks/data/papers/rainewhk-chinese-2016-607de12267.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2016-607de12267.json",
+      "sha256": "3cdc0e646729461ac9974c78b08a3b0b54789bba72b9dd559928c9518dc9b118"
+    },
+    "gks/data/papers/rainewhk-chinese-2017-9473c4386e.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2017-9473c4386e.json",
+      "sha256": "088075078ecacb979c67b28c6f63dd47d929a366809236775479256ade55e100"
+    },
+    "gks/data/papers/rainewhk-chinese-2018-964f5a862a.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2018-964f5a862a.json",
+      "sha256": "bfe7a8435b58b5bb404aacc3384e3ac86e15fd51ad3e8cafbdc1eac34758485f"
+    },
+    "gks/data/papers/rainewhk-chinese-2019-014f6692ea.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2019-014f6692ea.json",
+      "sha256": "6f3e7463a16bc1fa4eaf8c906ef3aaf1e095c95c40c6f5e8a76cebce4073dcf8"
+    },
+    "gks/data/papers/rainewhk-chinese-2020-3558c4fabb.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2020-3558c4fabb.json",
+      "sha256": "615c776a5b75d8683b2fcc2d611de8d1c4b4d0f48423a3d21a7393c44a82934f"
+    },
+    "gks/data/papers/rainewhk-chinese-2020-e36bce8e41.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2020-e36bce8e41.json",
+      "sha256": "0fb605e3345a03ac7c922e5105bb9d08c16989cffbe1a67092b785bf100e0601"
+    },
+    "gks/data/papers/rainewhk-chinese-2021-4090ea307b.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2021-4090ea307b.json",
+      "sha256": "365a923d020131a400da4201121118da89afe0a32eadf6983e8b912363703c85"
+    },
+    "gks/data/papers/rainewhk-chinese-2021-956ae6595c.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2021-956ae6595c.json",
+      "sha256": "1f0f853140f6d66675867ecf778231c31b2f8e7f621fdb93cc5323a0f9b98e66"
+    },
+    "gks/data/papers/rainewhk-chinese-2022-3716ab2b17.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2022-3716ab2b17.json",
+      "sha256": "f7870c5607ad32eeb4394d4026fdc69e0fa5b76ff4e60d0795ef692cc38d5f5c"
+    },
+    "gks/data/papers/rainewhk-chinese-2022-56db51bfa8.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2022-56db51bfa8.json",
+      "sha256": "3d34c4c5b77350171b65aec50e10861e737508ca00f26871bcf3e3925929d81e"
+    },
+    "gks/data/papers/rainewhk-chinese-2023-5d67ef090d.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2023-5d67ef090d.json",
+      "sha256": "332932a1a3678f2f8928ffb7cf20a78104beb64aba7ccb12a779d362c7f98db8"
+    },
+    "gks/data/papers/rainewhk-chinese-2023-7dc9fc0576.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2023-7dc9fc0576.json",
+      "sha256": "728519df93e92729a9143f60b7168f5c57a87874505f274b1c00d6e7d8544012"
+    },
+    "gks/data/papers/rainewhk-chinese-2023-91116c7707.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2023-91116c7707.json",
+      "sha256": "069afa19a0850892c7774d95d17e37be606dd9d4e7331f6ff4c01e0159ce4937"
+    },
+    "gks/data/papers/rainewhk-chinese-2024-773bd5c967.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2024-773bd5c967.json",
+      "sha256": "f405476cd6078dca9851cde0ae2b2c5eb075f8bd06fe2a83124a6cd11c01c924"
+    },
+    "gks/data/papers/rainewhk-chinese-2024-cd091213de.json": {
+      "source": "gks",
+      "path": "data/papers/rainewhk-chinese-2024-cd091213de.json",
+      "sha256": "5cb291a706d9e9a85d04b7a20cebf97570c7f3e274f99118a771143ac7349a69"
+    }
+  }
+}

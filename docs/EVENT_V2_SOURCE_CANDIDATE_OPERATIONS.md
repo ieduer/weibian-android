@@ -67,18 +67,49 @@ Use either exact supported Node release. No package download is needed:
 
 ```bash
 npm test
-npm run verify:candidate
+node --test scripts/inactive-candidate.test.mjs
+npm run verify:inactive
 ```
 
-The PR-only workflow repeats both commands and syntax checks on exact Node
-22.21.1 and 24.18.0. The verifier requires the exact source main to be an
-ancestor, allows only the nine declared candidate files, hashes existing
-Worker/Room/CI protected surfaces, rejects runtime candidate imports or binding
-markers, and checks every activation flag remains false.
+The PR-only workflow runs the existing hostile adapter tests, negative regression
+tests and the inactive gate on exact Node 22.21.1 and 24.18.0. The ten-minute
+ceiling, read-only permissions, SHA-pinned actions and cancellation remain.
 
-The full Android/Worker workflow may still run because the repository's
-existing `verify.yml` applies to all pull requests. That existing workflow is
-not modified by this candidate.
+`verify:candidate` and its original code/contract remain unchanged. They are the
+historical source-only transaction verifier, valid at candidate revision
+`98590b1deb3e5bc0fffd4590cb1d2c41c32828c4` against source main
+`f17e5d54e10f34047fac70424e63e836dcf002ea`. Running that transaction's whole-repository
+allowlist on later product PRs rejects even accepted main: main
+`921d36811c82c97254d07a050c32b9fc1850433a` already has fourteen paths outside it.
+Do not enlarge that historical allowlist or change its source main.
+
+The ongoing `scripts/verify-inactive-candidate.mjs` instead binds three exact,
+ancestor-checked Git revisions and fails closed if any is unavailable:
+
+- Candidate revision `98590b1...`: recheck the exact nine-path historical diff
+  and all thirteen original protected digests, then require the current
+  adapter, hostile tests, contract and original verifier to remain byte-exact.
+  No additional file may enter the frozen candidate directory.
+- Accepted runtime main `921d368...`: require the protected Worker, identity,
+  Room/outbox and migration files to remain byte-exact. The complete migration
+  and Room schema inventory is frozen too.
+- CI correction `f8fd08b...`: freeze only `.github/workflows/verify.yml` to the
+  SDK setup correction whose exact-head Android run37397045699 passed. This
+  source anchor is not a production or device acceptance.
+
+The gate also scans tracked and non-ignored new Worker and Android source
+(including flavor paths) for candidate imports, factories and named RPC
+markers. It rejects missing files and symlinks, activation or numeric score
+fields, new dependencies, and loss of the PR-only dual-Node checks. There is no
+skip-on-unrelated-change condition. Protected pins require a new reviewed
+source disposition for any future change; moving `main` never moves a pin.
+Ordinary content/UI changes outside these surfaces continue under the separate
+Android, content, release and device gates.
+
+This changes repository verification only. It does not activate the adapter,
+change a shared contract, migrate data, deploy, or make this candidate eligible
+for scoring. Negative tests cover protected drift, new wiring/migrations,
+symlinks, historical tampering, score changes and workflow/dependency drift.
 
 ## Explicitly forbidden actions
 

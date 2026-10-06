@@ -8,7 +8,9 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
+import org.json.JSONObject
 import java.io.File
+import java.security.MessageDigest
 
 /**
  * 直接解析随包发布的 assets/content.json —— 校验的是真正会装进 APK 的那份内容，
@@ -24,6 +26,15 @@ class ContentBundleTest {
         fun load() {
             val file = File("src/main/assets/content.json")
             assertTrue("找不到内容包：${file.absolutePath}", file.exists())
+            val manifestFile = File("src/main/assets/content-manifest.json")
+            assertTrue("找不到内置内容版本清单", manifestFile.exists())
+            val manifest = JSONObject(manifestFile.readText())
+            val bytes = file.readBytes()
+            val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
+                .joinToString("") { "%02x".format(it) }
+            assertEquals(digest, manifest.getString("sha256"))
+            assertEquals(bytes.size.toLong(), manifest.getLong("size"))
+            assertEquals(digest.take(16), manifest.getString("contentVersion"))
             bundle = ContentBundle.parse(file.readText(), "test")
         }
     }
