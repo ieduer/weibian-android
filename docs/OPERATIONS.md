@@ -1,3 +1,15 @@
+## 2026-10-05 — v1.2.0 / code6 release preparation
+
+The current candidate increments the existing Direct/Play package to v1.2.0/code6
+and preserves signing lineage, Room schema, account and outbox contracts. Play
+publication remains disabled. Content `0b3170748035504b` must be reproduced from
+the fixed source lock and verified inside the exact signed Direct APK; it is not
+yet a published content authority. The owner waived this release's physical-device
+gate in serial10; record `waived_unverified`, never a device pass. Public source,
+signing, immutable/alias/pointer parity, Worker acceptance and Status remain required.
+Current public baseline, new release card and separate rollback authorities are in
+workspace `reports/operations/analects-consolidation-20261004/serial10/`.
+
 ## 2026-10-05 — PR Android setup repair
 
 PR8 Verify run37396634046 failed before tests because the pinned setup-android action defaults to `tools platform-tools` and the SDK catalog could not resolve `tools`. Set its supported `packages` input explicitly to `platform-tools`; retain the same action SHA, Java/SDK targets, native/Worker tests, read-only permissions and release boundary. This is a CI setup correction, not a passing cloud test. The independent inactive event-v2 source-scope conflict remains open and its guard is unchanged.

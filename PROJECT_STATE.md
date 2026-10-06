@@ -1,3 +1,14 @@
+## 2026-10-05 — v1.2.0 / code6 release preparation
+
+Serial10 continues exact PR8 content/native source as Direct v1.2.0 / code6.
+Candidate content is `0b3170748035504b`; public content remains `fc68413c7b70da0e`
+until the immutable-object, signed-App and Worker publication transactions pass.
+The owner explicitly resolved the current physical-device gate with “視為已完成”.
+That gate is owner-waived / unverified: no device testing or installation occurred.
+All non-device source, signing, content, data-preservation and release checks remain.
+No model or notification canary is authorized. Play remains inactive.
+See workspace `reports/operations/analects-consolidation-20261004/serial10/RELEASE_CARD.md`.
+
 ## 2026-10-05 — Inactive source gate correction candidate
 
 The inherited source-only check incorrectly applied the August transaction's
