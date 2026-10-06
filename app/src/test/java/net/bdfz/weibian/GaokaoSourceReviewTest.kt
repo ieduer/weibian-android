@@ -9,7 +9,46 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class GaokaoSourceReviewTest {
-    private fun bundle() = ContentBundle.parse(File("src/main/assets/content.json").readText(), "test")
+    private fun fixture() = JSONObject(File("src/test/resources/exam-source-review-fixture.json").readText())
+
+    private fun bundle(): ContentBundle {
+        val json = JSONObject(File("src/main/assets/content.json").readText())
+        val groups = json.getJSONArray("gaokao")
+        val reviews = fixture().getJSONArray("groups")
+        // CI bootstraps the supported published bundle. Exercise the new parser
+        // using a test-only projection without changing that packaged content.
+        for (i in 0 until groups.length()) {
+            val group = groups.getJSONObject(i)
+            if (group.has("sourceReview")) continue
+            val review = (0 until reviews.length()).map { reviews.getJSONObject(it) }
+                .first { it.getString("id") == group.getString("id") }
+            group.put("sourceReview", review.getJSONObject("sourceReview"))
+            val questions = group.getJSONArray("questions")
+            val reviewedQuestions = review.getJSONArray("questions")
+            for (j in 0 until questions.length()) {
+                val question = questions.getJSONObject(j)
+                val reviewedQuestion = (0 until reviewedQuestions.length()).map { reviewedQuestions.getJSONObject(it) }
+                    .first { it.getString("id") == question.getString("id") }
+                question.put("sourceReview", reviewedQuestion.getJSONObject("sourceReview"))
+            }
+        }
+        return ContentBundle.parse(json.toString(), "test")
+    }
+
+    @Test fun `packaged content is either exact reviewed candidate or exact supported published bundle`() {
+        val json = JSONObject(File("src/main/assets/content.json").readText())
+        val groups = json.getJSONArray("gaokao")
+        val count = (0 until groups.length()).count { groups.getJSONObject(it).has("sourceReview") }
+        val manifest = JSONObject(File("src/main/assets/content-manifest.json").readText())
+        if (count == 0) {
+            val published = JSONObject(File("../content/public-content-lock.json").readText()).getJSONObject("manifest")
+            assertEquals(published.getString("sha256"), manifest.getString("sha256"))
+            assertFalse("A generated candidate cannot omit its reviews", manifest.has("sourceInputLockSha256"))
+        } else {
+            assertEquals(groups.length(), count)
+            assertEquals(fixture().getString("sourceBundleSha256"), manifest.getString("sha256"))
+        }
+    }
 
     @Test fun `all historical question IDs parse with reviewed answers`() {
         val content = bundle()
@@ -83,7 +122,9 @@ class GaokaoSourceReviewTest {
     @Test(expected = IllegalArgumentException::class)
     fun `publisher reproduction cannot silently become official`() {
         val json = JSONObject(File("src/main/assets/content.json").readText())
-        json.getJSONArray("gaokao").getJSONObject(0).getJSONObject("sourceReview").put("officialSource", true)
+        val review = fixture().getJSONArray("groups").getJSONObject(0).getJSONObject("sourceReview")
+        review.put("officialSource", true)
+        json.getJSONArray("gaokao").getJSONObject(0).put("sourceReview", review)
         ContentBundle.parse(json.toString(), "invalid")
     }
 }

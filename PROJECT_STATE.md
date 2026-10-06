@@ -1,3 +1,9 @@
+## 2026-10-05 — Candidate and published-content test compatibility
+
+The native source review tests now run against both the exact reviewed candidate and the currently published bundle. A test-only review projection exercises the new parsing and feedback rules when CI bootstraps the supported old bundle; it is never an application content source. Packaging assertions reject a generated candidate with missing reviews, require the exact reviewed digest when present, and accept the old bundle only under its published lock. Each content scenario passes161 tests in each distribution channel; the actual candidate assets were restored afterward. Runtime source, candidate content, lint and APK hashes are unchanged from086327a.
+
+The inherited event-v2 source-only workflow has a separate existing conflict: its frozen allowlist already rejects14 paths on current GitHub main921d368. Its code/contract and inactive status were not changed or bypassed. This is an outstanding CI/release governance disposition, not a passed check. Evidence: `serial7/weibian-ci-content-compatibility.json` and `serial7/weibian-inherited-ci-boundary.json` in the Analects consolidation report.
+
 ## 2026-10-05 — Source-reviewed exam candidate, not published
 
 Transaction `20261005-weibian-exam-source-review` extends the fixed-source candidate with the exact reviewed GK source `e0dcee540ad340901ec48112292e8c6cd19d5e21`. All seven groups and23 legacy question IDs receive additive review metadata. Every prior exam field, prompt and score remains intact. The native reader distinguishes current source corrections from historical references; future feedback uses the corrected material/answer and refuses numeric grades when printed subpart scoring is unknown. No stored attempt, Room schema, identity or central score changes.
