@@ -16,8 +16,8 @@
     "gk": {
       "repository": "ieduer/gaokao",
       "directory": "sites/exam/gaokao",
-      "commit": "0b3258ffcc755f4dc2939b3e2e22bf43f56519d4",
-      "authority": "release-authority accepted source snapshot on 2026-10-05"
+      "commit": "e0dcee540ad340901ec48112292e8c6cd19d5e21",
+      "authority": "Serial7 source-reviewed local candidate; not published. Parent source and every prior data field preserved; see gk-seven-group-validation.json"
     },
     "gks": {
       "repository": "ieduer/gks",
@@ -85,7 +85,7 @@
     "gaokao/data/all.json": {
       "source": "gk",
       "path": "data/all.json",
-      "sha256": "4129caa8a850f9596a3a5a45b13621a8466aa3d50a0c24542f1df8ffcd044268"
+      "sha256": "cf924f2691e95543d86405f26eb4efa7dc1ea59d67e462858053c93c3534a0aa"
     },
     "gks/data/papers/2002-chinese.json": {
       "source": "gks",

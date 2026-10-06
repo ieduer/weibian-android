@@ -1,4 +1,5 @@
 import copy
+import json
 import unittest
 from unittest.mock import patch
 import build_content as build
@@ -70,6 +71,44 @@ class SourceAndHistoryTests(unittest.TestCase):
         with patch('source_inputs.subprocess.check_output', return_value=b'wrong bytes'):
             with self.assertRaisesRegex(ValueError, 'hash mismatch'):
                 reader.read(build.SRC_DIALOGUES)
+
+    def test_reviews_cover_every_old_id_and_preserve_all_previous_fields(self):
+        with patch('build_content.apply_exam_reviews'):
+            previous = build.build_gaokao(self.chapters)
+        stripped = copy.deepcopy(self.exams)
+        for group in stripped:
+            self.assertIn('sourceReview', group)
+            del group['sourceReview']
+            for question in group['questions']:
+                self.assertIn('sourceReview', question)
+                del question['sourceReview']
+        self.assertEqual(previous, stripped)
+        by_id = {g['id']: g for g in self.exams}
+        self.assertIn('共7分', by_id['gk-2019-lunyu']['sourceReview']['topic'])
+        self.assertIn('贫与贱', by_id['gk-2019-lunyu']['sourceReview']['material'])
+        self.assertIn('不己知', by_id['gk-2023-lunyu']['sourceReview']['material'])
+        for group in self.exams:
+            for question in group['questions']:
+                review = question['sourceReview']
+                if group['year'] in [2019, 2023]:
+                    self.assertIsNone(review['printedScore'])
+                if group['year'] == 2015 and question['id'] in ['q1', 'q15']:
+                    self.assertIn('曾皙、孔子、曾皙、孔子', review['answer'])
+
+    def test_review_target_or_original_drift_fails_closed(self):
+        records = json.loads(build.INPUTS.read(build.SRC_GK_ALL))
+        mapping = json.loads((build.HERE / 'exam-review-map.json').read_text())
+        for mutate in [lambda rows, routes: rows[0]['source_review']['answers']['1'].update(questionSha256='0'*64),
+                       lambda rows, routes: routes['records']['2015-lunyu']['answers']['1'][0].update(promptSha256='0'*64),
+                       lambda rows, routes: routes['records']['2015-lunyu']['answers'].pop('2'),
+                       lambda rows, routes: rows[0]['source_review']['answers']['1'].update(printedScore=999),
+                       lambda rows, routes: rows[0]['source_review']['sources'][0].update(url='https://unreviewed.example/source')]:
+            rs, routes = copy.deepcopy(records), copy.deepcopy(mapping)
+            # Locate a reviewed record explicitly; source order is not authority.
+            rs.sort(key=lambda r: r['id'] != '2023-lunyu')
+            mutate(rs, routes)
+            with self.assertRaises(ValueError):
+                build.apply_exam_reviews(copy.deepcopy(self.exams), rs, routes, build.to_simplified)
 
 
 if __name__ == '__main__':

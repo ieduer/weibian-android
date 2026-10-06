@@ -1,3 +1,21 @@
+# Source-reviewed exam adoption — serial7 local candidate
+
+This section supersedes the unchanged-exam statement in the retained serial6 history below. Transaction `20261005-weibian-exam-source-review` pins the additive GK review source `e0dcee540ad340901ec48112292e8c6cd19d5e21`; the other66 upstream blobs remain unchanged. The previous GK record fields are identical to0b3258f. Fifteen publisher file references were visually reviewed and retained with byte sizes and hashes; these are reproductions, not exam-authority documents.
+
+`exam-review-map.json` maps12 reviewed subparts to all23 historical question IDs. Duplicate candidates remain separate and keep their prompts and scores. Exact question/material hashes and each target prompt are checked before adding optional `sourceReview` objects. All seven pre-existing exam objects are unchanged after removing only the new group/question review fields. No history-contract relaxation or attempt merge is allowed.
+
+The native reader displays corrected material and source scope, links the source images, and separates reviewed answers from retained historical references. Future AI feedback receives the corrected material and per-question answer. Unknown printed subpart scoring (2019 and2023) yields comments only: no fabricated six-point denominator and no numeric grade persistence. Known scores must have a matching denominator and range. This affects new attempts only; no historical score, record, outbox, owner binding or Room migration changes.
+
+Additive fields keep old bundles readable by the new App and preserve every key read by existing consumers. Old Apps ignore the new fields and therefore do not implement the correction; publishing a content pointer alone cannot satisfy acceptance. KZ currently reads chapters only; Fuzi must explicitly adopt the review before claiming corrected exam content. LY's pinned KZ corpus is unchanged. Source scanning covers137 registered roots, four exact candidate trees, Direct/Play, old immutable URLs and anonymous external readers. Live manifest remainsfc68413c7b70da0e; neither mutable pointers nor old objects have changed.
+
+Nine Python source/history tests and content validation pass. Both native variants pass160 tests each, lint (zero errors; nine warnings each) and debug assembly offline. Both APKs contain the exact899729-byte content and its matching manifest. Removing only the added review fields reproduces the entire prior2b6ffd83aff1a564 bundle digest, not just ID counts. The first native attempt stopped at a sandbox cache lock; its failed receipt is retained. The successful bounded offline run used the existing shared cache with the required filesystem permission.
+
+Local rollback is the retained3bf9923 source branch ancestor and publishedfc684 content. Required next gates: device and update compatibility, Fuzi/Web adoption, authenticated new-attempt/readback without provider-budget overrun, governed exact-source release, then Status stored/public/RSS. Keep the original learner data and all immutable objects.
+
+Evidence: `/Users/ylsuen/CF/reports/operations/analects-consolidation-20261004/serial7/`; controlling receipt: `/Users/ylsuen/CF/reports/operations/shared_hub_changes/2026-10-05-weibian-exam-source-review.json`.
+
+---
+
 # Fixed-source content generation
 
 2026-10-05 local candidate, not published. Parent source is `921d368`; the

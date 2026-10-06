@@ -35,6 +35,7 @@ from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from pathlib import Path
 from source_inputs import SourceInputs
+from exam_reviews import apply_exam_reviews
 
 try:
     from zhconv import convert as _zh_convert
@@ -643,6 +644,8 @@ def build_gaokao(chapters: list[dict]) -> list[dict]:
             bucket["passages"] = map_passages(bucket["material"], chapters)
             out.append(bucket)
 
+    apply_exam_reviews(out, json.loads(INPUTS.read(SRC_GK_ALL)),
+                       json.loads((HERE / "exam-review-map.json").read_text(encoding="utf-8")), to_simplified)
     out.sort(key=lambda e: (e["year"] or 0))
     return out
 
