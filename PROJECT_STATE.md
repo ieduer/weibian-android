@@ -1,3 +1,17 @@
+## 2026-10-05 — Inactive source gate correction candidate
+
+The inherited source-only check incorrectly applied the August transaction's
+whole-repository allowlist to later product PRs, rejecting fourteen already
+accepted main paths. The new ongoing verifier preserves the exact original
+candidate/contract/verifier and historical nine-path/thirteen-digest checks,
+while locking twenty current protected sources to reviewed exact anchors and
+scanning Worker/Android sources for activation. Existing hostile tests plus
+negative regression cases cover identity/data drift, imports, migrations,
+scoring, symlinks and workflow drift. This is CI-only; no candidate activation,
+content/runtime/student-data mutation or production acceptance. Cloud results
+remain pending until exact-head readback. Details: the candidate operations
+annex and Analects `serial8` evidence.
+
 ## 2026-10-05 — PR Android setup repair
 
 PR8 Verify run37396634046 failed before tests because the pinned setup-android action defaults to `tools platform-tools` and the SDK catalog could not resolve `tools`. Set its supported `packages` input explicitly to `platform-tools`; retain the same action SHA, Java/SDK targets, native/Worker tests, read-only permissions and release boundary. This is a CI setup correction, not a passing cloud test. The independent inactive event-v2 source-scope conflict remains open and its guard is unchanged.

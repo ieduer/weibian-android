@@ -178,3 +178,17 @@ update `PROJECT_STATE.md` in the same task.
 Every AI closeout must record changed files, generated artifacts, tests, live
 version/deployment, rollback, dirty-tree state, unresolved follow-ups, and the
 manual/state updates in `reports/agent_action_log.jsonl`. Chat is not a durable handoff.
+
+## 2026-10-05 inactive-candidate CI scope correction
+
+The PR candidate gate now validates the frozen historical transaction and
+ongoing inactivity separately. The original source-only verifier and contract
+are unchanged; no allowlist extension, candidate activation or runtime change
+is included. Exact source anchors, negative tests, commands and remaining
+activation blockers are in [the candidate operations annex](EVENT_V2_SOURCE_CANDIDATE_OPERATIONS.md#verification).
+Run `npm test`, `node --test scripts/inactive-candidate.test.mjs`, and
+`npm run verify:inactive`. The existing Android gate remains required; earlier
+native/content acceptance remains attached to its original exact source.
+Rollback this CI-only change by reverting its commit; do not roll back learner
+data, public content, Worker or App pointers. Cloud exact-head verification is
+pending until its recorded run completes.
