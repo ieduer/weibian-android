@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 export const anchors = Object.freeze({
   candidate: '98590b1deb3e5bc0fffd4590cb1d2c41c32828c4',
   runtime: '921d36811c82c97254d07a050c32b9fc1850433a',
+  landing: 'ed3d42ca85b6075299cbd3b52e94d6dc299b45cc',
   androidCi: 'f8fd08ba06d44606295978f5789535cd08715ed8',
 });
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -42,7 +43,8 @@ export function loadSnapshot(repo = root) {
   for (const { path } of contract.governance.protectedSurfaceDigests) {
     historical.set(path, blob(anchors.candidate, path));
     expected.set(path, blob(path === '.github/workflows/verify.yml'
-      ? anchors.androidCi : anchors.runtime, path));
+      ? anchors.androidCi : path === 'worker/src/index.js'
+        ? anchors.landing : anchors.runtime, path));
   }
   const migrationPaths = paths('ls-tree', '-r', '--name-only', '-z', anchors.runtime)
     .filter(migrationPath);

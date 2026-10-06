@@ -1,3 +1,7 @@
+## 2026-10-06 — Signed native candidate and landing preparation
+
+Direct v1.2.0 / code6 was built from clean pushed `0f2ad22883e9e0392a11f5120ebee624f7337663`. Signed APK: 2848445 bytes, SHA256 `1a68a1fe2165b298163cf10d7cf9132c8d92bcb83ea3c050809828750abf72c7`; v1/v2 signatures and the existing signer lineage passed the executable release guard. Both embedded content files match the reviewed public lock. The entrypoint change at `ed3d42ca85b6075299cbd3b52e94d6dc299b45cc` changes only the exact immutable download URL; the inactive-candidate guard adopts that file alone as a reviewed anchor, preserving all authentication, data, migrations and event-v2 inactivity restrictions. Public APK aliases and Worker traffic remain unchanged pending the registered release transaction.
+
 ## 2026-10-06 — Immutable content staged for v1.2.0
 
 Exact content `0b3170748035504b` (899729 bytes) is now staged at its immutable R2 URL and public full-byte readback matches the locked SHA256. The public bootstrap lock and append-only Worker release map adopt that object; the old fc684 object remains supported. This is preparation only: production Worker content and App pointers remain at fc684 / v1.1.3. Current physical-device acceptance is owner-waived, not tested. Signing and controlled pointer/traffic promotion remain pending. Evidence: CF `reports/operations/analects-consolidation-20261004/serial10/content-stage-public-readback.json`.
