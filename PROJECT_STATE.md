@@ -1,3 +1,7 @@
+## 2026-10-06 — Immutable content staged for v1.2.0
+
+Exact content `0b3170748035504b` (899729 bytes) is now staged at its immutable R2 URL and public full-byte readback matches the locked SHA256. The public bootstrap lock and append-only Worker release map adopt that object; the old fc684 object remains supported. This is preparation only: production Worker content and App pointers remain at fc684 / v1.1.3. Current physical-device acceptance is owner-waived, not tested. Signing and controlled pointer/traffic promotion remain pending. Evidence: CF `reports/operations/analects-consolidation-20261004/serial10/content-stage-public-readback.json`.
+
 ## 2026-10-05 — v1.2.0 / code6 release preparation
 
 Serial10 continues exact PR8 content/native source as Direct v1.2.0 / code6.

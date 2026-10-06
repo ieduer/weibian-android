@@ -1,14 +1,15 @@
 {
-  "sourceUrl": "https://img.bdfz.net/apps/weibian-content/releases/fc68413c7b70da0e/fc68413c7b70da0e1f14e36bb2229c4d9ae64fb8f26d75251f87d7457f8ffa75.json",
+  "sourceUrl": "https://img.bdfz.net/apps/weibian-content/releases/0b3170748035504b/0b3170748035504b44f947017855ec14893884d6c18acd996b6b76cfe454a2c9.json",
   "manifest": {
     "schema": "lunyu-content-v1",
     "schemaVersion": 1,
     "contentId": "lunyu-yizhu",
-    "contentVersion": "fc68413c7b70da0e",
-    "sha256": "fc68413c7b70da0e1f14e36bb2229c4d9ae64fb8f26d75251f87d7457f8ffa75",
-    "size": 871333,
+    "contentVersion": "0b3170748035504b",
+    "sha256": "0b3170748035504b44f947017855ec14893884d6c18acd996b6b76cfe454a2c9",
+    "size": 899729,
     "deltas": [],
-    "builtAt": "2026-07-29T05:43:31Z",
+    "builtAt": "2026-10-06T03:52:58Z",
+    "sourceInputLockSha256": "3284036cc90190461cabec44b846e16bba6fa314f60094be244383d8ab0224ab",
     "counts": {
       "chapters": 512,
       "books": 20,
