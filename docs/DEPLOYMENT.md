@@ -1,3 +1,7 @@
+## Current accepted release — 2026-10-06 UTC
+
+Direct v1.2.0 / code6 and reviewed content 0b3170748035504b are accepted. See [the single release record](releases/v1.2.0.md) for exact source/artifacts, 0/1/5/100 and public readback, owner-waived physical acceptance, and rollback. This current record supersedes the retained preparation and earlier-release history below.
+
 # 部署指南
 
 ## 一、内容接口 Worker

@@ -1,3 +1,7 @@
+## Current accepted release — 2026-10-06 UTC
+
+Direct v1.2.0 / code6 and reviewed content 0b3170748035504b are accepted. See [the single release record](releases/v1.2.0.md) for exact source/artifacts, 0/1/5/100 and public readback, owner-waived physical acceptance, and rollback. This current record supersedes the retained preparation and earlier-release history below.
+
 ## 2026-10-06 — Immutable content staged for v1.2.0
 
 Exact content `0b3170748035504b` (899729 bytes) is now staged at its immutable R2 URL and public full-byte readback matches the locked SHA256. The public bootstrap lock and append-only Worker release map adopt that object; the old fc684 object remains supported. This is preparation only: production Worker content and App pointers remain at fc684 / v1.1.3. Current physical-device acceptance is owner-waived, not tested. Signing and controlled pointer/traffic promotion remain pending. Evidence: CF `reports/operations/analects-consolidation-20261004/serial10/content-stage-public-readback.json`.

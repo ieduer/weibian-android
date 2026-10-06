@@ -1,5 +1,9 @@
 # 韦编 · 论语译注
 
+Current accepted Direct release: **v1.2.0 / versionCode 6**. [Download and release evidence](docs/releases/v1.2.0.md) · [GitHub Release](https://github.com/ieduer/weibian-android/releases/tag/v1.2.0). Physical-device acceptance was explicitly waived by the owner and was not performed.
+
+The older release and device records below are retained history; the current release record above controls source, content and rollback.
+
 > 韦编三绝 —— 孔子读《易》，编简的皮绳断了三次。
 > 这个 App 的目标只有一个：让一个人真正读完、读懂、记住、并能运用《论语》全部 **512 章**。
 

@@ -1,3 +1,7 @@
+## Current accepted release — 2026-10-06 UTC
+
+Direct v1.2.0 / code6 and reviewed content 0b3170748035504b are accepted. See [the single release record](releases/v1.2.0.md) for exact source/artifacts, 0/1/5/100 and public readback, owner-waived physical acceptance, and rollback. This current record supersedes the retained preparation and earlier-release history below.
+
 ## 2026-10-06 — Signed native candidate and landing preparation
 
 Direct v1.2.0 / code6 was built from clean pushed `0f2ad22883e9e0392a11f5120ebee624f7337663`. Signed APK: 2848445 bytes, SHA256 `1a68a1fe2165b298163cf10d7cf9132c8d92bcb83ea3c050809828750abf72c7`; v1/v2 signatures and the existing signer lineage passed the executable release guard. Both embedded content files match the reviewed public lock. The entrypoint change at `ed3d42ca85b6075299cbd3b52e94d6dc299b45cc` changes only the exact immutable download URL; the inactive-candidate guard adopts that file alone as a reviewed anchor, preserving all authentication, data, migrations and event-v2 inactivity restrictions. Public APK aliases and Worker traffic remain unchanged pending the registered release transaction.

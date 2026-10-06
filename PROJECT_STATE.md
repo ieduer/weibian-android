@@ -1,3 +1,9 @@
+## Current accepted state — 2026-10-06 UTC
+
+Weibian Direct v1.2.0/code6, new reviewed-content lock and Worker 2debbef at 100% are accepted; R2/GitHub/latest aliases and Status stored/public/RSS are verified. Physical acceptance is owner-waived and untested. See [release source, evidence and rollback](docs/releases/v1.2.0.md).
+
+Next: dependent Fuzi/KZ adoption and integrated real learner paths; broader original-record review and central correction remain unfinished. No additional provider tests, notifications, retrospective rescores or data migrations are authorized by this release. Older candidate/blocked snapshots below are historical.
+
 ## 2026-10-06 — Immutable content staged for v1.2.0
 
 Exact content `0b3170748035504b` (899729 bytes) is now staged at its immutable R2 URL and public full-byte readback matches the locked SHA256. The public bootstrap lock and append-only Worker release map adopt that object; the old fc684 object remains supported. This is preparation only: production Worker content and App pointers remain at fc684 / v1.1.3. Current physical-device acceptance is owner-waived, not tested. Signing and controlled pointer/traffic promotion remain pending. Evidence: CF `reports/operations/analects-consolidation-20261004/serial10/content-stage-public-readback.json`.
