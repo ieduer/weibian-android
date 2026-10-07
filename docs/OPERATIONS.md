@@ -1,3 +1,7 @@
+## Current notebook export candidate — 2026-10-07T23:48:37.000292+00:00
+
+[Native export](NOTEBOOK_EXPORT.md) adds explicit current-account/guest/legacy personal-copy export, complete preview and Android document write/readback. Both channels pass167 unit tests each, zero lint errors and debug assembly; all541 IDs from each actual native serializer output roundtrip through the merged importer. Public accepted v1.2.0/code6 and content0b317074 remain unchanged. Candidate v1.2.1/code7 is not signed or deployed; IN2020 is disconnected, with a user connection request pending. No model or data write; existing accepted records below are retained history.
+
 ## Current accepted release — 2026-10-06 UTC
 
 Direct v1.2.0 / code6 and reviewed content 0b3170748035504b are accepted. See [the single release record](releases/v1.2.0.md) for exact source/artifacts, 0/1/5/100 and public readback, owner-waived physical acceptance, and rollback. This current record supersedes the retained preparation and earlier-release history below.

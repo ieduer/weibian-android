@@ -127,6 +127,18 @@ class LearningRepository(
         activeOwner.value = requireActiveOwnerBinding(ownerBinding)
     }
 
+    /** Explicit local copy; no owner transfer, outbox update or learning write. */
+    suspend fun notebookExportRows(
+        source: NotebookExportSource,
+        expectedOwner: String,
+    ): Pair<String, List<ChapterProgressEntity>> {
+        check(activeOwner.value == expectedOwner) { "export_owner_changed" }
+        val owner = notebookExportOwner(source, expectedOwner)
+        val rows = db.chapterProgress().all(owner)
+        check(activeOwner.value == expectedOwner) { "export_owner_changed" }
+        return owner to rows
+    }
+
     fun observeChapter(chapterId: Int): Flow<ChapterProgressEntity?> =
         activeOwner.flatMapLatest { owner ->
             db.chapterProgress().observe(owner, chapterId)

@@ -1,6 +1,11 @@
 package net.bdfz.weibian.ui
 
 import android.app.Application
+import android.net.Uri
+import net.bdfz.weibian.BuildConfig
+import net.bdfz.weibian.data.NotebookExportDocument
+import net.bdfz.weibian.data.NotebookExportSource
+import net.bdfz.weibian.data.buildNotebookExport
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -171,6 +176,9 @@ data class UiState(
     val feedbackQueued: Boolean = false,
     val feedbackLastReceiptId: String? = null,
     val feedbackLastNotificationSent: Boolean? = null,
+    val notebookExport: NotebookExportDocument? = null,
+    val notebookExportBusy: Boolean = false,
+    val notebookExportMessage: String? = null,
     val legacyImportPending: Boolean = false,
     val legacyImportBusy: Boolean = false,
     val legacyImportError: String? = null,
@@ -212,6 +220,9 @@ internal fun UiState.afterAccountSwitch(
     feedbackQueued = false,
     feedbackLastReceiptId = null,
     feedbackLastNotificationSent = null,
+    notebookExport = null,
+    notebookExportBusy = false,
+    notebookExportMessage = null,
     legacyImportBusy = false,
     legacyImportError = null,
     newAchievements = emptyList(),
@@ -330,6 +341,7 @@ class WeibianViewModel(app: Application) : AndroidViewModel(app) {
     private val feedbackRepository = FeedbackRepository(app)
     private val updateManager = AppUpdateManager(app)
     private val accountGeneration = AccountGenerationGuard(initialOwnerBinding)
+    private var notebookExportToken: AccountGenerationToken? = null
     private var rankingRefreshQueue = RankingRefreshQueue()
     private val contentRefreshGate = SingleFlightGate()
 
@@ -1142,6 +1154,7 @@ class WeibianViewModel(app: Application) : AndroidViewModel(app) {
     ) {
         val owner = ownerBindingFor(session)
         accountGeneration.switchTo(owner)
+        notebookExportToken = null
         rankingRefreshQueue = RankingRefreshQueue()
         repository.switchOwner(owner)
         unlockedIds = emptySet()
@@ -1149,6 +1162,81 @@ class WeibianViewModel(app: Application) : AndroidViewModel(app) {
         _state.value = _state.value
             .afterAccountSwitch(session, validationState)
             .copy(message = message)
+    }
+
+    fun prepareNotebookExport(source: NotebookExportSource) = viewModelScope.launch {
+        if (_state.value.notebookExportBusy) return@launch
+        val token = accountGeneration.snapshot()
+        notebookExportToken = null
+        _state.value = _state.value.copy(
+            notebookExport = null, notebookExportBusy = true, notebookExportMessage = null,
+        )
+        try {
+            val document = withContext(Dispatchers.IO) {
+                val (owner, rows) = repository.notebookExportRows(source, token.ownerBinding)
+                buildNotebookExport(source, owner, rows, "weibian-${BuildConfig.VERSION_NAME}")
+            }
+            if (!accountGeneration.isCurrent(token)) return@launch
+            notebookExportToken = token
+            _state.value = _state.value.copy(
+                notebookExport = document, notebookExportMessage = "已读取本机副本，尚未保存文件或上传。",
+            )
+        } catch (error: Exception) {
+            if (accountGeneration.isCurrent(token)) _state.value = _state.value.copy(
+                notebookExportMessage = when (error.message) {
+                    "export_empty" -> "这一分区没有收藏或笔记。原有学习记录保持不变。"
+                    "export_too_large" -> "原件超过安全容量，未截断或导出。请保留本机资料。"
+                    "export_account_required" -> "请先登录，或选择本机游客资料。"
+                    else -> "无法完整核对这一分区，未导出。原有资料保持不变。"
+                },
+            )
+        } finally {
+            if (accountGeneration.isCurrent(token)) _state.value = _state.value.copy(notebookExportBusy = false)
+        }
+    }
+
+    fun saveNotebookExport(documentId: String, uri: Uri) = viewModelScope.launch {
+        val document = _state.value.notebookExport ?: return@launch
+        val token = notebookExportToken ?: return@launch
+        if (_state.value.notebookExportBusy || document.id != documentId ||
+            !accountGeneration.isCurrent(token)) return@launch
+        _state.value = _state.value.copy(notebookExportBusy = true, notebookExportMessage = "正在保存并读回核对…")
+        try {
+            withContext(Dispatchers.IO) {
+                check(accountGeneration.isCurrent(token)) { "export_owner_changed" }
+                val bytes = document.raw.toByteArray(Charsets.UTF_8)
+                val resolver = getApplication<Application>().contentResolver
+                check(uri.scheme == "content") { "export_invalid_destination" }
+                // Exactly one user-selected document write; uncertain writes are never replayed.
+                checkNotNull(resolver.openOutputStream(uri, "wt")).use { output ->
+                    check(accountGeneration.isCurrent(token)) { "export_owner_changed" }
+                    output.write(bytes)
+                }
+                checkNotNull(resolver.openInputStream(uri)).use { input ->
+                    var offset = 0
+                    val buffer = ByteArray(8192)
+                    while (true) {
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        check(count > 0 && offset + count <= bytes.size) { "export_readback_failed" }
+                        for (index in 0 until count) check(buffer[index] == bytes[offset + index]) {
+                            "export_readback_failed"
+                        }
+                        offset += count
+                    }
+                    check(offset == bytes.size) { "export_readback_failed" }
+                }
+            }
+            if (accountGeneration.isCurrent(token)) _state.value = _state.value.copy(
+                notebookExportMessage = "文件已保存并完整读回核对。可在合并站典藏中选择此文件；本机原件仍保留。",
+            )
+        } catch (_: Exception) {
+            if (accountGeneration.isCurrent(token)) _state.value = _state.value.copy(
+                notebookExportMessage = "文件保存或读回未能确认，已停止。请检查所选文件；本机原件保持不变。",
+            )
+        } finally {
+            if (accountGeneration.isCurrent(token)) _state.value = _state.value.copy(notebookExportBusy = false)
+        }
     }
 
     fun setRankingScope(scope: RankingScope) {

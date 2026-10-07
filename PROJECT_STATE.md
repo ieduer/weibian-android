@@ -1,3 +1,7 @@
+## Current notebook export candidate — 2026-10-07T23:48:37.000292+00:00
+
+[Native export](docs/NOTEBOOK_EXPORT.md) adds explicit current-account/guest/legacy personal-copy export, complete preview and Android document write/readback. Both channels pass167 unit tests each, zero lint errors and debug assembly; all541 IDs from each actual native serializer output roundtrip through the merged importer. Public accepted v1.2.0/code6 and content0b317074 remain unchanged. Candidate v1.2.1/code7 is not signed or deployed; IN2020 is disconnected, with a user connection request pending. No model or data write; existing accepted records below are retained history.
+
 ## Current accepted state — 2026-10-06 UTC
 
 Weibian Direct v1.2.0/code6, new reviewed-content lock and Worker 2debbef at 100% are accepted; R2/GitHub/latest aliases and Status stored/public/RSS are verified. Physical acceptance is owner-waived and untested. See [release source, evidence and rollback](docs/releases/v1.2.0.md).
