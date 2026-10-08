@@ -16,6 +16,14 @@ test('maps the accepted content version to an exact immutable R2 object', () => 
   assert.equal(contentReleaseForVersion('unknown'), null);
 });
 
+test('maps the reviewed release while retaining historical object identity', () => {
+  const release = contentReleaseForVersion('0b3170748035504b');
+  assert.equal(release?.size, 899_729);
+  assert.equal(release?.sha256, '0b3170748035504b44f947017855ec14893884d6c18acd996b6b76cfe454a2c9');
+  assert.equal(release?.key, 'apps/weibian-content/releases/0b3170748035504b/0b3170748035504b44f947017855ec14893884d6c18acd996b6b76cfe454a2c9.json');
+  assert.notEqual(release, contentReleaseForVersion('fc68413c7b70da0e'));
+});
+
 test('allows only bounded content-delta object names', () => {
   assert.equal(
     deltaObjectKey('12345678-abcdef09.json'),

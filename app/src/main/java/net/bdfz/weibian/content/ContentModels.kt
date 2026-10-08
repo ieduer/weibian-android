@@ -100,6 +100,15 @@ data class BankItem(
     val primaryRef: Int get() = refs.firstOrNull() ?: 0
 }
 
+data class GaokaoQuestionReview(val answer: String, val printedScore: Int?)
+
+data class GaokaoSourceReview(
+    val topic: String,
+    val material: String,
+    val note: String,
+    val sourceUrls: List<String>,
+)
+
 data class GaokaoQuestion(
     val id: String,
     val prompt: String,
@@ -107,7 +116,11 @@ data class GaokaoQuestion(
     val answer: String,
     val explanation: String,
     val knowledgePoints: List<String>,
-)
+    val sourceReview: GaokaoQuestionReview? = null,
+) {
+    val displayAnswer: String get() = sourceReview?.answer ?: answer
+    val feedbackMaxScore: Int? get() = if (sourceReview != null) sourceReview.printedScore else score
+}
 
 data class GaokaoItem(
     val id: String,
@@ -123,7 +136,10 @@ data class GaokaoItem(
     val answerSource: String,
     /** 该题所考的《论语》章句 id */
     val passages: List<Int>,
-)
+    val sourceReview: GaokaoSourceReview? = null,
+) {
+    val displayMaterial: String get() = sourceReview?.material ?: material
+}
 
 /** 一份完整的、已建好索引的内容包。 */
 class ContentBundle(
@@ -317,10 +333,22 @@ private fun JSONObject.toGaokaoItem() = GaokaoItem(
             answer = it.optString("answer"),
             explanation = it.optString("explanation"),
             knowledgePoints = it.optJSONArray("knowledgePoints").toStringList(),
+            sourceReview = it.optJSONObject("sourceReview")?.let { review ->
+                val answer = review.getString("answer")
+                val score = if (review.isNull("printedScore")) null else review.getInt("printedScore")
+                require(answer.isNotBlank() && (score == null || score > 0)) { "Invalid exam review answer" }
+                GaokaoQuestionReview(answer, score)
+            },
         )
     }.orEmpty(),
     referenceAnswer = optString("referenceAnswer"),
     modelAnswer = optString("modelAnswer"),
     answerSource = optString("answerSource"),
     passages = optJSONArray("passages").toIntList(),
+    sourceReview = optJSONObject("sourceReview")?.let { review ->
+        require(review.getString("schema") == "weibian-exam-review-v1" && !review.getBoolean("officialSource")) { "Invalid exam source review" }
+        val urls = review.getJSONArray("sources").map { it.getString("url") }
+        require(urls.isNotEmpty() && urls.all { it.matches(Regex("https://(img\\.eol\\.cn|gaokao\\.eol\\.cn|cdn\\.gaokzx\\.com)/.+")) }) { "Invalid exam review sources" }
+        GaokaoSourceReview(review.optString("topic"), review.optString("material"), review.getString("note"), urls)
+    },
 )

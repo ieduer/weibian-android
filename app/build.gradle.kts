@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.testing.Test
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
@@ -25,8 +28,8 @@ android {
         applicationId = "net.bdfz.weibian.direct"
         minSdk = 23
         targetSdk = 37
-        versionCode = 5
-        versionName = "1.1.3"
+        versionCode = 7
+        versionName = "1.2.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -137,4 +140,12 @@ dependencies {
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
     arg("room.generateKotlin", "true")
+}
+
+// ContentBundleTest reads these assets directly; include them in the test cache key.
+tasks.withType<Test>().configureEach {
+    inputs.files(
+        layout.projectDirectory.file("src/main/assets/content.json"),
+        layout.projectDirectory.file("src/main/assets/content-manifest.json"),
+    ).withPropertyName("bundledLearningContent").withPathSensitivity(PathSensitivity.RELATIVE)
 }

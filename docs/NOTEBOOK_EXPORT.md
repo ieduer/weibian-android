@@ -1,0 +1,13 @@
+# Original-device notebook export
+
+Current local candidate: 2026-10-07. Native v1.2.1/code7 descends from accepted v1.2.0/code6. Public APK, Worker, content lock, account/sync/Room schema and grading remain unchanged until a separately registered release.
+
+Profile now offers explicit current-account, guest and legacy-unbound partition exports. The repository reads only the chosen partition, rejects an account change before/after the read and serializes only chapter ID, favorite, exact note, first-open and last-activity timestamps. No account slug/hash, score, answer or outbox is copied. Source rows are never updated. Empty/malformed/oversize records are refused without truncation or UTF-8 replacement.
+
+The native preview retains full text with per-chapter navigation. After confirming personal ownership, the user selects a document with Android CreateDocument; the app writes once and independently reads every byte back. An uncertain write stops without replay or deleting the selected file. Account changes clear the preview and invalidate an outstanding file picker. No WebView, permission expansion, network call, model or new conversation is introduced. User-selected exports are personal documents, not task-owned disposable artifacts.
+
+The `analects-notebook-export-v1` header declares `weibian-android` and `bound-device`, `guest-device` or `legacy-device`. This is a source label, never proof of historical identity. The merged collection preserves these personal copies in separate append-only storage; they never overwrite notes or contribute grades. Limits agree across both clients:16 MiB/file,541 rows,256 KiB/raw record. Both accepted aliases and whitespace-only notes are preserved.
+
+Validation: accepted899729-byte content reproduces exactly; both Direct and Play pass167 unit tests each, both debug lint reports have zero errors, and both debug APKs build. Six new native cases cover exact text and field minimization, all541 IDs across the three partitions, owner separation, malformed/oversize data, whitespace/aliases and account-switch clearing. The actual native JSON output from all three partitions passes the merged parser, with every note and timestamp intact. Synthetic fixtures are under `app/build/notebook-export-fixtures`, reproducible via NotebookExportTest.
+
+Pending: exact clean source publication/signing, IN2020 original-device upgrade/export/import acceptance and public release. The bounded ADB inventory on2026-10-07 returned no connected devices. No phone was modified; LE2120 remains out of scope. Prior v1.2.0 owner waiver is historical and not extended. Preserve signer lineage and forward Room data; rollback requires a higher versionCode repair, never uninstall or clear data.

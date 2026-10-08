@@ -186,6 +186,8 @@ fun ProfileScreen(
             }
         }
 
+        item { NotebookExportCard(state, viewModel) }
+
         // ---- 段位与统计 ----
         item {
             PaperCard {

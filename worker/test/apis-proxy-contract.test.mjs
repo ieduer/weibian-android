@@ -12,7 +12,7 @@ test('native app calls only the same-product AI proxy', () => {
   assert.doesNotMatch(client, /apis\.bdfz\.net/);
   assert.doesNotMatch(client, /X-Internal-Token|APIS_CALLER_TOKEN/);
   assert.match(build, /AI_GATEWAY_URL", "\\"https:\/\/weibian\.bdfz\.net\\""/);
-  assert.match(build, /versionCode = 5/);
+  assert.match(build, /versionCode = 7/);
 });
 
 test('content Worker proxy is APIS binding-only and fail-closed', () => {

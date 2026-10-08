@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -130,6 +131,7 @@ fun GaokaoDetailScreen(
 ) {
     val bundle = state.bundle ?: return
     val item = bundle.gaokao(gaokaoId) ?: return
+    val uriHandler = LocalUriHandler.current
     val attempts by viewModel.observeGaokao(gaokaoId)
         .collectAsStateWithLifecycle(initialValue = emptyList())
     val drafts = remember(gaokaoId) { mutableStateMapOf<String, String>() }
@@ -151,14 +153,28 @@ fun GaokaoDetailScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            if (item.material.isNotBlank()) {
+            item.sourceReview?.let { review ->
+                item {
+                    PaperCard {
+                        Column(Modifier.padding(16.dp)) {
+                            SectionHeader("来源核对")
+                            if (review.topic.isNotBlank()) Text(review.topic, style = AnnotationTextStyle)
+                            Text(review.note, style = AnnotationTextStyle)
+                            review.sourceUrls.forEachIndexed { index, url ->
+                                OutlinedButton(onClick = { uriHandler.openUri(url) }) { Text("核对来源 ${index + 1}") }
+                            }
+                        }
+                    }
+                }
+            }
+            if (item.displayMaterial.isNotBlank()) {
                 item {
                     PaperCard {
                         Column(Modifier.padding(16.dp)) {
                             SectionHeader("材料")
                             Spacer(Modifier.height(10.dp))
                             SelectionContainer {
-                                Text(item.material, style = AnnotationTextStyle)
+                                Text(item.displayMaterial, style = AnnotationTextStyle)
                             }
                         }
                     }
@@ -196,13 +212,16 @@ fun GaokaoDetailScreen(
                             lineHeight = 25.sp,
                             fontWeight = FontWeight.Medium,
                         )
-                        question.score?.let {
+                        question.feedbackMaxScore?.let {
                             Spacer(Modifier.height(4.dp))
                             Text(
                                 "（$it 分）",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
+                        }
+                        if (question.feedbackMaxScore == null) {
+                            Text("配分尚未核定，本次只提供评语。", fontSize = 12.sp)
                         }
                         Spacer(Modifier.height(12.dp))
                         OutlinedTextField(
@@ -237,20 +256,25 @@ fun GaokaoDetailScreen(
                             }
                         }
 
-                        if (question.answer.isNotBlank()) {
+                        if (question.displayAnswer.isNotBlank()) {
                             Spacer(Modifier.height(14.dp))
                             var showAnswer by remember(question.id) { mutableStateOf(false) }
                             if (showAnswer) {
-                                SectionHeader("参考答案")
+                                SectionHeader(if (question.sourceReview != null) "来源核对与订正" else "参考答案")
                                 Spacer(Modifier.height(8.dp))
                                 SelectionContainer {
-                                    Text(question.answer, style = AnnotationTextStyle)
+                                    Text(question.displayAnswer, style = AnnotationTextStyle)
                                 }
                             } else {
                                 OutlinedButton(onClick = { showAnswer = true }) {
                                     Text("查看参考答案")
                                 }
                             }
+                        }
+                        if (question.sourceReview != null && question.answer.isNotBlank()) {
+                            var showHistorical by remember(question.id) { mutableStateOf(false) }
+                            OutlinedButton(onClick = { showHistorical = !showHistorical }) { Text("历史答案对照") }
+                            if (showHistorical) Text("历史文本保留供对照，请以上方来源订正为准。\n${question.answer}", style = AnnotationTextStyle)
                         }
                     }
                 }
@@ -261,10 +285,11 @@ fun GaokaoDetailScreen(
                     PaperCard {
                         Column(Modifier.padding(16.dp)) {
                             SectionHeader(
-                                "整题参考",
+                                if (item.sourceReview != null) "历史整题参考" else "整题参考",
                                 item.answerSource.takeIf { it.isNotBlank() },
                             )
                             Spacer(Modifier.height(8.dp))
+                            if (item.sourceReview != null) Text("历史文本可能含已订正的错误，请以上方逐题核对结果为准。", style = AnnotationTextStyle)
                             SelectionContainer {
                                 Text(
                                     item.referenceAnswer.ifBlank { item.modelAnswer },

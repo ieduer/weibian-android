@@ -17,6 +17,7 @@ import {
 const here = path.dirname(fileURLToPath(import.meta.url));
 const contentPath = path.resolve(here, '..', 'public', 'content.json');
 const manifestPath = path.resolve(here, '..', 'public', 'manifest.json');
+const currentVersion = JSON.parse(await readFile(manifestPath, 'utf8')).contentVersion;
 const migrationPath = path.resolve(
   here,
   '..',
@@ -113,7 +114,7 @@ async function fixture() {
 function event(eventId, chosenOptionId, extra = {}) {
   return {
     eventId,
-    contentVersion: 'fc68413c7b70da0e',
+    contentVersion: currentVersion,
     taskId: 'cm-1-1a',
     chapterId: 1,
     chosenOptionId,
@@ -232,7 +233,7 @@ test('ranking health fails closed on missing secret and verifies D1 plus exact R
   const payload = await healthy.json();
   assert.equal(payload.ok, true);
   assert.equal(payload.eligibleTaskCount, MAX_AUTHORED_TASKS);
-  assert.equal(payload.contentVersion, 'fc68413c7b70da0e');
+  assert.equal(payload.contentVersion, currentVersion);
 
   for (const brokenEnv of [
     { ...env, RANKING_PEPPER: '' },
@@ -304,6 +305,26 @@ test('first authored answer is server-validated, idempotent and immutable', asyn
   assert.equal(changedPayload.receipts[0].correct, false);
   assert.equal(changedPayload.receipts[0].points, 0);
   assert.equal(database.rows.length, 1);
+});
+
+test('a content upgrade preserves the historical first answer without awarding twice', async () => {
+  const { env, database } = await fixture();
+  const first = await worker.fetch(request([event('weibian_answer_legacy001', 'b')]), env);
+  assert.equal(first.status, 200);
+  assert.equal((await first.json()).receipts[0].status, 'accepted');
+  // The authored bank and task IDs are unchanged in this release. Simulate the
+  // persisted first answer produced by the previous content version.
+  database.sqlite.prepare('UPDATE weibian_answer_events_v2 SET content_version = ?')
+    .run('fc68413c7b70da0e');
+  const historical = { ...database.rows[0] };
+  const updated = await worker.fetch(request([event('weibian_answer_upgrade01', 'a')]), env);
+  assert.equal(updated.status, 200);
+  const receipt = (await updated.json()).receipts[0];
+  assert.equal(receipt.status, 'already-recorded');
+  assert.equal(receipt.canonicalEventId, 'weibian_answer_legacy001');
+  assert.equal(receipt.correct, false);
+  assert.equal(receipt.points, 0);
+  assert.deepEqual(database.rows.map(row => ({ ...row })), [historical]);
 });
 
 test('a conflicting event cannot poison earlier receipts in the same batch', async () => {

@@ -31,3 +31,14 @@ GitHub's current default-branch tree as the workflow authority, preserve the
 pre-existing work, and synchronize this annex into the canonical project
 manual only after ownership and exact source authority are clean. No workflow,
 artifact, repository setting, release or runtime changed in this task.
+
+## 2026-10-05 current candidate gate
+
+The ten-minute PR-only dual-Node job runs the frozen adapter hostile tests,
+inactive-regression negative tests and `npm run verify:inactive` on every PR.
+The historical nine-file transaction allowlist is checked against its exact
+candidate revision, while current protected identity/data/Worker sources stay
+pinned to accepted main. See `EVENT_V2_SOURCE_CANDIDATE_OPERATIONS.md` for the
+three reviewed source anchors and the fail-closed repinning boundary. No gate
+is skipped, no provider/release permission is added, and no dependency or APK
+artifact is introduced by this verification change.

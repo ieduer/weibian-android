@@ -1,3 +1,62 @@
+## Current notebook export candidate — 2026-10-07T23:48:37.000292+00:00
+
+[Native export](docs/NOTEBOOK_EXPORT.md) adds explicit current-account/guest/legacy personal-copy export, complete preview and Android document write/readback. Both channels pass167 unit tests each, zero lint errors and debug assembly; all541 IDs from each actual native serializer output roundtrip through the merged importer. Public accepted v1.2.0/code6 and content0b317074 remain unchanged. Candidate v1.2.1/code7 is not signed or deployed; IN2020 is disconnected, with a user connection request pending. No model or data write; existing accepted records below are retained history.
+
+## Current accepted state — 2026-10-06 UTC
+
+Weibian Direct v1.2.0/code6, new reviewed-content lock and Worker 2debbef at 100% are accepted; R2/GitHub/latest aliases and Status stored/public/RSS are verified. Physical acceptance is owner-waived and untested. See [release source, evidence and rollback](docs/releases/v1.2.0.md).
+
+Next: dependent Fuzi/KZ adoption and integrated real learner paths; broader original-record review and central correction remain unfinished. No additional provider tests, notifications, retrospective rescores or data migrations are authorized by this release. Older candidate/blocked snapshots below are historical.
+
+## 2026-10-06 — Immutable content staged for v1.2.0
+
+Exact content `0b3170748035504b` (899729 bytes) is now staged at its immutable R2 URL and public full-byte readback matches the locked SHA256. The public bootstrap lock and append-only Worker release map adopt that object; the old fc684 object remains supported. This is preparation only: production Worker content and App pointers remain at fc684 / v1.1.3. Current physical-device acceptance is owner-waived, not tested. Signing and controlled pointer/traffic promotion remain pending. Evidence: CF `reports/operations/analects-consolidation-20261004/serial10/content-stage-public-readback.json`.
+
+## 2026-10-05 — v1.2.0 / code6 release preparation
+
+Serial10 continues exact PR8 content/native source as Direct v1.2.0 / code6.
+Candidate content is `0b3170748035504b`; public content remains `fc68413c7b70da0e`
+until the immutable-object, signed-App and Worker publication transactions pass.
+The owner explicitly resolved the current physical-device gate with “視為已完成”.
+That gate is owner-waived / unverified: no device testing or installation occurred.
+All non-device source, signing, content, data-preservation and release checks remain.
+No model or notification canary is authorized. Play remains inactive.
+See workspace `reports/operations/analects-consolidation-20261004/serial10/RELEASE_CARD.md`.
+
+## 2026-10-05 — Inactive source gate correction candidate
+
+The inherited source-only check incorrectly applied the August transaction's
+whole-repository allowlist to later product PRs, rejecting fourteen already
+accepted main paths. The new ongoing verifier preserves the exact original
+candidate/contract/verifier and historical nine-path/thirteen-digest checks,
+while locking twenty current protected sources to reviewed exact anchors and
+scanning Worker/Android sources for activation. Existing hostile tests plus
+negative regression cases cover identity/data drift, imports, migrations,
+scoring, symlinks and workflow drift. This is CI-only; no candidate activation,
+content/runtime/student-data mutation or production acceptance. Cloud results
+remain pending until exact-head readback. Details: the candidate operations
+annex and Analects `serial8` evidence.
+
+## 2026-10-05 — PR Android setup repair
+
+PR8 Verify run37396634046 failed before tests because the pinned setup-android action defaults to `tools platform-tools` and the SDK catalog could not resolve `tools`. Set its supported `packages` input explicitly to `platform-tools`; retain the same action SHA, Java/SDK targets, native/Worker tests, read-only permissions and release boundary. This is a CI setup correction, not a passing cloud test. The independent inactive event-v2 source-scope conflict remains open and its guard is unchanged.
+
+## 2026-10-05 — Candidate and published-content test compatibility
+
+The native source review tests now run against both the exact reviewed candidate and the currently published bundle. A test-only review projection exercises the new parsing and feedback rules when CI bootstraps the supported old bundle; it is never an application content source. Packaging assertions reject a generated candidate with missing reviews, require the exact reviewed digest when present, and accept the old bundle only under its published lock. Each content scenario passes161 tests in each distribution channel; the actual candidate assets were restored afterward. Runtime source, candidate content, lint and APK hashes are unchanged from086327a.
+
+The inherited event-v2 source-only workflow has a separate existing conflict: its frozen allowlist already rejects14 paths on current GitHub main921d368. Its code/contract and inactive status were not changed or bypassed. This is an outstanding CI/release governance disposition, not a passed check. Evidence: `serial7/weibian-ci-content-compatibility.json` and `serial7/weibian-inherited-ci-boundary.json` in the Analects consolidation report.
+
+## 2026-10-05 — Source-reviewed exam candidate, not published
+
+Transaction `20261005-weibian-exam-source-review` extends the fixed-source candidate with the exact reviewed GK source `e0dcee540ad340901ec48112292e8c6cd19d5e21`. All seven groups and23 legacy question IDs receive additive review metadata. Every prior exam field, prompt and score remains intact. The native reader distinguishes current source corrections from historical references; future feedback uses the corrected material/answer and refuses numeric grades when printed subpart scoring is unknown. No stored attempt, Room schema, identity or central score changes.
+
+Candidate content0b3170748035504b, SHA 0b3170748035504b44f947017855ec14893884d6c18acd996b6b76cfe454a2c9, 899729 bytes. Nine source/history tests and content validation pass. Both native variants pass160 tests each, lint (zero errors; nine existing warnings each) and debug assembly. Both APKs contain exact candidate content/manifest bytes. No device or production acceptance is claimed. The public manifest was read back asfc68413c7b70da0e. Full scope, consumer gates and rollback: `docs/CONTENT_SOURCE_PIPELINE.md`; shared receipt: `/Users/ylsuen/CF/reports/operations/shared_hub_changes/2026-10-05-weibian-exam-source-review.json`.
+
+## 2026-10-05 — Fixed-source content candidate, not published
+
+The content builder now reads 67 exact accepted upstream Git blobs, restores all 23 historical exam IDs from legacy numbered fields, validates a published-history contract, and correctly maps 17 concepts / 15 figures. Candidate2b6ffd83aff1a564 changes only concept/figure collections; the original corpus, bank, aliases and all exam bytes remain exact. Seven source/history tests and all six native gates pass against the actual candidate assets. See `docs/CONTENT_SOURCE_PIPELINE.md` for evidence, generation, known exam uncertainties, pending Web/App release acceptance and rollback. Public content remainsfc68413c7b70da0e; no device, production or student data changed.
+
 # Project state
 
 Last updated: 2026-08-30 PDT
