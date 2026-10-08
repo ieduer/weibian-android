@@ -8,8 +8,9 @@ import { fileURLToPath } from 'node:url';
 export const anchors = Object.freeze({
   candidate: '98590b1deb3e5bc0fffd4590cb1d2c41c32828c4',
   runtime: '921d36811c82c97254d07a050c32b9fc1850433a',
-  landing: 'ed3d42ca85b6075299cbd3b52e94d6dc299b45cc',
+  landing: 'cc465135c0a9044a31ab6e087409c6e82a5d419b',
   androidCi: 'f8fd08ba06d44606295978f5789535cd08715ed8',
+  notebookExport: '2754fe89efc69e5ef7fb1746711e54f155f070cf',
 });
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const contractPath = 'contracts/weibian-first-answer-event-v2-candidate.json';
@@ -44,7 +45,8 @@ export function loadSnapshot(repo = root) {
     historical.set(path, blob(anchors.candidate, path));
     expected.set(path, blob(path === '.github/workflows/verify.yml'
       ? anchors.androidCi : path === 'worker/src/index.js'
-        ? anchors.landing : anchors.runtime, path));
+        ? anchors.landing : path === 'app/src/main/java/net/bdfz/weibian/data/LearningRepository.kt'
+          ? anchors.notebookExport : anchors.runtime, path));
   }
   const migrationPaths = paths('ls-tree', '-r', '--name-only', '-z', anchors.runtime)
     .filter(migrationPath);

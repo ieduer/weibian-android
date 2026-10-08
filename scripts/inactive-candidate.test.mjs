@@ -26,6 +26,7 @@ for (const path of ['contracts/weibian-first-answer-event-v2-candidate.json',
   'candidate/weibian-event-v2/adapter.mjs', 'candidate/weibian-event-v2/adapter.test.mjs',
   'candidate/weibian-event-v2/verify-source-scope.mjs', 'worker/src/index.js',
   'worker/wrangler.toml', 'app/src/main/java/net/bdfz/weibian/data/Daos.kt',
+  'app/src/main/java/net/bdfz/weibian/data/LearningRepository.kt',
   '.github/workflows/verify.yml']) {
   test(`rejects drift in ${path}`, () => {
     const state = snapshot();
